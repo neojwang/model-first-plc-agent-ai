@@ -1,0 +1,17 @@
+E3 lockstep equivalence check: tank_reference.json (description SHA-256 278008e6fb70fcac over inputs, derived, owned, events, graphs, transitions, forcing, outputs), grafcet2gvm.py (SHA-256 a4831abb3166b0e2)
+reference: explicit-state model of nusmv/grafcet2smv.py; 14 steps, 16 transitions, K = 15 micro-steps
+coverage: (1) 7 reachable stable situations x 1152 input combinations = 8064 one-tick tests from the initial situation (16128 ticks with their paths); (2) 200 random sequences x 100 ticks = 20000 ticks (seed 20261113)
+generated programs: tank_reference_gvm.hpp (SHA-256 fb203487cbb12a9a), tank_reference_gvm.py (SHA-256 f6c2bd85114e7c1c), tank_reference_gvm.st (SHA-256 3ce8648e46547e28), tank_reference_gvm_io.json (SHA-256 a573364f6ac78dc5), tank_reference_gvm_main.cpp (SHA-256 88af9e5b92f41ab4)
+tools: Python 3.13.18; g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+
+program           ticks       E3  first difference
+Python            36128        0  -
+C++               36128        0  -
+ST (matiec)       36128        0  -
+
+negative controls (each must give E3 > 0):
+  event read in every micro-step                 E3: Python 1690, C++ 1690, ST (matiec) 1690
+  forcing order dropped                          E3: Python 5407, C++ 5407, ST (matiec) 5407
+  receptivity of t0_E1 negated (start & mode = timer) E3: Python 19216, C++ 19216, ST (matiec) 19216
+
+result: equivalent on all tested inputs; every negative control detected (29.1 s)

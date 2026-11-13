@@ -1,0 +1,92 @@
+{
+ "inputs": [
+  "start",
+  "stop",
+  "mode",
+  "r",
+  "timer_q",
+  "ton_q",
+  "tof_q",
+  "hold_ok",
+  "logged"
+ ],
+ "enums": {
+  "mode": [
+   "timer",
+   "tontof",
+   "pid"
+  ],
+  "r": [
+   "LOW",
+   "MID",
+   "HIGH"
+  ]
+ },
+ "outputs": [
+  "fill_valve",
+  "pid_on",
+  "discharge_at_ud"
+ ],
+ "steps": [
+  "x0",
+  "xE1",
+  "xS1",
+  "xE2",
+  "x21",
+  "x22",
+  "xS2",
+  "xE3",
+  "xS3",
+  "x4",
+  "x5",
+  "x6",
+  "x10",
+  "x11"
+ ],
+ "init": [
+  true,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+  true,
+  false
+ ],
+ "K": 15,
+ "located": {
+  "in_start": "%IX100.0",
+  "in_stop": "%IX100.1",
+  "in_timer_q": "%IX100.2",
+  "in_ton_q": "%IX100.3",
+  "in_tof_q": "%IX100.4",
+  "in_hold_ok": "%IX100.5",
+  "in_logged": "%IX100.6",
+  "in_mode": "%IW100",
+  "in_r": "%IW101",
+  "out_fill_valve": "%QX100.0",
+  "out_pid_on": "%QX100.1",
+  "out_discharge_at_ud": "%QX100.2",
+  "out_stable": "%QX100.3",
+  "x_x0": "%QX101.0",
+  "x_xE1": "%QX101.1",
+  "x_xS1": "%QX101.2",
+  "x_xE2": "%QX101.3",
+  "x_x21": "%QX101.4",
+  "x_x22": "%QX101.5",
+  "x_xS2": "%QX101.6",
+  "x_xE3": "%QX101.7",
+  "x_xS3": "%QX102.0",
+  "x_x4": "%QX102.1",
+  "x_x5": "%QX102.2",
+  "x_x6": "%QX102.3",
+  "x_x10": "%QX102.4",
+  "x_x11": "%QX102.5"
+ }
+}
