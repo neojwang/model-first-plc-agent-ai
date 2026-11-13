@@ -1,0 +1,7 @@
+SELFTEST on synthetic inputs (not study results)
+  Wilson(10, 20) = [0.2993, 0.7007]  ok
+  pass@1(n=20, c=5) = 0.25  ok
+  Fisher exact fallback matches scipy on 3 tables  ok
+  CMH: chi2 = 8.263, p = 0.0040, OR_MH = 3.52 (computed; formula checked by hand)
+  Cohen kappa(20, 5, 10, 15) = 0.40  ok
+SELFTEST passed

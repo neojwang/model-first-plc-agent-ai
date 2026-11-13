@@ -1,0 +1,22 @@
+wrote tank_reference.smv
+self-check of tank_reference.smv: 1030 DEFINE equations evaluated on 8064 reachable states; mismatches with the explicit-state model: 0
+model tank_reference: 7 reachable stable situations x 1152 input combinations = 8064 states
+  P1     holds AG (r = HIGH -> AX !fill_valve)
+  P2     holds AG (stop -> AX (x0 & !fill_valve))
+  P3     holds AG ((fill_valve & !stop) -> E [ !stop U !fill_valve ])
+  P4     holds AG (!stop -> E [ !stop U x0 ])
+  W1     holds AG (!(x21 & x22))
+  W2     holds AG (x5 <-> x6)
+  W3     holds AG (!((xE1 | xS1) & (xE2 | x21 | x22 | xS2 | xE3 | xS3)) & !((xE2 | x21 | x22 | xS2) & (xE3 | xS3)))
+  W4     holds AG (x0 | xE1 | xS1 | xE2 | x21 | x22 | xS2 | xE3 | xS3 | x4 | x5 | x6)
+  W5     holds AG stable
+reference model: all specs hold
+seeded faults (a mutant is detected when at least one spec that holds on the reference fails):
+  Ma E1 loses the overfill term LSHH (Table 3)            detected by: P1
+  Mb step 21 can no longer reach S2 (Table 4)             detected by: P1, P4
+  Mc G0 forcing order removed                             detected by: P2
+  Md E3 loses the overfill term h >= h_max (Table 5)      detected by: P1
+  Me End of M2 never fires (S2 is a dead end)             detected by: P4
+  Mf pause step 22 never resumes filling                  detected by: P4
+  Mg E3 is never left                                     detected by: P1, P3, P4
+  Mh steps 21 and 22 ignore the timers (transient cycle)  detected by: W5

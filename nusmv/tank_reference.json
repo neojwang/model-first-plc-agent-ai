@@ -1,0 +1,322 @@
+{
+ "name": "tank_reference",
+ "source": "Reference GRAFCET of the paper: Fig. 6 (main program G1 shared by the tank tasks, stop handling G0) and Tables 3-5 (macro-steps M1 and M2 run in the customized Scene 3 Filling Tank (Timers) with level switches LSH and LSHH; M3 runs in Level Control)",
+ "abstraction": {
+  "r": "level region: LOW: h < h_target; MID: h_target <= h < h_max; HIGH: h >= h_max (in Scene 3 the three admissible states of LSH, LSHH)",
+  "LSH": "level switch at h_target: r = MID | r = HIGH",
+  "LSHH": "level switch at h_max: r = HIGH",
+  "timer_q": "simple Timer elapsed (Table 3); owned by step E1",
+  "ton_q": "TON_Timer.Q, IN := X21 (Table 4); owned by step 21",
+  "tof_q": "TOF_Timer.Q, IN := X21 (Table 4); TRUE until the pause has elapsed, owned by step 22",
+  "hold_ok": "t_h/(|e| <= eps) (Table 5); owned by step E3",
+  "logged": "Data logged (Fig. 6); owned by step 6",
+  "start": "StartCommand pressed (event: valid only in the first evolution of a transient run)",
+  "stop": "StopCommand (level)",
+  "note": "time, hold and logging conditions are unconstrained inputs while their owning step stays active: an over-approximation that is sound for the safety properties; no time elapses during a search for stability"
+ },
+ "inputs": {
+  "start": "boolean",
+  "stop": "boolean",
+  "mode": [
+   "timer",
+   "tontof",
+   "pid"
+  ],
+  "r": [
+   "LOW",
+   "MID",
+   "HIGH"
+  ],
+  "timer_q": "boolean",
+  "ton_q": "boolean",
+  "tof_q": "boolean",
+  "hold_ok": "boolean",
+  "logged": "boolean"
+ },
+ "derived": {
+  "LSH": "r = MID | r = HIGH",
+  "LSHH": "r = HIGH"
+ },
+ "owned": {
+  "timer_q": {
+   "step": "xE1",
+   "neutral": false
+  },
+  "ton_q": {
+   "step": "x21",
+   "neutral": false
+  },
+  "tof_q": {
+   "step": "x22",
+   "neutral": true
+  },
+  "hold_ok": {
+   "step": "xE3",
+   "neutral": false
+  },
+  "logged": {
+   "step": "x6",
+   "neutral": false
+  }
+ },
+ "events": [
+  "start"
+ ],
+ "graphs": [
+  {
+   "name": "G1",
+   "steps": [
+    "x0",
+    "xE1",
+    "xS1",
+    "xE2",
+    "x21",
+    "x22",
+    "xS2",
+    "xE3",
+    "xS3",
+    "x4",
+    "x5",
+    "x6"
+   ],
+   "initial": [
+    "x0"
+   ]
+  },
+  {
+   "name": "G0",
+   "steps": [
+    "x10",
+    "x11"
+   ],
+   "initial": [
+    "x10"
+   ]
+  }
+ ],
+ "transitions": [
+  {
+   "id": "t0_E1",
+   "from": [
+    "x0"
+   ],
+   "to": [
+    "xE1"
+   ],
+   "guard": "start & mode = timer"
+  },
+  {
+   "id": "t0_E2",
+   "from": [
+    "x0"
+   ],
+   "to": [
+    "xE2"
+   ],
+   "guard": "start & mode = tontof"
+  },
+  {
+   "id": "t0_E3",
+   "from": [
+    "x0"
+   ],
+   "to": [
+    "xE3"
+   ],
+   "guard": "start & mode = pid"
+  },
+  {
+   "id": "tE1_S1",
+   "from": [
+    "xE1"
+   ],
+   "to": [
+    "xS1"
+   ],
+   "guard": "timer_q | LSHH"
+  },
+  {
+   "id": "tE2_21",
+   "from": [
+    "xE2"
+   ],
+   "to": [
+    "x21"
+   ],
+   "guard": "TRUE"
+  },
+  {
+   "id": "t21_22",
+   "from": [
+    "x21"
+   ],
+   "to": [
+    "x22"
+   ],
+   "guard": "ton_q & !LSH"
+  },
+  {
+   "id": "t21_S2",
+   "from": [
+    "x21"
+   ],
+   "to": [
+    "xS2"
+   ],
+   "guard": "LSH"
+  },
+  {
+   "id": "t22_21",
+   "from": [
+    "x22"
+   ],
+   "to": [
+    "x21"
+   ],
+   "guard": "!tof_q"
+  },
+  {
+   "id": "tE3_S3",
+   "from": [
+    "xE3"
+   ],
+   "to": [
+    "xS3"
+   ],
+   "guard": "hold_ok | r = HIGH"
+  },
+  {
+   "id": "tEndM1",
+   "from": [
+    "xS1"
+   ],
+   "to": [
+    "x4"
+   ],
+   "guard": "TRUE"
+  },
+  {
+   "id": "tEndM2",
+   "from": [
+    "xS2"
+   ],
+   "to": [
+    "x4"
+   ],
+   "guard": "TRUE"
+  },
+  {
+   "id": "tEndM3",
+   "from": [
+    "xS3"
+   ],
+   "to": [
+    "x4"
+   ],
+   "guard": "TRUE"
+  },
+  {
+   "id": "t4_56",
+   "from": [
+    "x4"
+   ],
+   "to": [
+    "x5",
+    "x6"
+   ],
+   "guard": "TRUE"
+  },
+  {
+   "id": "t56_0",
+   "from": [
+    "x5",
+    "x6"
+   ],
+   "to": [
+    "x0"
+   ],
+   "guard": "logged"
+  },
+  {
+   "id": "t10_11",
+   "from": [
+    "x10"
+   ],
+   "to": [
+    "x11"
+   ],
+   "guard": "stop"
+  },
+  {
+   "id": "t11_10",
+   "from": [
+    "x11"
+   ],
+   "to": [
+    "x10"
+   ],
+   "guard": "!stop"
+  }
+ ],
+ "forcing": [
+  {
+   "by": "x11",
+   "graph": "G1",
+   "situation": [
+    "x0"
+   ]
+  }
+ ],
+ "outputs": {
+  "fill_valve": "xE1 | x21 | xE3",
+  "pid_on": "xE3",
+  "discharge_at_ud": "xE3"
+ },
+ "specs": [
+  {
+   "id": "P1",
+   "what": "overfill: after h >= h_max is observed, the fill valve is closed in the next stable situation",
+   "ctl": "AG (r = HIGH -> AX !fill_valve)"
+  },
+  {
+   "id": "P2",
+   "what": "stop: StopCommand forces G1 to {0} with the fill valve closed in the next stable situation",
+   "ctl": "AG (stop -> AX (x0 & !fill_valve))"
+  },
+  {
+   "id": "P3",
+   "what": "an open fill valve can be closed again while StopCommand stays false",
+   "ctl": "AG ((fill_valve & !stop) -> E [ !stop U !fill_valve ])"
+  },
+  {
+   "id": "P4",
+   "what": "step 0 can be reached from every reachable situation while StopCommand stays false",
+   "ctl": "AG (!stop -> E [ !stop U x0 ])"
+  },
+  {
+   "id": "W1",
+   "what": "well-formedness: steps 21 and 22 are exclusive",
+   "ctl": "AG (!(x21 & x22))"
+  },
+  {
+   "id": "W2",
+   "what": "well-formedness: AND-branches 5 and 6 are active together",
+   "ctl": "AG (x5 <-> x6)"
+  },
+  {
+   "id": "W3",
+   "what": "well-formedness: macro-steps are mutually exclusive",
+   "ctl": "AG (!((xE1 | xS1) & (xE2 | x21 | x22 | xS2 | xE3 | xS3)) & !((xE2 | x21 | x22 | xS2) & (xE3 | xS3)))"
+  },
+  {
+   "id": "W4",
+   "what": "well-formedness: G1 is never empty",
+   "ctl": "AG (x0 | xE1 | xS1 | xE2 | x21 | x22 | xS2 | xE3 | xS3 | x4 | x5 | x6)"
+  },
+  {
+   "id": "W5",
+   "what": "well-formedness: every evolution reaches a stable situation (no never-ending transient cycle)",
+   "ctl": "AG stable"
+  }
+ ]
+}
