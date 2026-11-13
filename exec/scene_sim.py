@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Scene tests by closed-loop simulation: scene_test_pass and a2_scene_test_pass, on any platform, without Factory I/O.
 
-Method.  The program is wrapped as compile_check.py does (fixed configuration, task interval 20 ms), the scene-test
+Method.  The program is wrapped as compile_check.py does (fixed configuration, task interval 20 ms; a program that
+brings its own configuration keeps it and runs at its own task interval, as in the runtime), the scene-test
 parameters of the situation are set as set_params.py does, and the result is compiled by the matiec (iec2c) of
 OpenPLC Runtime version 3 at the pinned commit, with the flags and library of the runtime's compilation script.  The
 C code is linked with a glue that reproduces the runtime loop (located variables; __CURRENT_TIME advanced by the
@@ -13,7 +14,8 @@ Nominal scene model (version 1).  Official data, read 2026-11-13 from docs.facto
 2 m, maximum input flow 0.25 m3/s, maximum output flow 0.3543 m3/s, discharge pipe radius 0.125 m, valves and level
 meter 0-10 V (manual/parts/stations); roller conveyor default velocity 0.45 m/s (manual/parts/sensors); the driver
 multiplies sensor values by Scale and divides actuator values by it (manual/drivers/modbus-server), Scale = 100.
-OpenPLC Runtime polls the slave device every 100 ms (default of webserver/openplc.db at the pinned commit).
+OpenPLC Runtime polls the slave device every 100 ms (default of webserver/openplc.db at the pinned commit); the
+simulation exchanges inputs and outputs every 100 ms rounded to a whole number of scans.
 Assumptions where the documentation is silent: the outflow is proportional to the discharge-valve opening and to the
 square root of the level (Torricelli; with the official pipe radius, sqrt(2 g 3 m) gives 0.377 m3/s at a full tank,
 close to the official 0.3543 m3/s); valves follow their command at once; a level switch is on while the level is at
@@ -44,7 +46,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCENE_MODEL = 'scene model v1 (2026-11-13)'
-TS = 0.02          # task interval of the fixed configuration (s)
+TS = 0.02          # task interval of the fixed configuration (s); a program's own configuration may set another
 POLL = 0.1         # OpenPLC slave-device polling period (s)
 A_TANK = math.pi * 1.0 ** 2
 H_TANK = 3.0
@@ -150,8 +152,10 @@ class PLC:
         self.lib.vc_set.argtypes = [ctypes.c_char_p, ctypes.c_int]
         self.lib.vc_set.restype = ctypes.c_int
         self.lib.vc_ticktime.restype = ctypes.c_ulonglong
-        if self.lib.vc_ticktime() != int(TS * 1e9):
-            raise RuntimeError('task interval differs from 20 ms')
+        tick = self.lib.vc_ticktime()
+        if tick == 0:
+            raise RuntimeError('the configuration defines no task interval')
+        self.ts = tick / 1e9              # one scan per task interval of the configuration (20 ms when appended)
         self.names = {}
         self.missing = set()
 
@@ -183,7 +187,8 @@ class Bench:
 
     def __init__(self, plc, plant, phase=0):
         self.plc, self.plant = plc, plant
-        self.n_poll = int(round(POLL / TS))
+        self.dt = plc.ts
+        self.n_poll = max(1, int(round(POLL / self.dt)))
         self.k = phase
         self.t = 0.0
         plc.reset()
@@ -203,8 +208,8 @@ class Bench:
             self.plant.actuate({loc: self.plc.get(loc) for loc in self.plant.actuators})
         self.k += 1
         self.plc.scan()
-        self.plant.step(TS)
-        self.t += TS
+        self.plant.step(self.dt)
+        self.t += self.dt
 
     def run_until(self, cond, t_max):
         while self.t < t_max - 1e-9:
@@ -342,7 +347,7 @@ def _restart(b, loc):
 def _stop_latency(b, out_locs):
     """Scans from the first scan with StopCommand in the input image until every output in out_locs is 0."""
     n = 0
-    while b.plc.get('%IX100.1') == 0 and n < 100:
+    while b.plc.get('%IX100.1') == 0 and n < max(100, 3 * b.n_poll):
         b.step()
         n += 1
     m = 0
@@ -423,7 +428,7 @@ def t3(plc, case, v):
         if t_lsh is None and p.lsh():
             t_lsh, open_at_lsh = b.t, p.cmd_f > 0
         if t_lsh is not None and p.cmd_f > 0:
-            fill_after += TS
+            fill_after += b.dt
         s = 1 if p.cmd_f > 0 else 0
         if s != state:
             segs.append((state, round(b.t - t_last, 2), b.t))
@@ -432,13 +437,14 @@ def t3(plc, case, v):
             t_end = t_last
             break
     # before LSH: every completed filling phase and pause lasts 5 s (the phase cut short by LSH is not counted);
-    # after LSH: the fill valve stays closed, apart from at most 0.25 s (reaction through two polling periods and a scan)
+    # after LSH: the fill valve stays closed, apart from at most two polling periods and a scan (0.25 s at 20 ms)
     before = [(st, d) for st, d, t_seg in segs if t_lsh is None or t_seg < t_lsh - 1e-9]
     fills = [d for st, d in before if st == 1]
     pauses = [d for st, d in before if st == 0]
     ok_alt = len(fills) >= 1 and len(pauses) >= 1 and all(abs(d - 5.0) <= 0.5 for d in fills + pauses)
     restart = t_end is not None and _restart(b, '%QX100.0')
-    ok = t_end is not None and ok_alt and fill_after <= 0.25 + 1e-9 and not p.lshh_seen and restart
+    after_max = 2 * POLL + b.dt + 0.03
+    ok = t_end is not None and ok_alt and fill_after <= after_max + 1e-9 and not p.lshh_seen and restart
     n_fill = len(fills) + (1 if open_at_lsh else 0)
     m = {'fill_phases': n_fill, 'end_s': round(t_end - 1.0, 1) if t_end else None, 'lshh': p.lshh_seen,
          'fill_after_lsh_s': round(fill_after, 2)}
@@ -516,7 +522,7 @@ def test_program(src_text, task, openplc, cache, variants=None):
         log.append('verdict: 0 (nothing the runtime could run)')
         return 0, log, result
     verdict = 1
-    missing = set()
+    missing, intervals = set(), set()
     runs = [('nominal', {})] + sorted((variants or {}).items())
     for label, v in runs:
         passed = 0
@@ -528,6 +534,7 @@ def test_program(src_text, task, openplc, cache, variants=None):
                     log.extend('   %s (%s): %s' % (task, case, l) for l in plog)
             try:
                 plc = PLC(text, openplc, cache)
+                intervals.add(plc.ts)
                 ok, detail, metrics = run_situation(plc, task, case, v)
                 missing |= plc.missing
             except Exception as e:                        # build or load failure of a compiled program
@@ -543,6 +550,8 @@ def test_program(src_text, task, openplc, cache, variants=None):
             log.append('sensitivity, %s: %d/%d situations pass' % (label, passed, len(SITUATIONS[task])))
     if missing:
         log.append('I/O not declared by the program (not connected): %s' % ', '.join(sorted(missing)))
+    if intervals:
+        log.append('task interval of the configuration: %s' % ', '.join('%g ms' % (x * 1e3) for x in sorted(intervals)))
     log.append('verdict: %d' % verdict)
     result['verdict'] = verdict
     return verdict, log, result
@@ -646,8 +655,19 @@ SELFTEST = {  # programs that must fail every situation (no task-card solution i
 }
 
 
+_T1_LATCH = ('PROGRAM Main\n  VAR\n    SensorA AT %IX100.0 : BOOL;\n    SensorB AT %IX100.1 : BOOL;\n'
+             '    Conveyor AT %QX100.0 : BOOL;\n  END_VAR\n  VAR\n    latch : RS;\n  END_VAR\n'
+             '  latch(S := SensorA, R1 := SensorB);\n  Conveyor := latch.Q1;\nEND_PROGRAM\n'
+             'CONFIGURATION Config0\n  RESOURCE Res0 ON PLC\n    TASK task0(INTERVAL := {INTERVAL}, PRIORITY := 0);\n'
+             '    PROGRAM instance0 WITH task0 : Main;\n  END_RESOURCE\nEND_CONFIGURATION\n')
+SELFTEST_PASS = {  # a program that brings its own configuration runs at its own task interval and must pass
+    'T1 latch, own task 100 ms': ('T1', _T1_LATCH.replace('{INTERVAL}', 'T#100ms')),
+    'T1 latch, own task 10 ms': ('T1', _T1_LATCH.replace('{INTERVAL}', 'T#10ms')),
+}
+
+
 def selftest(a):
-    """Plant sanity and programs that must fail every situation."""
+    """Plant sanity, programs that must fail every situation, and programs with their own task interval that must pass."""
     ok = True
     p = DigitalTank()
     p.cmd_f = 1.0
@@ -667,6 +687,11 @@ def selftest(a):
             good = verdict == 0 and len(fails) == len(SITUATIONS[task])
             ok &= good
             print('%-4s %-28s verdict %d, situations failed %d/%d' % ('ok' if good else 'FAIL', name, verdict, len(fails), len(SITUATIONS[task])))
+        for name, (task, text) in SELFTEST_PASS.items():
+            verdict, log, result = test_program(text, task, a.openplc, cache)
+            good = verdict == 1
+            ok &= good
+            print('%-4s %-28s verdict %d (%s)' % ('ok' if good else 'FAIL', name, verdict, log[-2]))
     finally:
         shutil.rmtree(cache, ignore_errors=True)
     print('selftest:', 'passed' if ok else 'FAILED')

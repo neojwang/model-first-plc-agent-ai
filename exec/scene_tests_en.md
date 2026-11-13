@@ -22,7 +22,7 @@ Parameters: before upload, set_params.py sets the initial values of the paramete
 
 ## How the simulation judges each situation
 
-The compiled program is driven exactly as OpenPLC Runtime drives it (one scan every 20 ms; the slave device polled every 100 ms). Nominal scene model v1: tank height 3 m and diameter 2 m, maximum input flow 0.25 m3/s, maximum output flow 0.3543 m3/s, outflow proportional to the discharge-valve opening and to the square root of the level, valves that follow their command at once, LSH at 2.4 m and LSHH at 2.7 m, register value = volts x 100 (driver Scale 100); conveyor at 0.45 m/s, sensor B 2.0 m downstream of sensor A, boxes 0.4 m long that stop with the conveyor; buttons pressed for 0.3 s. Timing tolerances allow for the polling period.
+The compiled program is driven exactly as OpenPLC Runtime drives it (one scan per task interval: 20 ms for the configuration that compile_check.py appends, or the interval of the program's own configuration; the slave device polled every 100 ms, rounded to a whole number of scans). Nominal scene model v1: tank height 3 m and diameter 2 m, maximum input flow 0.25 m3/s, maximum output flow 0.3543 m3/s, outflow proportional to the discharge-valve opening and to the square root of the level, valves that follow their command at once, LSH at 2.4 m and LSHH at 2.7 m, register value = volts x 100 (driver Scale 100); conveyor at 0.45 m/s, sensor B 2.0 m downstream of sensor A, boxes 0.4 m long that stop with the conveyor; buttons pressed for 0.3 s. Timing tolerances allow for the polling period.
 
 | Task | Situation | Operational criterion |
 |---|---|---|
@@ -30,7 +30,7 @@ The compiled program is driven exactly as OpenPLC Runtime drives it (one scan ev
 | T2 | (a) | The fill valve opens within 1 s of the start and closes 15 s (± 0.5 s) later, below LSH; it stays closed and the level stays constant for 5 s; a new start opens it again and StopCommand closes it (step 0) |
 | T2 | (b) | The fill valve closes while LSHH is on and before 59.5 s; it stays closed and the level stays constant for 5 s; step 0 as in (a) |
 | T2 | (c) | StopCommand is pressed 5 s after opening; the fill-valve output is 0 at most one scan after StopCommand enters the input image; step 0 as in (a) |
-| T3 | (a) | Before the level reaches LSH, every filling phase and pause lasts 5 s (± 0.5 s); after it, the fill valve is open for at most 0.25 s in total and then stays closed for 10 s; LSHH is never on; step 0 as in T2 (a) |
+| T3 | (a) | Before the level reaches LSH, every filling phase and pause lasts 5 s (± 0.5 s); after it, the fill valve is open for at most two polling periods plus one scan in total (0.25 s at 20 ms) and then stays closed for 10 s; LSHH is never on; step 0 as in T2 (a) |
 | T3 | (b) | StopCommand in the first pause: the valve stays closed for 8 s; a new start opens it; StopCommand while filling: it stays closed for 6 s |
 | T4 | (a) | From an empty tank: the level stays below 0.9 of the span; the program closes both valves within 900 s with the level within 0.02 of the set point; step 0: a new start opens the discharge valve and StopCommand closes it |
 | T4 | (b) | StopCommand 40 s after the start: both outputs are 0 at most one scan after StopCommand enters the input image; step 0 as in (a) |
