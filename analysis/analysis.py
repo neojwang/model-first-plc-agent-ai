@@ -148,7 +148,7 @@ def report_runs(rows, out):
 
 
 def table9(rows, path):
-    """Table 9 of the paper (Section 5.5) as CSV: one row per task and condition, then the primary test."""
+    """Results table of the paper (Section 5.5) as CSV: one row per task and condition, then the primary test."""
     by = defaultdict(list)
     for r in rows:
         by[(r['task_id'], r['condition'])].append(r)
@@ -219,7 +219,7 @@ def main():
     report_runs(rows, out)
     if t9:
         table9(rows, t9)
-        out.write('Table 9 written to %s\n\n' % t9)
+        out.write('Results table (Section 5.5) written to %s\n\n' % t9)
 
 
 if __name__ == '__main__':

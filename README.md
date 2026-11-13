@@ -11,6 +11,7 @@ Status: the materials are released before the experiment. The prompts are frozen
 | `exec/render_prompt.py` | Fills a template with a task card and the earlier response of the same lane |
 | `exec/freeze_prompts.py` | SHA-256 manifest of the prompts, written before the first generation and verified before every session |
 | `exec/make_run_plan.py`, `exec/run_plan.csv` | Randomized run plan: 4 tasks × 2 conditions × 30 samples (seed 20261112) |
+| `docs/use_case_variables.md` | Variables of the three tank use cases referred to in Section 5.2 of the paper, with the names and addresses of the task cards |
 | `exec/scene_tests_en.md` | Scene tests and pass criteria |
 | `exec/compile_check.py` | Compile check (compiled, a2_compiled): repeats the first three steps of the compilation script of OpenPLC Runtime version 3 at the pinned commit (iec2c, then g++ on Config0.c and Res0.c), writes the compilation log, and writes the file to upload for the scene test |
 | `exec/scene_sim.py` | Scene tests (scene_test_pass, a2_scene_test_pass) by closed-loop simulation: the compiled program, run as OpenPLC Runtime runs it (one scan per task interval of its configuration), drives models of the Factory I/O scenes (nominal scene model v1, documented in `scene_tests_en.md`); no Factory I/O needed; `--sensitivity` reruns under alternative assumptions |
@@ -19,7 +20,7 @@ Status: the materials are released before the experiment. The prompts are frozen
 | `exec/score_models.py` | Fills the model columns of the run sheet: criterion (iii) and, for the tank tasks, the model check of the A1 GRAFCET (writes a NuSMV model per sample) |
 | `nusmv/grafcet2smv.py` | GRAFCET (JSON) to NuSMV translator with an explicit-state pre-check; one model step is one evolution to a stable situation |
 | `nusmv/tank_reference.*` | Reference GRAFCET of the tank tasks, its NuSMV model, and the pre-check log (properties P1–P4, well-formedness W1–W5, seeded faults) |
-| `analysis/analysis.py` | Wilson intervals, pass@k, Fisher's exact test, Cochran–Mantel–Haenszel test (primary test of RQ1), false accepts and Cohen's kappa (RQ2); `--table9` writes Table 9 |
+| `analysis/analysis.py` | Wilson intervals, pass@k, Fisher's exact test, Cochran–Mantel–Haenszel test (primary test of RQ1), false accepts and Cohen's kappa (RQ2); `--table9` writes the results table of Section 5.5 |
 | `analysis/power_sim.py` | Monte Carlo power of the Cochran–Mantel–Haenszel test quoted in Section 3.2 |
 | `results/` (added after the experiment) | Run sheet `runs.csv`; the text artifacts of every sample (IDEF0 and GRAFCET models, ST code, NuSMV models, compilation and test logs); `manifest.csv` with the SHA-256 of every artifact. Screen recordings of the scene tests are listed in the manifest but not included |
 
