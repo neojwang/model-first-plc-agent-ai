@@ -1,0 +1,50 @@
+Synchronous check of ST programs against GVM programs (gvm/st_match.py --reference)
+date (UTC): 2026-11-14 08:55
+Python 3.13.18; g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; scene model v1 (2026-11-13)
+SHA-256 (first 16): st_match.py 6164ff19e9517c97, gvm_scene.py d1f907d11f02001e, scene_sim.py ca4d6772c24dfadc
+
+1. Reference ST programs (pilot/upload/) against the reference GRAFCETs (gvm/reference/): must match.
+T1: match 1, lasting differences 0
+   T1 (scene): 2096 scans, 0 different, 0 lasting (longest 0 scans)
+T2: match 1, lasting differences 0
+   T2 (a): 1436 scans, 0 different, 0 lasting (longest 0 scans)
+   T2 (b): 2436 scans, 1 different, 0 lasting (longest 1 scans)
+   T2 (c): 441 scans, 0 different, 0 lasting (longest 0 scans)
+T3: match 1, lasting differences 0
+   T3 (a): 3752 scans, 1 different, 0 lasting (longest 1 scans)
+   T3 (b): 1166 scans, 0 different, 0 lasting (longest 0 scans)
+T4: match 1, lasting differences 0
+   T4 (a): 4976 scans, 0 different, 0 lasting (longest 0 scans)
+   T4 (b): 2191 scans, 0 different, 0 lasting (longest 0 scans)
+   T4 (c): 400 scans, 1 different, 0 lasting (longest 1 scans)
+
+2. Seeded faults of the GRAFCET (gvm/gvm_scene.py) against the reference ST programs: must not match.
+F01 T1, conveyor on step x0 instead of x1: match 0, lasting 1 -> detected
+F02 T1, stop at sensor B removed (guard FALSE): match 0, lasting 1 -> detected
+F03 T2, LSHH removed from the end of filling: match 0, lasting 2 -> detected
+F04 T2, stop removed from the end of filling: match 0, lasting 2 -> detected
+F05 T2, timer owned by step x0: match 0, lasting 1 -> detected
+F06 T3, tof_q neutral FALSE (rule 5 violated): match 0, lasting 4 -> detected
+F07 T3, ton_q owned by the pause step: match 0, lasting 4 -> detected
+F08 T3, LSH removed from the end of filling: match 0, lasting 1 -> detected
+F09 T4, r = HIGH removed from the end of regulation: match 0, lasting 1 -> detected
+F10 T4, settled neutral TRUE: match 0, lasting 2 -> detected
+F11 T4, discharge valve never held: match 0, lasting 4 -> detected
+
+3. Seeded faults of the ST programs (pilot/vc/vc_check.py) against the reference GRAFCETs: a fault of the
+   sequence must not match; a fault of the PID controller is outside the comparison; SR in place of RS is
+   a variant that the task card allows.
+T1 M1 set and reset swapped (fault of the sequence): match 0, lasting 1 -> as expected
+T1 M2 never reset (fault of the sequence): match 0, lasting 5 -> as expected
+T1 M3 set dominant (SR) (allowed variant): match 1, lasting 0 -> as expected
+T2 M1 LSHH ignored (fault of the sequence): match 0, lasting 1 -> as expected
+T2 M2 stop ignored (fault of the sequence): match 0, lasting 3 -> as expected
+T2 M3 timer never started (fault of the sequence): match 0, lasting 1 -> as expected
+T3 M1 LSH ignored (fault of the sequence): match 0, lasting 1 -> as expected
+T3 M2 pause never ends (fault of the sequence): match 0, lasting 6 -> as expected
+T3 M3 stop ignored (fault of the sequence): match 0, lasting 3 -> as expected
+T4 M1 no anti-windup (controller, not compared): match 1, lasting 0 -> as expected
+T4 M2 overfill limit ignored (fault of the sequence): match 0, lasting 1 -> as expected
+T4 M3 stop ignored (fault of the sequence): match 0, lasting 3 -> as expected
+
+verdict: the references match, every seeded fault of the sequence is detected

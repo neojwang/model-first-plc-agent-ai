@@ -25,7 +25,9 @@ vocabulary of the task card, the same for every GRAFCET:
   * outputs: T1 conveyor; T2 and T3 fill_valve and discharge_valve; in T4, fill_valve TRUE lets a PID controller drive
     the fill valve and discharge_valve TRUE holds the discharge valve at 40 % (task card), the PID being the algorithm
     of pilot/reference/T4_ref.st (integral reset on entry, clamping to 0-100 % with integration suspended while
-    clamped) with the gains of the situation.  An output of the task card that the GRAFCET does not give is held FALSE.
+    clamped) with the gains of the situation; as in that program, the level, the error, the band check and the PID
+    are computed in REAL (32-bit) arithmetic, rounded after every operation.  An output of the task card that the
+    GRAFCET does not give is held FALSE.
 Step 0.  The scene tests take a new start that opens the output, and StopCommand that closes it, as evidence that an
 ST program has returned to step 0 (exec/scene_tests_en.md); the GVM programs get the same probe.  The one exception
 is a new start while the level already meets the end condition of the started step (LSHH on in T2, LSH on in T3,
@@ -59,6 +61,7 @@ import os
 import platform
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -296,6 +299,14 @@ def situation_params(task, case):
     return p
 
 
+def f32(x):
+    """x rounded to an IEC 61131-3 REAL (IEEE 754 single precision)."""
+    return struct.unpack('<f', struct.pack('<f', x))[0]
+
+
+R_SP, R_MAX, R_EPS, R_UD, R_FS = f32(H_SP), f32(H_MAX), f32(EPS), f32(U_D), f32(float(FULL_SCALE))
+
+
 def real_to_int(x):
     return int(math.floor(x + 0.5)) if x >= 0 else -int(math.floor(-x + 0.5))
 
@@ -310,7 +321,7 @@ class GvmPLC:
         self.enum = {n: list(v) for n, v in spec['inputs'].items() if v != 'boolean'}
         self.owned = {c: (o['step'], KIND[c], params[o['preset'].lower()]) for c, o in spec['owned'].items()}
         self.init = {x for g in spec['graphs'] for x in g['initial']}
-        self.rec, self.unstable = [], 0
+        self.rec, self.unstable, self.o = [], 0, {}
         self.init_sit = tuple(x in self.init for x in core.steps)
 
     def reset(self):
@@ -346,14 +357,14 @@ class GvmPLC:
             val['start'] = 1 if (btn and not self.prev_start) else 0
             val['stop'] = self._in('stop')
             if task == 'T4':
-                h = self._in('level') / float(FULL_SCALE)
-                e = H_SP - h
-                val['r'] = 2 if h >= H_MAX else (1 if h >= H_SP else 0)
+                h = f32(f32(float(self._in('level'))) / R_FS)
+                e = f32(R_SP - h)
+                val['r'] = 2 if h >= R_MAX else (1 if h >= R_SP else 0)
             else:
                 e = 0.0
                 val['r'] = 2 if self._in('lshh') else (1 if self._in('lsh') else 0)
             for c, (s, kind, pt) in self.owned.items():
-                cond = s in self.active and (kind != 'hold' or abs(e) <= EPS + 1e-12)
+                cond = s in self.active and (kind != 'hold' or abs(e) <= R_EPS)
                 if cond:
                     if self.t_on[c] is None:
                         self.t_on[c] = j
@@ -369,15 +380,15 @@ class GvmPLC:
         self.unstable += not stable
         self.sit = sit
         self.active = {x for x, a in zip(self.core.steps, sit) if a}
-        o = dict(zip(self.core.outputs, outs))
+        o = self.o = dict(zip(self.core.outputs, outs))   # GRAFCET outputs of this scan (gvm/st_match.py)
         if task == 'T4':
             fill, dis = o.get('fill_valve', False), o.get('discharge_valve', False)
             if fill:
-                kp, ti, td = self.p['kp'], self.p['ti'], self.p['td']
+                kp, ti, td, rts = f32(self.p['kp']), f32(self.p['ti']), f32(self.p['td']), f32(ts)
                 if not self.fill_prev:
                     self.i_term, self.e_prev = 0.0, e
-                d_term = kp * td * (e - self.e_prev) / ts if ts > 0 else 0.0
-                u_raw = kp * e + self.i_term + d_term
+                d_term = f32(f32(f32(kp * td) * f32(e - self.e_prev)) / rts) if rts > 0 else 0.0
+                u_raw = f32(f32(f32(kp * e) + self.i_term) + d_term)
                 if u_raw > 1.0:
                     u = 1.0
                 elif u_raw < 0.0:
@@ -385,12 +396,12 @@ class GvmPLC:
                 else:
                     u = u_raw
                     if ti > 0:
-                        self.i_term += kp * ts / ti * e
+                        self.i_term = f32(self.i_term + f32(f32(f32(kp * rts) / ti) * e))
                 self.e_prev = e
-                self.out['%QW100'] = real_to_int(u * FULL_SCALE)
+                self.out['%QW100'] = real_to_int(f32(u * R_FS))
             else:
                 self.out['%QW100'] = 0
-            self.out['%QW101'] = real_to_int(U_D * FULL_SCALE) if dis else 0
+            self.out['%QW101'] = real_to_int(f32(R_UD * R_FS)) if dis else 0
             self.fill_prev = fill
         else:
             for name, loc in LOC_OUT[task].items():

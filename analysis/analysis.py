@@ -96,7 +96,7 @@ def report_runs(rows, out):
     for r in rows:
         by[(r['task_id'], r['condition'])].append(r)
     tasks = sorted({t for t, _ in by})
-    out.write('## RQ1: generation results per task\n\n')
+    out.write('## RQ1, secondary since 2026-11-14: ST programs compiled with matiec and run in the scene tests (OpenPLC)\n\n')
     out.write('| Task | Condition | n | Compiled | R_syn [95% CI] | Passed | R_fun [95% CI] | pass@1 | pass@5 |\n')
     out.write('|---|---|---|---|---|---|---|---|---|\n')
     tables = []
@@ -117,7 +117,7 @@ def report_runs(rows, out):
         tables.append((a, bb, c, d))
         out.write('| %s | Fisher exact (workflow vs baseline, R_fun) | | | | | p = %.4f | | |\n' % (t, fisher_exact(a, bb, c, d)))
     chi2, p, orr = cmh(tables)
-    out.write('\nPrimary test of RQ1 - Cochran-Mantel-Haenszel test over tasks (R_fun, continuity-corrected): '
+    out.write('\nSecondary test of RQ1 (primary until 2026-11-14) - Cochran-Mantel-Haenszel test over tasks (R_fun, continuity-corrected): '
               'chi2 = %.3f, p = %.4f, MH common odds ratio = %.2f. The per-task Fisher tests above are descriptive.\n\n'
               % (chi2, p, orr))
 
@@ -148,10 +148,12 @@ def report_runs(rows, out):
 
 
 def report_gvm(rows, out):
-    """Secondary, descriptive (no test): the A1 and A2 GRAFCET models of the workflow samples run as the Python and
-    C++ programs of the GVM in the registered situations (gvm/gvm_scene.py).  NA counts as not passed."""
+    """Primary since 2026-11-14 (author's decision after the first pilot): the A1 and A2 GRAFCET models of the
+    workflow samples run as the Python and C++ programs of the GVM in the registered situations (gvm/gvm_scene.py),
+    reported per task with Wilson 95% intervals; NA counts as not passed.  Then, descriptive: whether the ST program of
+    each lane follows the GVM program of its GRAFCET (gvm/st_match.py)."""
     wf = [r for r in rows if r['condition'] == 'workflow']
-    out.write('## GRAFCET models run as GVM programs (secondary, descriptive; gvm/gvm_scene.py)\n\n')
+    out.write('## RQ1, primary since 2026-11-14: GRAFCET models run as GVM programs (gvm/gvm_scene.py)\n\n')
     if not any(r.get('gvm_py_scene_pass', '').strip() for r in wf):
         out.write('No results in runs.csv yet (python3 gvm/gvm_scene.py runs.csv --base DIR --write).\n\n')
         return
@@ -175,6 +177,19 @@ def report_gvm(rows, out):
     out.write('| | ST program passed | ST program failed |\n|---|---|---|\n')
     out.write('| GRAFCET passed | %d | %d |\n| GRAFCET failed or NA | %d | %d |\n\n' % (
         cell[(True, True)], cell[(True, False)], cell[(False, True)], cell[(False, False)]))
+    out.write('## ST programs against the GVM programs of their GRAFCET (descriptive; gvm/st_match.py)\n\n')
+    if not any(r.get('st_gvm_match', '').strip() for r in wf):
+        out.write('No results in runs.csv yet (python3 gvm/st_match.py --openplc DIR runs.csv --base DIR --write).\n\n')
+        return
+    out.write('| Task | Lane | n | match | no match | NA | lasting differences |\n|---|---|---|---|---|---|---|\n')
+    for t in sorted({r['task_id'] for r in wf}):
+        rs = [r for r in wf if r['task_id'] == t]
+        for lane, pre in (('A1', ''), ('A2', 'a2_')):
+            m = [val(r, pre + 'st_gvm_match') for r in rs]
+            lasting = sum(int(val(r, pre + 'st_gvm_lasting')) for r in rs if val(r, pre + 'st_gvm_lasting').isdigit())
+            out.write('| %s | %s | %d | %d | %d | %d | %d |\n' % (t, lane, len(rs), m.count('1'), m.count('0'),
+                                                                 sum(x in ('', 'NA') for x in m), lasting))
+    out.write('\n')
 
 
 def table9(rows, path):
@@ -246,8 +261,8 @@ def main():
     out = sys.stdout
     out.write('# Analysis report\n\n')
     rows = list(csv.DictReader(open(args[0], encoding='utf-8')))
-    report_runs(rows, out)
     report_gvm(rows, out)
+    report_runs(rows, out)
     if t9:
         table9(rows, t9)
         out.write('Results table (Section 5.5) written to %s\n\n' % t9)

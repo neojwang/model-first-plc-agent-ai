@@ -1,7 +1,7 @@
 GVM scene tests of the reference GRAFCETs and seeded faults (gvm/gvm_scene.py --reference)
-date (UTC): 2026-11-14 05:19
+date (UTC): 2026-11-14 08:55
 Python 3.13.18; g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; scene model v1 (2026-11-13)
-SHA-256 (first 16): gvm_scene.py 3bc3cdde98e46c70, grafcet2gvm.py a4831abb3166b0e2, grafcet2smv.py 30c053165cdaed3c, scene_sim.py ca4d6772c24dfadc
+SHA-256 (first 16): gvm_scene.py d1f907d11f02001e, grafcet2gvm.py a4831abb3166b0e2, grafcet2smv.py 30c053165cdaed3c, scene_sim.py ca4d6772c24dfadc
 
 1. Reference GRAFCETs (gvm/reference/T1-T4_ref.json): every registered situation must pass in Python and C++,
    with E3 = 0; the alternative assumptions of scene_sim.py --sensitivity are reported, not judged.
@@ -36,10 +36,10 @@ T3_ref.json (SHA-256 5a5458d00fc5700b; description 8aca89158f51e068): Python 1, 
    sensitivity (Python), switches -0.05 m: 2/2 situations pass
    sensitivity (Python), valve lag 1 s: 2/2 situations pass
 T4_ref.json (SHA-256 84128fb9e8eff9e6; description 74d8f34974c6cd24): Python 1, C++ 1, E3 0 -> ok
-   Python: T4 (a): pass - ended after 94.1 s; highest level 0.785; end error 0.015; step 0 ok
+   Python: T4 (a): pass - ended after 95.8 s; highest level 0.786; end error 0.014; step 0 ok
    Python: T4 (b): pass - both outputs 0 0 scan(s) after StopCommand; restart ok
    Python: T4 (c): pass - valves closed within 1 s and kept closed
-   C++: T4 (a): pass - ended after 94.1 s; highest level 0.785; end error 0.015; step 0 ok
+   C++: T4 (a): pass - ended after 95.8 s; highest level 0.786; end error 0.014; step 0 ok
    C++: T4 (b): pass - both outputs 0 0 scan(s) after StopCommand; restart ok
    C++: T4 (c): pass - valves closed within 1 s and kept closed
    E3 (C++ against Python on the Python closed loops): 0 tick(s)
