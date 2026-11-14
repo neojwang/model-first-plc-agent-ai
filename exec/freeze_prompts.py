@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Freeze the prompts before the experiment: SHA-256 of every task card and template.
+"""Freeze the prompts before the experiment: SHA-256 of every task card and template, and of run_llm.py
+(the call settings and the transcription rule).
 
   python3 freeze_prompts.py            # writes prompts_manifest.json (run once, before the first generation)
   python3 freeze_prompts.py --verify   # exits with status 1 if any prompt file changed since freezing
@@ -20,6 +21,9 @@ def digest_all():
         for name in sorted(os.listdir(os.path.join(ROOT, sub))):
             p = os.path.join(ROOT, sub, name)
             out['%s/%s' % (sub, name)] = hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    runner = os.path.join(HERE, 'run_llm.py')
+    if os.path.exists(runner):
+        out['run_llm.py'] = hashlib.sha256(open(runner, 'rb').read()).hexdigest()
     return out
 
 

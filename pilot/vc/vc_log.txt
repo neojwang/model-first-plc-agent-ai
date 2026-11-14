@@ -1,0 +1,65 @@
+L1 syntax: upload files and their scene-test variants compiled with iec2c and g++ (exec/scene_sim.py glue)
+   T1_ref_openplc.st      sha256 c37438af7160ae25
+   T2_ref_openplc.st      sha256 46a9f2de16a07236
+   T3_ref_openplc.st      sha256 2f448962cc87dcea
+   T4_ref_openplc.st      sha256 0313191536383aec
+   9 programs built
+
+L3 function: registered situations, nominal scene model (scene model v1 (2026-11-13))
+   ok   T1   scene  five boxes stopped and stayed at sensor B
+   ok   T2   (a)    closed after 15.00 s at h = 1.19 m; step 0 ok
+   ok   T2   (b)    closed after 34.10 s at h = 2.714 m (LSHH on); step 0 ok
+   ok   T2   (c)    fill valve off 0 scan(s) after StopCommand; restart ok
+   ok   T3   (a)    7 filling phases before LSH, 6 pauses; fill after LSH 0.16 s; LSHH not reached
+   ok   T3   (b)    stop in pause True, restart True, stop in filling True
+   ok   T4   (a)    ended after 95.8 s; highest level 0.786; end error 0.014; step 0 ok
+   ok   T4   (b)    both outputs 0 0 scan(s) after StopCommand; restart ok
+   ok   T4   (c)    valves closed within 1 s and kept closed
+   ok   T1   extra  (not registered) box at B kept, conveyor stayed off
+
+L3 function: own configuration with another task interval (every registered situation must pass)
+   ok   T1   T#10ms   1/1 situations pass (task interval of the configuration: 10 ms)
+   ok   T1   T#100ms  1/1 situations pass (task interval of the configuration: 100 ms)
+   ok   T2   T#10ms   3/3 situations pass (task interval of the configuration: 10 ms)
+   ok   T2   T#100ms  3/3 situations pass (task interval of the configuration: 100 ms)
+   ok   T3   T#10ms   2/2 situations pass (task interval of the configuration: 10 ms)
+   ok   T3   T#100ms  2/2 situations pass (task interval of the configuration: 100 ms)
+   ok   T4   T#10ms   3/3 situations pass (task interval of the configuration: 10 ms)
+   ok   T4   T#100ms  3/3 situations pass (task interval of the configuration: 100 ms)
+
+L3 function: robustness grid (every combination must pass)
+   ok   T1     48 situation runs over 48 combinations, 0 failed
+   ok   T2     54 situation runs over 18 combinations, 0 failed
+   ok   T3     36 situation runs over 18 combinations, 0 failed
+   ok   T4    612 situation runs over 204 combinations, 0 failed (highest level 0.802, latest end 257.5 s)
+
+L2 logic: properties P1-P4 on the compiled code (300 random sequences x 400 scans each)
+   ok   T2   P1 32390/32390, P2 9640/9640, P3 122/122, P4 300/300
+   ok   T3   P1 32390/32390, P2 9640/9640, P3 61/61, P4 300/300
+   ok   T4   P1 32689/32689, P2 10882/10882, P3 71/71, P4 300/300
+
+Configuration faults (each must make a registered situation fail)
+   fails  T2   stop button normally closed    fill valve did not open within 1 s of the start
+   fails  T3   stop button normally closed    fill valve did not open within 1 s of the start
+   fails  T4   stop button normally closed    no valve opened within 1 s of the start
+   fails  T4   driver Scale 1 instead of 100  did not end within 900 s; highest level 0.498
+
+Seeded faults: the references pass every check; each fault must fail a registered situation or a property
+   reference T1  scene pass, extra pass
+   reference T2  (a) pass, (b) pass, (c) pass, P1 pass, P2 pass, P3 pass, P4 pass
+   reference T3  (a) pass, (b) pass, P1 pass, P2 pass, P3 pass, P4 pass
+   reference T4  (a) pass, (b) pass, (c) pass, P1 pass, P2 pass, P3 pass, P4 pass
+   caught  T1  M1 set and reset swapped   failed: scene, extra
+   caught  T1  M2 never reset             failed: scene, extra
+   allowed T1  M3 set dominant (SR)       failed: extra  (variant permitted by the task card; registered checks pass)
+   caught  T2  M1 LSHH ignored            failed: (b), P1, P3, P4
+   caught  T2  M2 stop ignored            failed: (a), (c), P2
+   caught  T2  M3 timer never started     failed: (a)
+   caught  T3  M1 LSH ignored             failed: (a), P1, P3, P4
+   caught  T3  M2 pause never ends        failed: (a), P4
+   caught  T3  M3 stop ignored            failed: (b), P2
+   caught  T4  M1 no anti-windup          failed: (a)
+   caught  T4  M2 overfill limit ignored  failed: (c), P4
+   caught  T4  M3 stop ignored            failed: (a), (b), P2
+
+result: all checks passed; every seeded fault caught

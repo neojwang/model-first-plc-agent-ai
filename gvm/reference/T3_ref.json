@@ -1,0 +1,83 @@
+{
+ "graphs": [
+  {
+   "name": "G1",
+   "steps": [
+    "x0",
+    "x21",
+    "x22"
+   ],
+   "initial": [
+    "x0"
+   ]
+  }
+ ],
+ "transitions": [
+  {
+   "id": "t1",
+   "from": [
+    "x0"
+   ],
+   "to": [
+    "x21"
+   ],
+   "guard": "start & !stop"
+  },
+  {
+   "id": "t2",
+   "from": [
+    "x21"
+   ],
+   "to": [
+    "x0"
+   ],
+   "guard": "stop | LSH"
+  },
+  {
+   "id": "t3",
+   "from": [
+    "x21"
+   ],
+   "to": [
+    "x22"
+   ],
+   "guard": "!stop & ton_q & !LSH"
+  },
+  {
+   "id": "t4",
+   "from": [
+    "x22"
+   ],
+   "to": [
+    "x21"
+   ],
+   "guard": "!stop & !tof_q"
+  },
+  {
+   "id": "t5",
+   "from": [
+    "x22"
+   ],
+   "to": [
+    "x0"
+   ],
+   "guard": "stop"
+  }
+ ],
+ "outputs": {
+  "fill_valve": "x21",
+  "discharge_valve": "FALSE"
+ },
+ "owned": {
+  "ton_q": {
+   "step": "x21",
+   "neutral": false,
+   "preset": "TON_Duration"
+  },
+  "tof_q": {
+   "step": "x22",
+   "neutral": true,
+   "preset": "TOF_Duration"
+  }
+ }
+}

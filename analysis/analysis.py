@@ -147,6 +147,36 @@ def report_runs(rows, out):
         out.write('Discrepancy classes reported by A2: ' + ', '.join('%s = %d' % kv for kv in sorted(cls.items())) + '\n\n')
 
 
+def report_gvm(rows, out):
+    """Secondary, descriptive (no test): the A1 and A2 GRAFCET models of the workflow samples run as the Python and
+    C++ programs of the GVM in the registered situations (gvm/gvm_scene.py).  NA counts as not passed."""
+    wf = [r for r in rows if r['condition'] == 'workflow']
+    out.write('## GRAFCET models run as GVM programs (secondary, descriptive; gvm/gvm_scene.py)\n\n')
+    if not any(r.get('gvm_py_scene_pass', '').strip() for r in wf):
+        out.write('No results in runs.csv yet (python3 gvm/gvm_scene.py runs.csv --base DIR --write).\n\n')
+        return
+    out.write('| Task | Lane | n | Python passed | R_gvm [95% CI] | C++ passed | NA | E3 > 0 |\n|---|---|---|---|---|---|---|---|\n')
+    val = lambda r, c: r.get(c, '').strip()
+    for t in sorted({r['task_id'] for r in wf}):
+        rs = [r for r in wf if r['task_id'] == t]
+        n = len(rs)
+        for lane, pre in (('A1', ''), ('A2', 'a2_')):
+            kp = sum(val(r, pre + 'gvm_py_scene_pass') == '1' for r in rs)
+            kc = sum(val(r, pre + 'gvm_cpp_scene_pass') == '1' for r in rs)
+            na = sum(val(r, pre + 'gvm_py_scene_pass') in ('', 'NA') for r in rs)
+            e3 = sum(val(r, pre + 'gvm_e3') not in ('', 'NA', '0') for r in rs)
+            lo, hi = wilson(kp, n)
+            out.write('| %s | %s | %d | %d | %.2f [%.2f, %.2f] | %d | %d | %d |\n' % (
+                t, lane, n, kp, kp / n if n else float('nan'), lo, hi, kc, na, e3))
+    cell = defaultdict(int)
+    for r in wf:
+        cell[(val(r, 'gvm_py_scene_pass') == '1', b(r['scene_test_pass']))] += 1
+    out.write('\nA1 GRAFCET (GVM, Python) against the A1 ST program of the same sample (scene_test_pass):\n\n')
+    out.write('| | ST program passed | ST program failed |\n|---|---|---|\n')
+    out.write('| GRAFCET passed | %d | %d |\n| GRAFCET failed or NA | %d | %d |\n\n' % (
+        cell[(True, True)], cell[(True, False)], cell[(False, True)], cell[(False, False)]))
+
+
 def table9(rows, path):
     """Results table of the paper (Section 5.5) as CSV: one row per task and condition, then the primary test."""
     by = defaultdict(list)
@@ -217,6 +247,7 @@ def main():
     out.write('# Analysis report\n\n')
     rows = list(csv.DictReader(open(args[0], encoding='utf-8')))
     report_runs(rows, out)
+    report_gvm(rows, out)
     if t9:
         table9(rows, t9)
         out.write('Results table (Section 5.5) written to %s\n\n' % t9)

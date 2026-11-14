@@ -12,7 +12,7 @@ For every workflow row:
     and properties P1-P4 of Section 3.2 are added to the model; W5 (every evolution reaches a stable situation) is
     reported as a diagnostic and does not enter the verdict.  A .smv file is written next to the JSON for the formal
     NuSMV run; until NuSMV has been run, the verdict comes from the explicit-state pre-check (nusmv_tool = precheck).
-    After running NuSMV, overwrite nusmv_all_hold and nusmv_failed_specs and set nusmv_tool to NuSMV 2.6.
+    nusmv/run_nusmv.py --write then runs NuSMV on these files and replaces the three columns (nusmv_tool = NuSMV 2.6.0).
 """
 import argparse
 import csv
@@ -102,7 +102,7 @@ def main():
             r['a2_accept'] = '1' if all(bit(p) for p in parts) else '0'
         if task in TANK_TASKS:
             if r.get('nusmv_tool', '').startswith('NuSMV'):
-                continue                                  # formal result already entered by hand
+                continue                                  # formal result already entered (nusmv/run_nusmv.py)
             if d1 is None:
                 r['nusmv_all_hold'], r['nusmv_failed_specs'], r['nusmv_tool'] = 'NA', 'unparsable: no A1 GRAFCET', 'precheck'
                 continue

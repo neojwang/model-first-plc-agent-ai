@@ -2,6 +2,7 @@
 """Randomized run plan: 4 tasks x 2 conditions x n samples (default n = 30), seed fixed for reproducibility.
 
   python3 make_run_plan.py [--n 30] [--seed 20261112] > run_plan.csv
+  python3 make_run_plan.py --pilot > pilot_plan.csv      # one trial sample per task and condition, not counted
 Run the generations in the order of run_order; record the outcome columns in the same file (save it as runs.csv).
 """
 import csv
@@ -20,12 +21,12 @@ COLS = ['run_order', 'run_id', 'task_id', 'scene', 'strategy', 'condition', 'sam
         'test_log', 'notes']
 
 
-def main(n, seed):
+def main(n, seed, pilot=False):
     rows = []
     for tid, scene, strat in TASKS:
         for cond in ('workflow', 'baseline'):
             for k in range(1, n + 1):
-                rid = '%s-%s-%02d' % (tid, 'W' if cond == 'workflow' else 'B', k)
+                rid = ('P-' if pilot else '') + '%s-%s-%02d' % (tid, 'W' if cond == 'workflow' else 'B', k)
                 r = {c: '' for c in COLS}
                 r.update(run_id=rid, task_id=tid, scene=scene, strategy=strat, condition=cond, sample_id=k)
                 if cond == 'workflow':
@@ -41,7 +42,8 @@ def main(n, seed):
                     r['nusmv_all_hold'], r['nusmv_failed_specs'], r['nusmv_tool'] = 'NA', 'NA', 'NA'
                 r.update(compile_log='%s/compile.log' % rid, test_log='%s/test.log' % rid)
                 rows.append(r)
-    random.Random(seed).shuffle(rows)
+    if not pilot:
+        random.Random(seed).shuffle(rows)
     for i, r in enumerate(rows, 1):
         r['run_order'] = i
     w = csv.DictWriter(sys.stdout, fieldnames=COLS)
@@ -54,5 +56,6 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Write the randomized run plan as CSV to standard output.')
     ap.add_argument('--n', type=int, default=30, help='samples per task and condition (default 30)')
     ap.add_argument('--seed', type=int, default=20261112, help='random seed (default 20261112)')
+    ap.add_argument('--pilot', action='store_true', help='trial plan: n = 1, ids P-..., not shuffled')
     a = ap.parse_args()
-    main(a.n, a.seed)
+    main(1 if a.pilot else a.n, a.seed, a.pilot)

@@ -1,0 +1,47 @@
+{
+ "graphs": [
+  {
+   "name": "G1",
+   "steps": [
+    "x0",
+    "xE1"
+   ],
+   "initial": [
+    "x0"
+   ]
+  }
+ ],
+ "transitions": [
+  {
+   "id": "t1",
+   "from": [
+    "x0"
+   ],
+   "to": [
+    "xE1"
+   ],
+   "guard": "start & !stop"
+  },
+  {
+   "id": "t2",
+   "from": [
+    "xE1"
+   ],
+   "to": [
+    "x0"
+   ],
+   "guard": "stop | timer_done | LSHH"
+  }
+ ],
+ "outputs": {
+  "fill_valve": "xE1",
+  "discharge_valve": "FALSE"
+ },
+ "owned": {
+  "timer_done": {
+   "step": "xE1",
+   "neutral": false,
+   "preset": "TimerDuration"
+  }
+ }
+}

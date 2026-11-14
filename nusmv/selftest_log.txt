@@ -1,0 +1,55 @@
+stub NuSMV (verdicts printed in reverse order, formulas in extra parentheses):
+  score_models.py --write on the fixtures (pre-check, .smv files)    ok
+  fixture S2 (overfill term deleted): pre-check P1 fails             ok
+  fixture S3 (no stop forcing): pre-check P2 fails                   ok
+  fixture S5 (no A1 GRAFCET): NA, no model                           ok
+  SPEC comment lines give P1-P4, W5 in file order                    ok
+  reverse-order verdicts mapped back by formula text                 ok
+  a false verdict lands on P3 only                                   ok
+  missing verdict is refused                                         ok
+  two properties with the same formula text are refused              ok
+  report-only run leaves runs.csv unchanged                          ok
+  --write keeps runs.csv.bak and returns 0                           ok
+  NuSMV verdict entered over the pre-check (S1)                      ok
+  disagreement listed in nusmv_runs.csv (S1), agreement (S2)         ok
+  row without a model left unchanged (S5)                            ok
+  non-tank task skipped (S6)                                         ok
+  rows already checked by NuSMV are skipped on a second run          ok
+  score_models.py --write on the fixtures (pre-check, .smv files)    ok
+  NuSMV error: exit code 1, pre-check left in place                  ok
+real NuSMV (binary SHA-256 4b7f800ee7ab5a83):
+  score_models.py --write on the fixtures (pre-check, .smv files)    ok
+  NuSMV agrees with the pre-check on the 4 fixture models            ok
+  fixture S1: NuSMV verdict 1/-                                      ok
+  fixture S2: NuSMV verdict 0/P1                                     ok
+  fixture S4: NuSMV verdict 1/-                                      ok
+  fixture S3: NuSMV P2 fails                                         ok
+Formal NuSMV run of the tank reference model and its seeded faults (nusmv/run_nusmv.py --reference)
+run (UTC): 2026-11-14T05:18:59Z
+tool: This is NuSMV 2.6.0 (compiled on Wed Oct 14 15:36:56 2015)
+binary SHA-256: 4b7f800ee7ab5a832112d864996f318830b4e0989b99af8339b19ee88b9871d6
+model: tank_reference.json -> .smv (SHA-256 ddaa6a6c0bbd3c639a792247d0fc36e33dd7ac0165a7a8c40f37adfdf9ec3e9a; identical to nusmv/tank_reference.smv)
+  P1  holds AG (r = HIGH -> AX !fill_valve)
+  P2  holds AG (stop -> AX (x0 & !fill_valve))
+  P3  holds AG ((fill_valve & !stop) -> E [ !stop U !fill_valve ])
+  P4  holds AG (!stop -> E [ !stop U x0 ])
+  W1  holds AG (!(x21 & x22))
+  W2  holds AG (x5 <-> x6)
+  W3  holds AG (!((xE1 | xS1) & (xE2 | x21 | x22 | xS2 | xE3 | xS3)) & !((xE2 | x21 | x22 | xS2) & (xE3 | xS3)))
+  W4  holds AG (x0 | xE1 | xS1 | xE2 | x21 | x22 | xS2 | xE3 | xS3 | x4 | x5 | x6)
+  W5  holds AG stable
+reference model: all specs hold
+seeded faults (a fault is detected when a spec that holds on the reference fails):
+  Ma E1 loses the overfill term LSHH (Table 3)            detected by: P1
+  Mb step 21 can no longer reach S2 (Table 4)             detected by: P1, P4
+  Mc G0 forcing order removed                             detected by: P2
+  Md E3 loses the overfill term h >= h_max (Table 5)      detected by: P1
+  Me End of M2 never fires (S2 is a dead end)             detected by: P4
+  Mf pause step 22 never resumes filling                  detected by: P4
+  Mg E3 is never left                                     detected by: P1, P3, P4
+  Mh steps 21 and 22 ignore the timers (transient cycle)  detected by: W5
+properties that fail on at least one seeded fault: P1, P2, P3, P4, W5
+agreement with the explicit-state pre-check: 9 of 9 specs, 8 of 8 seeded faults
+RESULT all specs hold, all seeded faults detected, same as the pre-check
+  reference model and seeded faults (--reference)                    ok
+SELFTEST passed
