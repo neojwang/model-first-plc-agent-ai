@@ -1,0 +1,4 @@
+# The IEC 61131-3 Structured Text (ST) programs use the extension .st, which
+# GitHub's language detection reports as Smalltalk; keep them out of the
+# language statistics.
+*.st linguist-detectable=false
