@@ -14,6 +14,10 @@ output, while an ST program that fires one transition per scan shows it for one 
 earlier or later.  The verdict is 1 when no difference lasts two scans or more in any registered situation; the
 number of such lasting differences is reported.  NA when the ST program does not compile, or when the GRAFCET does not
 give a program (gvm/gvm_scene.py).
+In T4 the band check |e| <= eps decides when the hold time runs; at the two level counts on the edge of the band
+(h_sp - eps and h_sp + eps) equivalent REAL formulas round differently, so either reading is accepted (amended
+2026-11-15, protocol.md): the GVM program runs every situation once for each reading of the two edge counts (in or
+out of the band), and the situation matches when the ST program agrees with one of them.
 For a workflow sample the ST program of a lane is checked against the GRAFCET of the same lane (A1 ST with A1
 GRAFCET, A2 ST with A2 GRAFCET).
 
@@ -97,7 +101,7 @@ class Shadow:
         else:
             self.run = 0
 
-    # attributes that the step-0 probe of gvm_scene.py reads
+    # situation of the GVM program (kept for diagnostics)
     @property
     def sit(self):
         return self.g.sit
@@ -105,6 +109,15 @@ class Shadow:
     @property
     def init_sit(self):
         return self.g.init_sit
+
+
+EDGES = ((False, True), (False, False), (True, True), (True, False))   # T4: (lower, upper) edge count in the band;
+                                                                    # the first is the registered REAL rule
+
+
+def edge_label(edge):
+    lo, hi = GS.SP_COUNTS - GS.EPS_COUNTS, GS.SP_COUNTS + GS.EPS_COUNTS
+    return '%d %s, %d %s' % (lo, 'in' if edge[0] else 'out', hi, 'in' if edge[1] else 'out')
 
 
 def compare(task, st_text, d, label, openplc, work):
@@ -135,15 +148,24 @@ def compare(task, st_text, d, label, openplc, work):
             out['reason'] = 'ST: %s' % str(e)[:200]
             out['match'] = out['lasting'] = 'NA'
             return out
-        g = GS.GvmPLC(task, GS.PyCore(gdir, spec['name']), spec, GS.situation_params(task, case))
-        sh = Shadow(task, g, st)
-        SIM.run_situation(sh, task, case, {})
+        best = None
+        for edge in (EDGES if task == 'T4' else (None,)):
+            g = GS.GvmPLC(task, GS.PyCore(gdir, spec['name']), spec, GS.situation_params(task, case), edge=edge)
+            sh = Shadow(task, g, st)
+            SIM.run_situation(sh, task, case, {})
+            if best is None or sh.lasting < best[0].lasting:
+                best = (sh, edge)
+            if sh.lasting == 0:
+                break
+        sh, edge = best
         missing |= st.missing
         total += sh.lasting
         verdict &= sh.lasting == 0
         out['situations'][case] = {'scans': sh.n, 'different': sh.diff, 'lasting': sh.lasting, 'longest': sh.longest}
-        out['log'].append('%s (%s): %d scans, %d different, %d lasting (longest %d scans)' % (
-            task, case, sh.n, sh.diff, sh.lasting, sh.longest))
+        if edge is not None:
+            out['situations'][case]['edge'] = edge_label(edge)
+        out['log'].append('%s (%s): %d scans, %d different, %d lasting (longest %d scans)%s' % (
+            task, case, sh.n, sh.diff, sh.lasting, sh.longest, '; band edge ' + edge_label(edge) if edge else ''))
     out['match'], out['lasting'] = int(verdict), total
     if missing:
         out['log'].append('I/O not declared by the ST program (not connected): %s' % ', '.join(sorted(missing)))

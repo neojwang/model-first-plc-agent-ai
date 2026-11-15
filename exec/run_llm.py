@@ -265,8 +265,20 @@ def host_id():
     p = cred_path('host.json')
     h = load_json(p) or {}
     if not h.get('ext_agent_host_id'):
-        h = {'ext_agent_host_id': str(uuid.uuid4()), 'created_utc': now()}
+        h = {'ext_agent_host_id': uuid.uuid4().urn, 'created_utc': now()}
         write_private(p, json.dumps(h, indent=1))
+    else:
+        # Local host-ID compatibility fix: retain the UUID, add its URI prefix.
+        value = h['ext_agent_host_id']
+        if isinstance(value, str):
+            try:
+                legacy_uuid = uuid.UUID(value)
+            except ValueError:
+                pass  # Preserve other supported identifiers (JWK URI / did:key).
+            else:
+                if value.lower() == str(legacy_uuid):
+                    h['ext_agent_host_id'] = legacy_uuid.urn
+                    write_private(p, json.dumps(h, indent=1))
     return h['ext_agent_host_id']
 
 

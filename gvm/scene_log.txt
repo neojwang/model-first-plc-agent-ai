@@ -1,7 +1,7 @@
 GVM scene tests of the reference GRAFCETs and seeded faults (gvm/gvm_scene.py --reference)
-date (UTC): 2026-11-14 08:55
+date (UTC): 2026-11-15 04:03
 Python 3.13.18; g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; scene model v1 (2026-11-13)
-SHA-256 (first 16): gvm_scene.py d1f907d11f02001e, grafcet2gvm.py a4831abb3166b0e2, grafcet2smv.py 30c053165cdaed3c, scene_sim.py ca4d6772c24dfadc
+SHA-256 (first 16): gvm_scene.py 3e2d7dd05b7d227c, grafcet2gvm.py a4831abb3166b0e2, grafcet2smv.py 30c053165cdaed3c, scene_sim.py fb082f6d6c195264
 
 1. Reference GRAFCETs (gvm/reference/T1-T4_ref.json): every registered situation must pass in Python and C++,
    with E3 = 0; the alternative assumptions of scene_sim.py --sensitivity are reported, not judged.
@@ -52,7 +52,7 @@ T4_ref.json (SHA-256 84128fb9e8eff9e6; description 74d8f34974c6cd24): Python 1, 
 F01 T1, conveyor on step x0 instead of x1: Python fails scene; C++ fails scene; E3 0 -> detected
 F02 T1, stop at sensor B removed (guard FALSE): Python fails scene; C++ fails scene; E3 0 -> detected
 F03 T2, LSHH removed from the end of filling: Python fails b; C++ fails b; E3 0 -> detected
-F04 T2, stop removed from the end of filling: Python fails a,c; C++ fails a,c; E3 0 -> detected
+F04 T2, stop removed from the end of filling: Python fails a,b,c; C++ fails a,b,c; E3 0 -> detected
 F05 T2, timer owned by step x0: Python fails a; C++ fails a; E3 0 -> detected
 F06 T3, tof_q neutral FALSE (rule 5 violated): Python fails a,b; C++ fails a,b; E3 0 -> detected
 F07 T3, ton_q owned by the pause step: Python fails a,b; C++ fails a,b; E3 0 -> detected

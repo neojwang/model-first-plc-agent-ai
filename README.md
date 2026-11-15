@@ -2,7 +2,7 @@
 
 This repository accompanies the paper "Teaching Programmable Logic Controller Programming and Verification with Agent AI: A Model-First IDEF0–GRAFCET Workflow in a Virtual Factory". It contains everything needed to repeat the code-generation experiment (RQ1) and the cross-check of the verification lane (RQ2); it contains no student data.
 
-Status: the materials are released before the experiment. The prompts are frozen with `exec/freeze_prompts.py` after a pilot of eight rows (one per task and condition, not counted) and before the first generation of the run plan, and the results (`results/`) are added after the experiment. License: MIT (see `LICENSE`).
+Status: the materials are released before the experiment. The prompts are frozen with `exec/freeze_prompts.py` after two pilots of eight rows each (one row per task and condition, not counted) and before the first generation of the run plan, and the results (`results/`) are added after the experiment. License: MIT (see `LICENSE`).
 
 | Path | Content |
 |---|---|
@@ -50,3 +50,10 @@ cd pilot/vc && python3 vc_check.py --openplc OPENPLC_V3_DIR --pilot ..   # check
 ```
 
 Python 3 is required (`run_llm.py` uses the standard library only and needs an OpenAI API key or a ChatGPT Plus or Pro plan); numpy and scipy are used by `power_sim.py` and, when installed, by `analysis.py`; NuSMV 2.6 is required for the formal model check; g++ with C++17 runs the C++ programs of `gvm/`; the compile check and the scene simulation need OpenPLC_v3 at commit b5d41356dab4aeadca0dd7ca64ba542f870b595d with matiec built (flex, bison, libtool and g++); Factory I/O is not needed: the scene tests run in the simulator, and the simulated verdicts were not compared with runs in Factory I/O. Self-tests: `python3 exec/compare_grafcet.py --selftest`, `python3 exec/set_params.py --selftest`, `python3 exec/scene_sim.py --openplc OPENPLC_V3_DIR --selftest`, `python3 analysis/analysis.py --selftest`, `python3 nusmv/grafcet2smv.py nusmv/tank_reference.json --check --mutants`, `python3 nusmv/run_nusmv.py --selftest [--nusmv NUSMV_BINARY]`, `python3 gvm/gvm_scene.py --selftest`, `python3 gvm/st_match.py --openplc OPENPLC_V3_DIR --selftest`, `python3 gvm/e3_check.py nusmv/tank_reference.json` (Python and C++ only; add `--openplc` for the ST program).
+
+## Changes after the pilots
+
+- After the first pilot: the three ST templates ask for code that compiles with matiec (located variables in a VAR block of their own; no keywords or names of standard functions as identifiers or enumeration values; at least one statement in every CASE branch).
+- After the second pilot: the return to step 0 in the scene tests is checked in the same way for ST programs and for the GVM programs of GRAFCET models; when the tank already meets the end condition of the started step, a new start may open the fill valve for at most one scan, and the tank is then emptied before the check (`exec/scene_sim.py`, `exec/scene_tests_en.md`).
+- After the second pilot: in the comparison of an ST program with the GVM program of its GRAFCET (`gvm/st_match.py`), a level count that lies exactly on the edge of the tolerance band of the PID task may be read inside or outside the band.
+- After the second pilot: `exec/run_llm.py` sends the host identifier of Sign in with ChatGPT as `urn:uuid:…`, the format given in the OpenAI documentation for UUID-based host IDs; this concerns the sign-in only, not the requests to the model. The prompts were frozen after these changes (`exec/prompts_manifest.json`).

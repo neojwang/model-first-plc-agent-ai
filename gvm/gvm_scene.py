@@ -28,14 +28,12 @@ vocabulary of the task card, the same for every GRAFCET:
     clamped) with the gains of the situation; as in that program, the level, the error, the band check and the PID
     are computed in REAL (32-bit) arithmetic, rounded after every operation.  An output of the task card that the
     GRAFCET does not give is held FALSE.
-Step 0.  The scene tests take a new start that opens the output, and StopCommand that closes it, as evidence that an
-ST program has returned to step 0 (exec/scene_tests_en.md); the GVM programs get the same probe.  The one exception
-is a new start while the level already meets the end condition of the started step (LSHH on in T2, LSH on in T3,
-h >= h_max in T4; at the probes of T2 (b) and T3 (a)): in a GRAFCET this start is a transient evolution, the step is
-left in the same evolution and its continuous action is not executed, so no output opens.  There the evidence is read
-from the situation, which is the whole state of a GVM program: it must be the initial situation, with the output at
-0, before the new start and again after the start and StopCommand of the probe, so that a new cycle runs as the first
-one did.
+Step 0.  The scene tests take a new start that opens the output, and StopCommand that closes it, as evidence that a
+program has returned to step 0 (exec/scene_tests_en.md).  The ST and the GVM programs get the same probe (amended
+2026-11-15, protocol.md): when the level already meets the end condition of the started step (LSHH on in T2, LSH on
+in T3, h >= h_max in T4; at the probes of T2 (b) and T3 (a)), a new start may open the fill valve for at most one
+scan, as a GRAFCET whose step is left in the same evolution opens nothing, and the tank is then emptied before the
+probe.
 The verdict of a program is 1 only if every registered situation passes.  E3 counts the ticks of the Python closed
 loops in which the C++ program, given the same inputs, reaches a different situation, stability flag, or outputs;
 the C++ program also runs its own closed loops.  NA: the GRAFCET is missing, is not a JSON object, or uses names or
@@ -307,6 +305,20 @@ def f32(x):
 R_SP, R_MAX, R_EPS, R_UD, R_FS = f32(H_SP), f32(H_MAX), f32(EPS), f32(U_D), f32(float(FULL_SCALE))
 
 
+SP_COUNTS, EPS_COUNTS = int(round(H_SP * FULL_SCALE)), int(round(EPS * FULL_SCALE))
+assert abs(H_SP * FULL_SCALE - SP_COUNTS) < 1e-9 and abs(EPS * FULL_SCALE - EPS_COUNTS) < 1e-9
+
+
+def in_band(raw, e, edge=None):
+    """|e| <= eps for the level count raw.  edge None: the registered REAL computation (as pilot/reference/T4_ref.st);
+    otherwise exact in counts, with each of the two edge counts (h_sp -/+ eps) read in or out of the band as edge says:
+    gvm/st_match.py accepts either reading, since equivalent REAL formulas round the edge counts differently."""
+    if edge is None:
+        return abs(e) <= R_EPS
+    d = abs(raw - SP_COUNTS)
+    return d < EPS_COUNTS or (d == EPS_COUNTS and edge[0 if raw < SP_COUNTS else 1])
+
+
 def real_to_int(x):
     return int(math.floor(x + 0.5)) if x >= 0 else -int(math.floor(-x + 0.5))
 
@@ -314,8 +326,9 @@ def real_to_int(x):
 class GvmPLC:
     """The interface of scene_sim.PLC (reset, set, get, scan, ts, missing) around a GVM program and the binding."""
 
-    def __init__(self, task, core, spec, params, record=False):
+    def __init__(self, task, core, spec, params, record=False, edge=None):
         self.task, self.core, self.p, self.record = task, core, params, record
+        self.edge = edge   # T4: None, or (lower edge count in band?, upper edge count in band?)
         self.ts = TS
         self.missing = set()
         self.enum = {n: list(v) for n, v in spec['inputs'].items() if v != 'boolean'}
@@ -357,14 +370,16 @@ class GvmPLC:
             val['start'] = 1 if (btn and not self.prev_start) else 0
             val['stop'] = self._in('stop')
             if task == 'T4':
-                h = f32(f32(float(self._in('level'))) / R_FS)
+                raw = int(self._in('level'))
+                h = f32(f32(float(raw)) / R_FS)
                 e = f32(R_SP - h)
                 val['r'] = 2 if h >= R_MAX else (1 if h >= R_SP else 0)
+                band = in_band(raw, e, self.edge)
             else:
-                e = 0.0
+                e, band = 0.0, True
                 val['r'] = 2 if self._in('lshh') else (1 if self._in('lsh') else 0)
             for c, (s, kind, pt) in self.owned.items():
-                cond = s in self.active and (kind != 'hold' or abs(e) <= R_EPS)
+                cond = s in self.active and (kind != 'hold' or band)
                 if cond:
                     if self.t_on[c] is None:
                         self.t_on[c] = j
@@ -407,25 +422,6 @@ class GvmPLC:
             for name, loc in LOC_OUT[task].items():
                 self.out[loc] = 1 if o.get(name, False) else 0
         self.j += 1
-
-
-def _restart_gvm(b, loc):
-    """Step-0 evidence for a GVM program (see Step 0 above); the ST programs keep scene_sim._restart."""
-    if not isinstance(b.plc, GvmPLC):
-        return _restart_st(b, loc)
-    p, task = b.plant, b.plc.task
-    ended = (task == 'T2' and p.lshh()) or (task == 'T3' and p.lsh()) or (task == 'T4' and p.x >= H_MAX)
-    if not ended:
-        return _restart_st(b, loc)
-    before = b.plc.sit == b.plc.init_sit and b.plc.get(loc) == 0
-    b.press('start', b.t + 1.0)
-    b.run_until(lambda: b.plc.get(loc) > 0, b.t + 2.0)
-    b.press('stop', b.t + 0.5)
-    b.run_until(lambda: False, b.t + 1.5)
-    return before and b.plc.sit == b.plc.init_sit and b.plc.get(loc) == 0
-
-
-_restart_st, SIM._restart = SIM._restart, _restart_gvm
 
 
 # ---------------------------------------------------------------- running a GRAFCET

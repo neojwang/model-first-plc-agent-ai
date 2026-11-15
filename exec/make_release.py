@@ -39,6 +39,7 @@ FILES += ['gvm/gvm_scene.py', 'gvm/scene_log.txt'] + ['gvm/reference/%s_ref.json
 FILES += ['exec/make_release.py']
 # kit30: the ST programs checked against the GVM programs of their GRAFCET (author, 2026-11-14 16:49)
 FILES += ['gvm/st_match.py', 'gvm/st_match_log.txt']
+FILES += ['.gitattributes']
 OPTIONAL = ['exec/prompts_manifest.json']        # copied once the prompts are frozen
 DIRS = ['exec/prompts/tasks', 'exec/prompts/templates']
 ARTIFACT_COLS = ['a1_idef0', 'a1_grafcet_json', 'st_code', 'a2_idef0', 'a2_grafcet_json', 'a2_st_code',

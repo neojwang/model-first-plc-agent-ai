@@ -335,8 +335,37 @@ class AnalogTank:
 
 # ---------------------------------------------------------------- situations (scene_tests_en.md)
 
+FULL_START_LOC = {'T2': '%QX100.0', 'T3': '%QX100.0', 'T4': '%QW100'}   # the fill valve of each tank task
+
+
+def _full(b):
+    """The end condition of the started step already holds: LSHH on (T2), LSH on (T3), h >= h_max (T4)."""
+    p, task = b.plant, getattr(b, 'task', None)
+    return (task == 'T2' and p.lshh()) or (task == 'T3' and p.lsh()) or (task == 'T4' and p.x >= 0.9)
+
+
+def _empty(p):
+    if isinstance(p, AnalogTank):
+        p.x = 0.0
+    else:
+        p.h = 0.0
+
+
 def _restart(b, loc):
-    """Step-0 evidence: after a fresh start the output opens, and stop closes it again."""
+    """Step-0 evidence, the same for ST and GVM programs (amended 2026-11-15, protocol.md): if the end condition of
+    the started step already holds (LSHH on in T2, LSH on in T3, h >= h_max in T4), a new start may open the fill valve
+    for at most one scan, and the tank is then emptied; then a new start must open the output and StopCommand close it."""
+    if _full(b):
+        fill = FULL_START_LOC[b.task]
+        b.press('start', b.t + 1.0)
+        t_end, n = b.t + 3.0, 0
+        while b.t < t_end - 1e-9:
+            b.step()
+            n += b.plc.get(fill) > 0
+        if n > 1:
+            return False
+        _empty(b.plant)
+        b.run_until(lambda: False, b.t + 1.0)
     b.press('start', b.t + 1.0)
     ok = b.run_until(lambda: b.plc.get(loc) > 0, b.t + 2.0)
     b.press('stop', b.t + 0.5)
@@ -379,6 +408,7 @@ def t1(plc, v):
 def t2(plc, case, v, timer):
     p = DigitalTank(v.get('delta', 0.0), v.get('lag', 0.0), v.get('nc_stop', False))
     b = Bench(plc, p, v.get('phase', 0))
+    b.task = 'T2'
     b.press('start', 1.0)
     if not b.run_until(lambda: p.cmd_f > 0, 2.0):
         return False, 'fill valve did not open within 1 s of the start', {}
@@ -408,6 +438,7 @@ def t2(plc, case, v, timer):
 def t3(plc, case, v):
     p = DigitalTank(v.get('delta', 0.0), v.get('lag', 0.0), v.get('nc_stop', False))
     b = Bench(plc, p, v.get('phase', 0))
+    b.task = 'T3'
     b.press('start', 1.0)
     if not b.run_until(lambda: p.cmd_f > 0, 2.0):
         return False, 'fill valve did not open within 1 s of the start', {}
@@ -456,6 +487,7 @@ def t4(plc, case, v):
     p = AnalogTank(v.get('model', 'B'), v.get('lag', 0.0), v.get('fi', 1.0), v.get('fo', 1.0), v.get('rounding', 'round'),
                    v.get('nc_stop', False), v.get('scale', 100))
     b = Bench(plc, p, v.get('phase', 0))
+    b.task = 'T4'
     if case == 'c':
         p.x = 0.95
         b.press('start', 1.0)
