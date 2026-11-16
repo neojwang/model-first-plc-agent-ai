@@ -1,0 +1,167 @@
+{
+ "input_transformations": [],
+ "id": "resp_076b818159a1946b016af9aa516fa887d0b5be96513ebbdca6",
+ "object": "response",
+ "created_at": 1794746961,
+ "completed_at": 1794746966,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "message",
+   "id": "msg_076b818159a1946b016af9aa53fbd487d0b2004e07d29f2fea",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "{\n  \"graphs\": [\n    {\n      \"name\": \"G1\",\n      \"steps\": [\"x0\", \"x1\"],\n      \"initial\": [\"x0\"]\n    }\n  ],\n  \"transitions\": [\n    {\n      \"id\": \"t1\",\n      \"from\": [\"x0\"],\n      \"to\": [\"x1\"],\n      \"guard\": \"sensor_a & !sensor_b\"\n    },\n    {\n      \"id\": \"t2\",\n      \"from\": [\"x1\"],\n      \"to\": [\"x0\"],\n      \"guard\": \"sensor_b\"\n    }\n  ],\n  \"outputs\": {\n    \"conveyor\": \"x1\"\n  },\n  \"forcing\": [],\n  \"owned\": {}\n}",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "13b324cc-a0c6-4926-8621-671877719ecc",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 2988,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 155,
+  "output_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "total_tokens": 3143,
+  "attribution": {
+   "items": {
+    "msg_076b818159a1946b016af9aa51708087d09257bffef287b283": {
+     "input_tokens": 344,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 344,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_076b818159a1946b016af9aa51708087d0957cd121a43ac2f4": {
+     "input_tokens": 944,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 944,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_076b818159a1946b016af9aa51708087d0a83fc520865060dc": {
+     "input_tokens": 1698,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 1698,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_076b818159a1946b016af9aa53fbd487d0b2004e07d29f2fea": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 155,
+     "content": [
+      {
+       "input_tokens": 2,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 155
+      }
+     ]
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 160,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

@@ -1,0 +1,92 @@
+FUNCTION_BLOCK TankFilling
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    sequence_state : INT := 0;
+    filling_timer : TON;
+    timer_done : BOOL := FALSE;
+END_VAR
+
+(* Stop has priority over starting or continuing a fill. *)
+IF stop THEN
+    sequence_state := 0;
+ELSE
+    CASE sequence_state OF
+        0:
+            IF start AND NOT LSHH THEN
+                sequence_state := 1;
+            END_IF;
+
+        1:
+            IF LSHH THEN
+                sequence_state := 0;
+            END_IF;
+
+        ELSE
+            sequence_state := 0;
+    END_CASE;
+END_IF;
+
+(* Start timing in the same scan that filling is requested. *)
+filling_timer(
+    IN := (sequence_state = 1),
+    PT := TimerDuration
+);
+timer_done := filling_timer.Q;
+
+IF (sequence_state = 1) AND timer_done THEN
+    sequence_state := 0;
+END_IF;
+
+fill_valve := (sequence_state = 1) AND NOT stop AND NOT LSHH;
+discharge_valve := FALSE;
+
+(* Reset the timer on completion so a new start can be accepted
+   on the following scan without retaining the previous elapsed time. *)
+IF sequence_state = 0 THEN
+    filling_timer(IN := FALSE, PT := TimerDuration);
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    TimerDuration : TIME := T#10s;
+    start_edge : R_TRIG;
+    filling_control : TankFilling;
+END_VAR
+
+(* Convert the start button into a one-scan rising-edge event. *)
+start_edge(CLK := StartCommand);
+
+filling_control(
+    start := start_edge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+FillValve := filling_control.fill_valve;
+DischargeValve := filling_control.discharge_valve;
+
+END_PROGRAM

@@ -1,0 +1,21 @@
+The model below treats the **PLC control logic** as the system boundary. Thus, the sensor states are inputs and the conveyor command is the output; the physical box and conveyor belong to the controlled plant.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-on-B requirement; IEC 61131-3 bistable-block requirement; I/O address mapping; reset-dominant priority convention¹ | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection to Factory I/O |
+| **A1** | **Determine the start request** | `sensor_a` | Sensor-A detection meaning; start-on-A requirement | Start request | OpenPLC Boolean logic |
+| **A2** | **Determine the stop request** | `sensor_b` | Sensor-B detection meaning; stop-on-B requirement | Stop request | OpenPLC Boolean logic |
+| **A3** | **Retain and update the conveyor command** | Start request; stop request | IEC 61131-3 bistable-block behavior; reset-dominant priority convention¹; output address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP output interface |
+
+**Arrow connections and interpretation**
+
+- The A0 input `sensor_a` feeds A1; A1’s **Start request** feeds A3’s set input.
+- The A0 input `sensor_b` feeds A2; A2’s **Stop request** feeds A3’s reset input.
+- A3 produces the A0 output `conveyor`. Its retained state keeps the conveyor running after the box leaves sensor A and stops it when sensor B is active.
+- The external identifier mappings are:
+  - `sensor_a` ← `SensorA AT %IX100.0`
+  - `sensor_b` ← `SensorB AT %IX100.1`
+  - `conveyor` → `Conveyor AT %QX100.0`
+- These are **level-sensitive** requests, not rising-edge events: each request is active while its corresponding sensor is TRUE.
+
+¹ The task permits either SR or RS and does not explicitly define simultaneous-sensor behavior. This model selects **reset-dominant RS**, so `sensor_b = TRUE` stops the conveyor even if `sensor_a` is also TRUE. This is an explicit implementation choice consistent with keeping the box at B.

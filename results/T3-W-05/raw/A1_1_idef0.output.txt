@@ -1,0 +1,82 @@
+## A0 context model — Control timed tank filling
+
+**Scope:** Control the digital filling tank using an initial step, a filling step, and a pause step. Limit each filling interval with TON and each pause interval with TOF. Keep the discharge valve closed.
+
+**Model conventions**
+- Inputs are information transformed by a function; controls constrain its execution; outputs are its results; mechanisms perform the function.
+- The tables use noun phrases for arrows and verb phrases for functions.
+- `start` is a rising-edge event, not the maintained value of `StartCommand`.
+- **Protective interpretation:** `LSHH` inhibits filling and forces step 0. This is an additional defensive response; it does not replace the requirement to terminate normal filling at `LSH`.
+
+### Context ICOM
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control timed tank filling | `StartCommand` signal; `StopCommand` signal; `LSH` signal; `LSHH` signal | Filling sequence rules; stop priority rule; initial-step rule; `TON_Duration`; `TOF_Duration`; level thresholds; I/O address assignment; discharge inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; Factory I/O tank simulation; Modbus TCP connection |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Acquire commands and level indications | `StartCommand` signal; `StopCommand` signal; `LSH` signal; `LSHH` signal | Input address assignment; rising-edge detection rule; input sampling rule | `start`; `stop`; `LSH`; `LSHH` | OpenPLC input image; Modbus TCP driver; rising-edge detector; previous-command memory |
+| A2 | Evaluate filling and pause timing | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON behavior specification; TOF behavior specification; timer initialization rule | `ton_q`; `tof_q` | TON timer instance; TOF timer instance; PLC time base; timer instance memory |
+| A3 | Determine the active sequence step | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step rule; transition rules; stop priority rule; high-level termination rule; high-high inhibition rule; single-active-step rule | Active-step indication; Filling-step activity | Sequence controller; step-state memory; PLC scan execution |
+| A4 | Command the tank valves | Active-step indication; `stop`; `LSH`; `LSHH` | Valve command rules; output address assignment; discharge inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC output image; Modbus TCP driver; simulated valve actuators |
+
+### Internal arrow connections
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `start`; `stop`; `LSH`; `LSHH` | A1 | A3 |
+| `stop`; `LSH`; `LSHH` | A1 | A4 |
+| Filling-step activity | A3 | A2 |
+| `ton_q`; `tof_q` | A2 | A3 |
+| Active-step indication | A3 | A4 |
+| `fill_valve`; `discharge_valve` | A4 | A0 boundary |
+
+The A3–A2 feedback represents sequence activity driving the timers and timer results governing subsequent transitions. It is not an instruction execution order.
+
+## Behavioral controls
+
+These rules define the controls referenced in the ICOM tables without prescribing PLC code.
+
+### Sequence rules
+
+| Current step | Transition condition | Next step |
+|---|---|---|
+| Any step | `stop` | Step 0 |
+| Any step | `LSHH`, with `stop` FALSE | Step 0 |
+| Filling or pause | `LSH`, with `stop` and `LSHH` FALSE | Step 0 |
+| Step 0 | `start`, with `stop`, `LSH`, and `LSHH` FALSE | Filling |
+| Filling | `ton_q`, with `stop`, `LSH`, and `LSHH` FALSE | Pause |
+| Pause | `tof_q` FALSE, with `stop`, `LSH`, and `LSHH` FALSE | Filling |
+| Any step | No applicable transition | Current step |
+
+Step 0 is the initialized state. Returning to step 0 does not cause an automatic restart: a new `start` event is required.
+
+### Timing rules
+
+- **TON:** Its IN is Filling-step activity. `ton_q` becomes TRUE after continuous filling for `TON_Duration`; leaving filling resets TON.
+- **TOF:** Its IN is Filling-step activity. `tof_q` is TRUE during filling and remains TRUE for `TOF_Duration` after filling ends.
+- Pause ends only when `tof_q` is FALSE.
+- Both timers are evaluated cyclically, including outside the filling step. At initialization, Filling-step activity and timer outputs are FALSE.
+
+### Valve command rules
+
+| Condition | `fill_valve` | `discharge_valve` |
+|---|---|---|
+| Filling active, with `stop`, `LSH`, and `LSHH` FALSE | TRUE | FALSE |
+| Any other condition, including step 0 and pause | FALSE | FALSE |
+
+## Boundary address assignment
+
+| Boundary signal | PLC address | Model identifier |
+|---|---|---|
+| `StartCommand` | `%IX100.0` | `start`, after rising-edge detection |
+| `StopCommand` | `%IX100.1` | `stop` |
+| `LSH` | `%IX100.2` | `LSH` |
+| `LSHH` | `%IX100.3` | `LSHH` |
+| `FillValve` | `%QX100.0` | `fill_valve` |
+| `DischargeValve` | `%QX100.1` | `discharge_valve` |
+
+**Physical constraint:** Normal filling terminates at `LSH` = 2.4 m. The requirement that `LSHH` = 2.7 m is never reached also depends on scan and communication delays, valve closing time, and residual inflow. Those plant characteristics must be validated; an `LSHH` response alone cannot guarantee that its threshold is never reached.

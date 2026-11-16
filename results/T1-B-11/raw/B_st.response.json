@@ -1,0 +1,152 @@
+{
+ "input_transformations": [],
+ "id": "resp_0031cefd25931d59016af9b54b203087d093fa7e7690070b7c",
+ "object": "response",
+ "created_at": 1794749771,
+ "completed_at": 1794749778,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_0031cefd25931d59016af9b551331487d0a5910c690a36ff0f",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-bVRiFk1nO3rGWQc_1S5AjEKKVGfjw3DMqWGzskjrjmrDcJNHOUiROjwQSG4UdH86-AMdZNRqZrLvEmaSzliSjMX71YfyKQjg3ae6VH43cHk7a1UFVZUhl0eZ2Hua8gb8sd33cCFwFwe0VPDmHew5jNpJVdZVoIxAqnQpb8OvIbh0Xpb6s51DxG75LzWeQJg0QsPd773HoMz35lgrQlnwSDy6MR-zM7zEWT4aBBU1VF7MRQU_RFVxKUiKlPTtUjqtg4LU3dyPKPt9JtxsmVAzKnfOVYK--i0HFCxsW9n4WKyVvptZP9Fxdw_xTrjHxSblP2Toch-7O551_sfEWK_-UySQQMwPR_uULX3tAX-7II9I0NfLVLyWJ6rsAMvvB6CrizECRRu1c70eGWcIDy2md5yL-0LxkyDmkTnwKzx6K74f5NRV7KPH3zFkwoK1iOOEb7CtOtqm5Vw19lPBtcorpgaPKa0XhdR-PwcKqTfRnShEcBuCSW4TljRko6F-920oSIT45zoEH4V8L4sYq1rnd2AH2vfmxPVWJr--Xcp_o41QgkUqNBqvrRLqpYrsMzm0rgCOb2XvhL33jrtPGS2wyi4t9ta9mCDJzYUbBayvFwbd0RmDjG1_3KDKLcgQkF3boQwYXgFK-n9NmJJ7HWE73qCQC_RVef5iK3t83rhtzKFYzk_YjPLKEm0xIQsVg-2BJMvvn8LIzvAZxeuJRxa4-LcF1q8MVM4QbFZFcrLOrWhb6lJKwyFv83kjmRR9DrcGVxRTA8L1sOd6z2xAOF00nCz-qczSLFFcZ0IP7TRrk4dR4oCq-EJkUs9EVu3_cSXw-JvnT6OIQSTp1EuZcYiRf0hEbNeUuLJm8UVtSF3JOM5r7a1CdJoEGN1qzBSFZEVkxDlrVUCv4sefLoDRxqE9MHSJCdE-AY5zDxry08AtkcVz9DAsmY0ba4DQEgJbBmzr2GNfGS9GtTHyxFPHp0jxhGgrvlFmyphLtrMH0tKDEIYXg_2y1MsPXpjdhaBeUlIkrEfTz3r-htI0P_PVYT1A1qg6tWXDBjzejqL0WIoEAltPSYPYYr-wwrwV6uroMYIqMAjd63CIieuhLHJWreYXGQFBbTJjpyAUULTWWD91XpfGbBdIZFzLcz8nS5LtbWcz_5aBvpuKXjBW1Bnw2yBB-Pyq4_EMeBYaC9t96wgcOHBpfhPr85gyjIOnNeKxiOACK-lF7gMNcdXcug8G27NlidkKo92ryETewyeBDLjt8rBfskKdd3tIdH9AI1wqBNT6HKZUWDJvwIHfqIrLPzKpWTEmU94hBQUBONqDbBqo9Fhwyvv1CuNF_YjxllMHZdfRGuPUxYZtbN2cLsSrexxW0qr2Evcu9LaohyiwifEa3JUp-2a4Gc2mWIan2UjxdlM-PlC9v_7nEB4CbiF41PQBUhc73unIHkcneeO8f575DFPtQ4ln3aT-REfaZO38L9ZdR8RnAZqBjHXoeFR6h0RX2qcD-uipd7czRB5SLuT2cW0bFHSUiyB9tuecSmAKpi7HgsPl6Dk_9RJPZpl99u8PjMT29luaL3rSuSjfHTTEMaH-kZuf4d5cPiVaaxUbj-9B5aMISeReTCOgHljcBZ0lYunBMoS_d6pnmmNqwLctH_mFPJSSlxvW_Co-AK15tUSbgOONHTwFYX1KKRiFqxZYkQ1qFO8IEGltM08XRaA1SuTLpQVBEiXhMaT3uK3gKYgbIUq5VDU5Zdv9KkXNGNuk8kM_cpLgfZ_xErPPx6UDfe4RhBDPeCAm8fdnD8x3IBYhlmHWGbRXkInLGSVj6gzZ95YG-FYltCBQDYucg-kA5Rm3TxnVKIfH2tFAmQrxcNggzY2uRl8fqclTPbeY9zGTzmm-XqipSBikU2nRhTKOwcahXoYtkVnAYLT9ex5FY7kc0O3q31Ij0F2RhvtuMgBcKQ-_hAYgA9DYBi9xy5QHj8QQTUrJp8N2BcqibD2MIJRD1wRVORBpkur1DVFe2Hc9NB5ZblkUNJsQnWMI1xHmFk3Q6P_bPnnNCs-dmylHhxUERrfhlG-cKD95LRd8s2pEqyC1nlosQ6tlh4QneZMXvHdWaGHfcf9pHj3epA3l5QKoEkXFp3IcYYxJU_2gI-bXYUm4Lm-cGdG0569NP-y7OxFfLOmsryAitOo0Leq9dCFPnv3HSCHJ1lAzHP8LThzrxWmu_thhEp9TLNFtFv8lrhruT_uZ9bSm1dfJbT5QjjRf8KAzGl5lcXzvcckd64WlXG90WJarS73IRaqwp9D7aGjWlaODEmTr_cvzC-Hdo2MnS9PAJjt5PYlurC88cjYvY6HNWtePx8egTU5-IfyTrYUSnXhA_n-4Mw2a8Asxdug95sRB5OGVP9-LkM-YXWl30dnGUAeLG4YBw3kC0eAXzsF9mr7xHkL9Enzb_x-ISGNwqe23Snbziu3MSKoXwweqP1jNhYlLo0vQVgyy4QLmBDfIJI-AFH6BcWei9U8QZ5DLxJ31KyVOlhuhhB6lurKaJ-tezILsQGLYnvIO7BHU7oLIPZKmzxmP3xqH4CK_siWlzTiiVBHaCROjRZIaS1T23PGlA_TWzT4I8dw-Qgwxlm3QRGFc0CszKHaId1XkUWuCSlSvOo2UxGeTkdsDnMQNyhs0-x1J2SDAGoWf18BhAgJMF1i--mJOaY3Oc79zepI5n87DjXSxUM7WTSJL0G6z1yDx8_EI5h3ME1q_hm_JfOEbrWQOHEXHIyGrj0RE0szq1uTk1VRgfreNUQSCpaprt3dbazXNgzUvBGLzx2GVD4Dh74cuSWJ7DQCGFyPcrGhZ_6mJ4YvoG4_3uoaPmPo0X7w7F7jF2tCdcRpoDQERabx7NuRSMC-rcN6QZ_1Ga1aQ0n-0nOAi98pTvxaq9Jf_o9d5qmmqhYw9RXh56mUviqYvpCgR5alGihRuPOJsJ1TdTl8JPxpeIqCSA8k7WbiHJjYPM-vTHCLzBljpSKYy2c0RAYFXpvmIdYrPTk1x0Wlf0yO3u0zqh0MV56uIfa7c0JZ-Q=="
+  },
+  {
+   "type": "message",
+   "id": "msg_0031cefd25931d59016af9b551330c87d0b4e815243f0415e2",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "FUNCTION_BLOCK ConveyorControl\nVAR_INPUT\n    sensor_a : BOOL;\n    sensor_b : BOOL;\nEND_VAR\nVAR_OUTPUT\n    conveyor : BOOL := FALSE;\nEND_VAR\nVAR\n    conveyor_latch : RS;\nEND_VAR\n\nconveyor_latch(S := sensor_a, R1 := sensor_b);\nconveyor := conveyor_latch.Q1;\n\nEND_FUNCTION_BLOCK\n\n\nPROGRAM Main\nVAR\n    SensorA AT %IX100.0 : BOOL;\n    SensorB AT %IX100.1 : BOOL;\n    Conveyor AT %QX100.0 : BOOL := FALSE;\nEND_VAR\nVAR\n    controller : ConveyorControl;\nEND_VAR\n\ncontroller(sensor_a := SensorA, sensor_b := SensorB);\nConveyor := controller.conveyor;\n\nEND_PROGRAM",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "9c8fa047-14af-47be-8158-f14d33b30852",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 405,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 256,
+  "output_tokens_details": {
+   "reasoning_tokens": 95
+  },
+  "total_tokens": 661,
+  "attribution": {
+   "items": {
+    "msg_0031cefd25931d59016af9b54b210c87d0bd62f20356fb4040": {
+     "input_tokens": 403,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 403,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0031cefd25931d59016af9b551330c87d0b4e815243f0415e2": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 161,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 161
+      }
+     ]
+    },
+    "rs_0031cefd25931d59016af9b551331487d0a5910c690a36ff0f": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 95
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 166,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

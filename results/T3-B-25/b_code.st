@@ -1,0 +1,103 @@
+FUNCTION_BLOCK TankRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    PhaseIndex : INT := 0;
+    FillingActive : BOOL;
+    FillLimitTimer : TON;
+    FillPauseTimer : TOF;
+    ton_q : BOOL;
+    tof_q : BOOL;
+END_VAR
+
+(* Stop and level switches have priority over the sequence. *)
+IF stop OR LSH OR LSHH THEN
+    PhaseIndex := 0;
+END_IF;
+
+FillingActive := (PhaseIndex = 1);
+
+FillLimitTimer(
+    IN := FillingActive,
+    PT := TON_Duration
+);
+ton_q := FillLimitTimer.Q;
+
+FillPauseTimer(
+    IN := FillingActive,
+    PT := TOF_Duration
+);
+tof_q := FillPauseTimer.Q;
+
+IF NOT (stop OR LSH OR LSHH) THEN
+    CASE PhaseIndex OF
+        0:
+            IF start THEN
+                PhaseIndex := 1;
+            END_IF;
+
+        1:
+            IF ton_q THEN
+                PhaseIndex := 2;
+            END_IF;
+
+        2:
+            IF NOT tof_q THEN
+                PhaseIndex := 1;
+            END_IF;
+
+    ELSE
+        PhaseIndex := 0;
+    END_CASE;
+END_IF;
+
+fill_valve := (PhaseIndex = 1) AND NOT stop AND NOT LSH AND NOT LSHH;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Adjustable timing parameters; initial values are five seconds. *)
+    TON_Duration : TIME := T#5s;
+    TOF_Duration : TIME := T#5s;
+
+    StartEdge : R_TRIG;
+    Controller : TankRuntime;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+
+Controller(
+    start := StartEdge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := Controller.fill_valve;
+DischargeValve := Controller.discharge_valve;
+
+END_PROGRAM

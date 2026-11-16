@@ -1,0 +1,16 @@
+The model below treats the function being modeled as **the PLC control of timed filling**, rather than the physical transport of liquid. Accordingly, its inputs and outputs are signals. A0 is the context function; A1–A3 are its child functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSHH** | **TimerDuration**; initial-step requirement; filling-sequence requirements; stop-priority requirement; discharge-disable requirement | **fill_valve**; **discharge_valve** | OpenPLC Runtime; PLC program and state memory; timer facility; Modbus TCP interface to Factory I/O |
+| **A1** | **Update filling-step state** | **start**; **stop**; **LSHH**; **timer_done**; filling-step state feedback | Initial state: step 0; start transition: step 0 → filling step on **start**; completion transition: filling step → step 0 on **timer_done** or **LSHH**; overriding transition: any step → step 0 while **stop** is TRUE | Filling-step state | OpenPLC Runtime; sequence logic; step-state memory |
+| **A2** | **Time the filling step** | Filling-step state | **TimerDuration**; timer-start requirement on entry to the filling step; timer-reset requirement outside the filling step | **timer_done** | OpenPLC Runtime; timer instance |
+| **A3** | **Generate valve commands** | Filling-step state; **stop** | Fill-command rule: **fill_valve** TRUE only during the filling step and while **stop** is FALSE; idle-output rule: all outputs FALSE in step 0; discharge-disable rule: **discharge_valve** always FALSE | **fill_valve**; **discharge_valve** | OpenPLC Runtime; Boolean output logic; Modbus TCP output mapping |
+
+**Arrow and execution notes**
+
+- **start** is the specified one-scan press event, not the sustained value of the start button. **stop** is a level-sensitive signal.
+- The **filling-step state** is an internal arrow, branched to A2 and A3 and fed back to A1 through state memory. **timer_done** is an internal arrow from A2 to A1.
+- Initialization establishes step 0 and a reset timer. Entering the filling step opens **fill_valve** and starts a fresh timing interval. Either **timer_done** or **LSHH** ends filling; **stop** overrides all other conditions.
+- **LSH** is available from the scene but has **no specified functional role** in this task. It therefore does not appear as an operative IDEF0 arrow; in particular, it does not terminate filling.
+- The physical mapping is **start** ← press event derived from `%IX100.0`, **stop** ← `%IX100.1`, **LSH** ← `%IX100.2`, **LSHH** ← `%IX100.3`, **fill_valve** → `%QX100.0`, and **discharge_valve** → `%QX100.1`.

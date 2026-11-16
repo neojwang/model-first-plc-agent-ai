@@ -1,0 +1,58 @@
+## A0 context and decomposition
+
+**A0 — Control timed tank filling**
+
+The controller starts in step 0, enters the filling step on `start`, and returns to step 0 on `stop`, `LSHH`, or `timer_done`. Only the filling step can energize `fill_valve`; `discharge_valve` remains FALSE.
+
+The model uses the required receptivity names: `start`, `stop`, `LSH`, `LSHH`, and `timer_done`. Other named arrows below represent internal state information.
+
+### ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TimerDuration`; Initial-step rule; Stop-priority rule; Filling-completion rule; Discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; Command-event detection; Timer facility; Modbus TCP connection; Factory I/O tank, switches, and valves |
+| **A1** | **Select the operating step** | `start`; `stop`; `LSHH`; `timer_done`; Operating-step status | Initial-step rule; Stop-priority rule; Filling-completion rule | Selected-step status | OpenPLC Runtime; Step-state memory |
+| **A2** | **Measure the filling interval** | Selected-step status | `TimerDuration`; Timer-initialization rule; Timer-reset rule | `timer_done` | OpenPLC timer facility; PLC time base |
+| **A3** | **Drive the tank valves** | Selected-step status | Idle-output rule; Filling-output rule; Discharge-inhibition rule | `fill_valve`; `discharge_valve`; Operating-step status | OpenPLC Runtime; Step-state memory; Output image; Modbus TCP connection; Factory I/O valves |
+
+**Arrow-use note:** `LSH` is an available but unused A0 input. It is not connected to a child function because this task assigns it no control effect. It must not terminate filling.
+
+### Child-function connections
+
+| Source | Arrow | Destination |
+|---|---|---|
+| A0 boundary | `start`, `stop`, `LSHH` | A1 |
+| A3 | Operating-step status | A1 |
+| A1 | Selected-step status | A2 and A3 |
+| A0 boundary | `TimerDuration` | A2 |
+| A2 | `timer_done` | A1 |
+| A3 | `fill_valve`, `discharge_valve` | A0 boundary |
+
+`timer_done` is internal to A0, not a physical PLC input. The A1–A2 feedback represents step/timer interaction, not a prescribed function-call order. Timer expiry and step selection must be evaluated so that expiry closes the valve in the scan in which it is recognized.
+
+## Control-arrow definitions
+
+| Control arrow | Required meaning |
+|---|---|
+| Initial-step rule | Initialize Operating-step status to step 0. |
+| Stop-priority rule | Whenever `stop` is TRUE, select step 0 regardless of all other receptivities. |
+| Filling-completion rule | While filling, select step 0 when `LSHH` or `timer_done` is TRUE. A simultaneous `start` must not override completion. |
+| Timer-initialization rule | Start a fresh interval on entry to the filling step. |
+| Timer-reset rule | Reset the timer outside the filling step; a previous completion must not carry into a new filling interval. |
+| Idle-output rule | In step 0, set both outputs FALSE. |
+| Filling-output rule | In the filling step, set `fill_valve` TRUE. A detected `LSHH` prevents sustained filling, including when present at startup. |
+| Discharge-inhibition rule | Keep `discharge_valve` FALSE in every step. |
+
+## Interface interpretation
+
+| Logical arrow | Physical source or destination | Interpretation |
+|---|---|---|
+| `start` | `StartCommand`, `%IX100.0` | One-scan rising-edge event; holding the button does not repeatedly restart filling. |
+| `stop` | `StopCommand`, `%IX100.1` | Level-sensitive stop request. |
+| `LSH` | `LSH`, `%IX100.2` | Liquid detected at 2.4 m; unused in this task. |
+| `LSHH` | `LSHH`, `%IX100.3` | Liquid detected at 2.7 m; terminates filling. |
+| `timer_done` | Internal timer status | Filling interval has reached `TimerDuration`. |
+| `fill_valve` | `FillValve`, `%QX100.0` | TRUE opens the fill valve. |
+| `discharge_valve` | `DischargeValve`, `%QX100.1` | Always FALSE. |
+
+If `start` occurs while `stop` is TRUE, that event is discarded; releasing `stop` does not itself start filling.

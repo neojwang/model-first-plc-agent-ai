@@ -1,0 +1,39 @@
+The model below takes the **controller and its I/O interface** as its boundary. The tank is the external process: its level measurement enters the controller, and valve commands leave it. **A0** is the context function; **A1–A5** are its child functions.
+
+Raw I/O readings are treated as inputs. Parameters, operating rules, and internally derived conditions that govern execution are treated as controls.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand reading (%IX100.0); StopCommand reading (%IX100.1); LevelMeter reading (%IW100) | Level target h_sp = h_target = 0.8 h_span; overfill limit h_max = 0.9 h_span; tolerance eps = 0.02 h_span; hold duration t_h = 10 s; PID gains Kp, Ti, Td; measuring span h_span = 10 V; FULL_SCALE = 1000; discharge opening requirement of 40%; initial-step rule; stop-priority rule; PID saturation and integration-suspension rules | FillValve command (%QW100); DischargeValve command (%QW101); **fill_valve**; **discharge_valve** | OpenPLC Runtime; PLC application and scan execution; Modbus TCP connection; Factory I/O driver with Scale = 100 |
+| **A1** | **Interpret process measurements and operator commands** | StartCommand reading; StopCommand reading; LevelMeter reading | I/O address mapping; FULL_SCALE; h_span; rising-edge detection rule for **start**; Boolean interpretation rule for **stop** | Measured level h; **start**; **stop** | PLC input processing; rising-edge detector and previous-button-state memory; Modbus TCP interface |
+| **A2** | **Evaluate level conditions and settling duration** | Measured level h | h_sp; h_target; h_max; eps; t_h; regulation-active state; level-region classification rules; continuous-band timing and timer-reset rules | Level error e; **r**; **settled** | PLC arithmetic and comparison logic; continuous-duration timer |
+| **A3** | **Manage regulation steps and termination** | — | **start**; **stop**; **r**; **settled**; initial step 0; start-transition rule; completion rule; stop-priority rule | Current step; regulation-active state; **fill_valve**; **discharge_valve** | PLC step-state memory; sequence and priority logic |
+| **A4** | **Compute bounded PID fill demand** | Level error e | Regulation-active state; Kp, Ti, Td; PID execution interval; output limits of 0–100%; integration-suspension rule while output is clamped | Bounded fill-opening demand | PID algorithm; PID state memory; output limiter; integration-enable logic; PLC execution clock |
+| **A5** | **Issue valve commands** | Bounded fill-opening demand | **fill_valve**; **discharge_valve**; **stop**; current step; FULL_SCALE; fixed discharge opening of 40%; zero-output requirement for step 0 and stop | FillValve command (%QW100); DischargeValve command (%QW101) | PLC output assignment logic; integer conversion; Modbus TCP interface; Factory I/O driver |
+
+### Arrow meanings and governing rules
+
+- **A1 — Measurement and command interpretation**
+  - \(h = (\text{LevelMeter}/\text{FULL\_SCALE})h_{\text{span}}\).
+  - **start** is TRUE only in the scan detecting a press of StartCommand.
+  - **stop** follows the TRUE/FALSE state of StopCommand.
+
+- **A2 — Error, region, and settling evaluation**
+  - \(e = h_{sp}-h\).
+  - **r** = LOW when \(h<h_{target}\), MID when \(h_{target}\le h<h_{max}\), and HIGH when \(h\ge h_{max}\).
+  - **settled** becomes TRUE after \(|e|\le eps\) has remained continuously true for \(t_h\) during regulation. The timer resets when regulation is inactive or the error leaves the tolerance band.
+
+- **A3 — Step supervision**
+  - Step 0 is initial; **fill_valve** and **discharge_valve** are FALSE.
+  - **start** initiates regulation from step 0.
+  - During regulation, both output identifiers are TRUE.
+  - **settled** or **r** = HIGH ends regulation and returns to step 0.
+  - **stop** overrides all other conditions and returns to step 0 with both output identifiers FALSE.
+
+- **A4–A5 — Actuation**
+  - The PID demand is clamped to 0–100%, with integration suspended while clamped.
+  - While **fill_valve** is TRUE, FillValve receives the PID demand scaled to 0–1000.
+  - While **discharge_valve** is TRUE, DischargeValve receives \(0.4\,\text{FULL\_SCALE}=400\).
+  - In step 0 or whenever **stop** is TRUE, both analog commands are zero.
+
+Here, **fill_valve** and **discharge_valve** are the required Boolean activity indicators—not the analog valve commands. In particular, **fill_valve** remains TRUE while the PID is driving the fill valve even if its bounded demand is zero.

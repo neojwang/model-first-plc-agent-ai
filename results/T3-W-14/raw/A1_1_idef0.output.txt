@@ -1,0 +1,85 @@
+## A0 context model
+
+**A0 — Control timed tank filling**
+
+The model boundary includes input conditioning, step-state management, TON/TOF timing, and output commanding. The tank and its sensors/valves are external to the controller.
+
+Arrow labels below are noun phrases, including signal identifiers. Function names are verb phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration; TOF_Duration; initial-step requirement; filling/pause transition rules; stop priority; high-level termination requirement; high-high-level prohibition; I/O address mapping | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan execution; TON and TOF function-block instances; Modbus TCP connection; Factory I/O digital tank, level switches, and valves |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A1** | **Condition command and level signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O address mapping; rising-edge detection rule; startup edge-initialization policy | start; stop; LSH; LSHH | Modbus input image; rising-edge detector; previous-button-state memory |
+| **A2** | **Manage filling sequence** | start; stop; LSH; LSHH; ton_q; tof_q | Initial step 0; transition rules; transition priority; single-active-step constraint | Filling-step activity; active-step status | Step-state memory; sequence-transition evaluator |
+| **A3** | **Time filling and pause intervals** | Filling-step activity | TON_Duration; TOF_Duration; TON semantics; TOF semantics; cyclic timer-execution requirement | ton_q; tof_q | TON instance; TOF instance; PLC time base |
+| **A4** | **Command tank valves** | Filling-step activity; stop; LSH; LSHH | Valve-command rules; discharge inhibition; I/O address mapping | fill_valve; discharge_valve | Output logic; Modbus output image; Factory I/O valve actuators |
+
+### Internal arrow connections
+
+- **A1 → A2:** start, stop, LSH, LSHH.
+- **A1 → A4:** stop, LSH, LSHH.
+- **A2 → A3 and A4:** Filling-step activity.
+- **A3 → A2:** ton_q, tof_q.
+- **A2 → diagnostic boundary:** Active-step status.
+- **A4 → plant boundary:** fill_valve, discharge_valve.
+
+The A2–A3 feedback represents cyclic state/timer coordination, not an execution-order prescription.
+
+## Controls governing the decomposition
+
+### Signal meanings and mapping
+
+The raw tag names below identify the specified I/O mapping; the sequence receptivities and output names remain exactly those requested.
+
+| Model identifier | Meaning | Runtime tag/address |
+|---|---|---|
+| start | One-scan rising-edge event from the start button | StartCommand, `%IX100.0` |
+| stop | Current stop-button state | StopCommand, `%IX100.1` |
+| LSH | Level indication at 2.4 m | LSH, `%IX100.2` |
+| LSHH | Level indication at 2.7 m | LSHH, `%IX100.3` |
+| ton_q | TON output Q | Internal timer signal |
+| tof_q | TOF output Q | Internal timer signal |
+| fill_valve | Fill-valve command | FillValve, `%QX100.0` |
+| discharge_valve | Discharge-valve command | DischargeValve, `%QX100.1` |
+
+A conservative startup policy requires a fresh button press after initialization; an already-held StartCommand does not generate start.
+
+### A2 sequence rules
+
+These steps are internal states of **A2**, not additional IDEF0 functions.
+
+| Current state | Receptivity or condition | Resulting state |
+|---|---|---|
+| Any state | stop | Step 0 |
+| Any state | LSHH | Step 0 |
+| Filling or pause | LSH | Step 0 |
+| Step 0 | start AND NOT stop AND NOT LSH AND NOT LSHH | Filling |
+| Filling | ton_q AND NOT LSH, with stop and LSHH absent | Pause |
+| Pause | NOT tof_q AND NOT LSH, with stop and LSHH absent | Filling |
+
+Otherwise, the current state is retained. Priority is **stop, LSHH, LSH, then normal progression**. Start events outside step 0 are ignored.
+
+### A3 timer rules
+
+- Both timer inputs receive **Filling-step activity**.
+- TON uses **TON_Duration**. Its ton_q becomes TRUE after continuous filling activity for that duration.
+- TOF uses **TOF_Duration**. Its tof_q is TRUE during filling and remains TRUE for the specified duration after filling activity becomes FALSE.
+- Both timer instances execute cyclically, including during pause and step 0.
+- Scan scheduling must preserve the intended off-delay when entering pause; a stale tof_q must not cause an immediate, unintended restart.
+
+### A4 output rules
+
+- **fill_valve** is TRUE only during filling, with stop, LSH, and LSHH all FALSE.
+- **discharge_valve** is always FALSE.
+- Step 0 and pause command both outputs FALSE.
+
+## Safety boundary
+
+Normal filling terminates at **LSH**, before **LSHH**. The LSHH response above is a defensive shutdown, not permission to fill to that level.
+
+**Software logic alone cannot guarantee that LSHH is never physically reached.** That requirement also depends on valve-closing delay, scan/communication delay, inflow after closure, and sensor reliability. The available 0.3 m margin must accommodate those effects; otherwise an independent protective measure is required.

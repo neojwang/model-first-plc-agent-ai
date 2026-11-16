@@ -1,0 +1,110 @@
+FUNCTION_BLOCK TankRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    ActiveState : INT := 0;
+    NextState : INT := 0;
+    FillingActive : BOOL;
+    ton_q : BOOL;
+    tof_q : BOOL;
+    FillTimer : TON;
+    PauseTimer : TOF;
+END_VAR
+
+(* Evaluate timers for the currently active GRAFCET situation. *)
+FillingActive := (ActiveState = 1);
+FillTimer(IN := FillingActive, PT := TON_Duration);
+PauseTimer(IN := FillingActive, PT := TOF_Duration);
+
+ton_q := FillTimer.Q;
+tof_q := PauseTimer.Q;
+
+(* Evaluate transitions from the current situation only. *)
+NextState := ActiveState;
+
+CASE ActiveState OF
+    0:
+        IF start AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            NextState := 1;
+        END_IF;
+
+    1:
+        IF stop OR LSH OR LSHH THEN
+            NextState := 0;
+        ELSIF ton_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            NextState := 2;
+        END_IF;
+
+    2:
+        IF stop OR LSH OR LSHH THEN
+            NextState := 0;
+        ELSIF NOT tof_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            NextState := 1;
+        END_IF;
+
+ELSE
+    NextState := 0;
+END_CASE;
+
+(* Synchronize timer inputs with step activation and deactivation.
+   In particular, start the TOF delay immediately on leaving filling. *)
+IF NextState <> ActiveState THEN
+    ActiveState := NextState;
+    FillingActive := (ActiveState = 1);
+
+    FillTimer(IN := FillingActive, PT := TON_Duration);
+    PauseTimer(IN := FillingActive, PT := TOF_Duration);
+
+    ton_q := FillTimer.Q;
+    tof_q := PauseTimer.Q;
+END_IF;
+
+fill_valve := (ActiveState = 1);
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Configure these parameters to the required operating durations. *)
+    TON_Duration : TIME := T#0s;
+    TOF_Duration : TIME := T#0s;
+
+    StartEdge : R_TRIG;
+    TankControl : TankRuntime;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+
+TankControl(
+    start := StartEdge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := TankControl.fill_valve;
+DischargeValve := TankControl.discharge_valve;
+
+END_PROGRAM

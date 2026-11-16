@@ -1,0 +1,68 @@
+{
+ "run_id": "T3-W-25",
+ "condition": "workflow",
+ "task_id": "T3",
+ "calls": [
+  {
+   "step": "A1_1_idef0",
+   "time_utc_start": "2026-11-15T18:45:05Z",
+   "time_utc_end": "2026-11-15T18:45:56Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  },
+  {
+   "step": "A1_2_grafcet",
+   "time_utc_start": "2026-11-15T18:45:56Z",
+   "time_utc_end": "2026-11-15T18:46:08Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  },
+  {
+   "step": "A1_3_st",
+   "time_utc_start": "2026-11-15T18:46:08Z",
+   "time_utc_end": "2026-11-15T18:46:26Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  },
+  {
+   "step": "A2_1_idef0",
+   "time_utc_start": "2026-11-15T18:46:26Z",
+   "time_utc_end": "2026-11-15T18:47:01Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  },
+  {
+   "step": "A2_2_grafcet",
+   "time_utc_start": "2026-11-15T18:47:01Z",
+   "time_utc_end": "2026-11-15T18:47:11Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  },
+  {
+   "step": "A2_3_st",
+   "time_utc_start": "2026-11-15T18:47:11Z",
+   "time_utc_end": "2026-11-15T18:47:28Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  }
+ ],
+ "settings_sha256": "e17e5be85a7c89164e6752f643248e2087c655f70dafb31fabaebf3759218193",
+ "route": "chatgpt",
+ "dry_run": false,
+ "first_call_utc": "2026-11-15T18:45:05Z",
+ "models_returned": [
+  "gpt-6.1-sol"
+ ]
+}

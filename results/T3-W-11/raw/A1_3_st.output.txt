@@ -1,0 +1,123 @@
+FUNCTION_BLOCK FillingRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    active_state : INT := 0;
+    next_state : INT := 0;
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    x2 : BOOL := FALSE;
+    ton_q : BOOL := FALSE;
+    tof_q : BOOL := FALSE;
+    filling_ton : TON;
+    filling_tof : TOF;
+END_VAR
+
+(* Evaluate transitions using the current situation and timer outputs. *)
+ton_q := filling_ton.Q;
+tof_q := filling_tof.Q;
+next_state := active_state;
+
+CASE active_state OF
+    0:
+        IF start AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 1;
+        END_IF;
+
+    1:
+        IF stop OR LSH OR LSHH THEN
+            next_state := 0;
+        ELSIF ton_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 2;
+        END_IF;
+
+    2:
+        IF stop OR LSH OR LSHH THEN
+            next_state := 0;
+        ELSIF NOT tof_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 1;
+        END_IF;
+
+ELSE
+    next_state := 0;
+END_CASE;
+
+(* Commit the new GRAFCET situation. *)
+active_state := next_state;
+x0 := active_state = 0;
+x1 := active_state = 1;
+x2 := active_state = 2;
+
+(* Execute each standard timer once per scan.
+   Both timer inputs measure filling-step activity.
+   TOF starts its off-delay when the filling step is left. *)
+filling_ton(IN := x1, PT := TON_Duration);
+filling_tof(IN := x1, PT := TOF_Duration);
+
+ton_q := filling_ton.Q;
+tof_q := filling_tof.Q;
+
+(* Continuous, non-stored GRAFCET actions. *)
+fill_valve := x1;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Configure these timer parameters before operation. *)
+    TON_Duration : TIME := T#0s;
+    TOF_Duration : TIME := T#0s;
+
+    start : BOOL := FALSE;
+    stop : BOOL := FALSE;
+    first_scan : BOOL := TRUE;
+    start_edge : R_TRIG;
+    controller : FillingRuntime;
+END_VAR
+
+(* Sampling the edge detector on the first scan initializes its memory.
+   An already-held StartCommand is not treated as a new press. *)
+start_edge(CLK := StartCommand);
+
+IF first_scan THEN
+    start := FALSE;
+    first_scan := FALSE;
+ELSE
+    start := start_edge.Q;
+END_IF;
+
+stop := StopCommand;
+
+controller(
+    start := start,
+    stop := stop,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := controller.fill_valve;
+DischargeValve := controller.discharge_valve;
+
+END_PROGRAM

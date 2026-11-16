@@ -1,0 +1,212 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    FULL_SCALE : INT;
+    h_span : REAL;
+    h_target : REAL;
+    h_sp : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    cycle_seconds : REAL;
+END_VAR
+VAR_OUTPUT
+    FillValve : INT;
+    DischargeValve : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    state_id : INT := 0;
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    was_active : BOOL := FALSE;
+    h : REAL;
+    e : REAL;
+    previous_error : REAL := 0.0;
+    proportional_term : REAL;
+    integral_term : REAL := 0.0;
+    candidate_integral : REAL;
+    derivative_term : REAL;
+    raw_demand : REAL;
+    bounded_demand : REAL;
+END_VAR
+
+(* Region coding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+e := h_sp - h;
+
+IF h >= h_max THEN
+    r := 2;
+ELSIF h >= h_target THEN
+    r := 1;
+ELSE
+    r := 0;
+END_IF;
+
+(* The hold condition measures uninterrupted time inside the tolerance
+   band while regulation is active. *)
+HoldTimer(
+    IN := (state_id = 1) AND NOT stop
+          AND (r <> 2) AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+IF stop THEN
+    state_id := 0;
+ELSE
+    CASE state_id OF
+        0:
+            IF start AND (r <> 2) THEN
+                state_id := 1;
+            END_IF;
+        1:
+            IF settled OR (r = 2) THEN
+                state_id := 0;
+            END_IF;
+    ELSE
+        state_id := 0;
+    END_CASE;
+END_IF;
+
+x0 := state_id = 0;
+x1 := state_id = 1;
+fill_valve := x1;
+discharge_valve := x1;
+
+FillValve := 0;
+DischargeValve := 0;
+
+IF x1 THEN
+    IF NOT was_active THEN
+        integral_term := 0.0;
+        previous_error := e;
+    END_IF;
+
+    (* PID demand is expressed as a fraction of full valve opening.
+       Ti, Td and cycle_seconds are expressed in seconds. *)
+    proportional_term := Kp * e;
+    derivative_term := 0.0;
+    candidate_integral := integral_term;
+
+    IF cycle_seconds > 0.0 THEN
+        derivative_term :=
+            Kp * Td * (e - previous_error) / cycle_seconds;
+
+        IF Ti > 0.0 THEN
+            candidate_integral :=
+                integral_term + Kp * e * cycle_seconds / Ti;
+        ELSE
+            integral_term := 0.0;
+            candidate_integral := 0.0;
+        END_IF;
+    END_IF;
+
+    raw_demand :=
+        proportional_term + candidate_integral + derivative_term;
+
+    (* Reject the integral update whenever the demand is clamped. *)
+    IF raw_demand > 1.0 THEN
+        bounded_demand := 1.0;
+    ELSIF raw_demand < 0.0 THEN
+        bounded_demand := 0.0;
+    ELSE
+        bounded_demand := raw_demand;
+        integral_term := candidate_integral;
+    END_IF;
+
+    FillValve :=
+        REAL_TO_INT(bounded_demand * INT_TO_REAL(FULL_SCALE));
+    DischargeValve :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+
+    previous_error := e;
+ELSE
+    integral_term := 0.0;
+    candidate_integral := 0.0;
+    derivative_term := 0.0;
+    proportional_term := 0.0;
+    raw_demand := 0.0;
+    bounded_demand := 0.0;
+    previous_error := e;
+END_IF;
+
+was_active := x1;
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    h_span : REAL := 10.0;
+    h_sp : REAL := 8.0;
+    h_target : REAL := 8.0;
+    h_max : REAL := 9.0;
+    eps : REAL := 0.2;
+    t_h : TIME := T#10s;
+    cycle_seconds : REAL := 0.02;
+END_VAR
+VAR
+    Controller : FB_LevelControl;
+    (* Configurable commissioning values; tune for the plant.
+       Kp is opening fraction per volt; Ti and Td are seconds. *)
+    Kp : REAL := 0.1;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    FULL_SCALE := FULL_SCALE,
+    h_span := h_span,
+    h_target := h_target,
+    h_sp := h_sp,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    cycle_seconds := cycle_seconds
+);
+
+FillValve := Controller.FillValve;
+DischargeValve := Controller.DischargeValve;
+fill_valve := Controller.fill_valve;
+discharge_valve := Controller.discharge_valve;
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

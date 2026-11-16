@@ -1,0 +1,20 @@
+### IDEF0 functional model
+
+The model boundary is the **conveyor-control logic**: sensor indications enter the model, and the conveyor command leaves it. Physical box movement belongs to the controlled plant, not to the controller’s outputs.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable requirement; I/O address mapping; reset-priority policy¹ | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection to Factory I/O |
+| **A1** | **Determine conveyor start request** | `sensor_a` | Start-on-A requirement; input mapping: `sensor_a` ← SensorA at `%IX100.0` | Start request | OpenPLC Boolean logic |
+| **A2** | **Determine conveyor stop request** | `sensor_b` | Stop-at-B requirement; input mapping: `sensor_b` ← SensorB at `%IX100.1` | Stop request | OpenPLC Boolean logic |
+| **A3** | **Latch and issue conveyor command** | Start request; stop request | IEC 61131-3 bistable requirement; state-retention rule; reset-priority policy¹; output mapping: `conveyor` → Conveyor at `%QX100.0` | `conveyor` | IEC 61131-3 RS function block; OpenPLC Runtime; Modbus TCP output interface |
+
+**Child-function connections:** A1’s **Start request** feeds A3’s set input; A2’s **Stop request** feeds A3’s reset input. A3’s retained output supplies `conveyor`. These request names denote internal arrows, not additional external I/O identifiers.
+
+¹ **Priority choice:** The task permits either SR or RS but does not explicitly specify simultaneous-input behavior. This model selects **reset-dominant RS** to prioritize stopping at B:
+
+- `sensor_b = TRUE`: `conveyor` is FALSE, including when both sensors are TRUE.
+- Otherwise, `sensor_a = TRUE`: `conveyor` is TRUE.
+- Both sensors FALSE: `conveyor` retains its previous state.
+
+Thus, the conveyor continues running after the box leaves A and stops when the box reaches B.

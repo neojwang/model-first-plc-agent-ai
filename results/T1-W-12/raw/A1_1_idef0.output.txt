@@ -1,0 +1,71 @@
+## Model scope and decisions
+
+This is a **controller-level IDEF0 model**: the inputs are sensor signals and the output is the conveyor command. Physical box transport is performed by the plant.
+
+- **A0** is the context function requested below; its context diagram is conventionally labeled **A-0** in IDEF0.
+- **A1–A3** decompose A0.
+- **Reset dominance:** use an IEC 61131-3 **RS** bistable so that detection at sensor B stops the conveyor even if both sensors are TRUE.
+- **Initialization assumption:** the retained conveyor command starts FALSE. Startup and restart behavior should be confirmed before implementation.
+
+All function names below are verb phrases; all arrow labels are noun phrases. The required external signal identifiers are exactly `sensor_a`, `sensor_b`, and `conveyor`.
+
+## A0 context and child-function ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start requirement; Stop requirement; Command retention requirement; Reset-priority policy; Initial-state assumption; I/O address map | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable; Modbus TCP connection; Factory I/O scene |
+| **A1** | **Derive set and reset requests** | `sensor_a`; `sensor_b` | Start requirement; Stop requirement | Set request; Reset request | OpenPLC Runtime |
+| **A2** | **Retain the conveyor command** | Set request; Reset request | Command retention requirement; Reset-priority policy; Initial-state assumption | Retained conveyor command | OpenPLC Runtime; IEC 61131-3 RS bistable |
+| **A3** | **Apply the conveyor command** | Retained conveyor command | I/O address map | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O conveyor actuator |
+
+The bistable’s internal state belongs to the **A2 mechanism**; it is not an additional external input.
+
+## Arrow definitions
+
+### External signal arrows
+
+| Arrow | Meaning | Address / plant tag |
+|---|---|---|
+| `sensor_a` | TRUE while a box is detected at sensor A | `%IX100.0` / `SensorA` |
+| `sensor_b` | TRUE while a box is detected at sensor B | `%IX100.1` / `SensorB` |
+| `conveyor` | TRUE runs the conveyor; FALSE stops it | `%QX100.0` / `Conveyor` |
+
+### Internal arrows
+
+| Arrow | Source → destination | Meaning |
+|---|---|---|
+| Set request | A1 → A2 | Start request asserted while `sensor_a` is TRUE |
+| Reset request | A1 → A2 | Stop request asserted while `sensor_b` is TRUE |
+| Retained conveyor command | A2 → A3 | Stored run/stop state produced by the RS bistable |
+
+### Control arrows
+
+| Arrow | Meaning |
+|---|---|
+| Start requirement | Box detection at sensor A requests conveyor operation |
+| Stop requirement | Box detection at sensor B requests conveyor stoppage |
+| Command retention requirement | The conveyor command persists after sensor A clears, until a reset request occurs |
+| Reset-priority policy | A reset request overrides a simultaneous set request |
+| Initial-state assumption | The retained conveyor command is FALSE at initialization |
+| I/O address map | The binding of scene tags and required identifiers to the listed PLC addresses |
+
+## Decomposition connectivity
+
+The A0 boundary arrows are preserved in its decomposition:
+
+- `sensor_a` and `sensor_b` enter **A1**.
+- **A1** supplies **Set request** and **Reset request** to **A2**.
+- **A2** supplies **Retained conveyor command** to **A3**.
+- **A3** produces `conveyor` at the A0 boundary.
+- Each control and mechanism in the table enters the function it constrains or supports.
+
+## Behavioral check
+
+| `sensor_a` | `sensor_b` | Resulting retained command and `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous state retained |
+| TRUE | FALSE | TRUE — conveyor runs |
+| FALSE | TRUE | FALSE — conveyor stops |
+| TRUE | TRUE | FALSE — reset priority stops the conveyor |
+
+Thus, clearing sensor A does not stop transport. Detection at sensor B resets the retained command, leaving the conveyor stopped.

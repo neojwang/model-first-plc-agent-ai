@@ -2,7 +2,7 @@
 
 This repository accompanies the paper "Teaching Programmable Logic Controller Programming and Verification with Agent AI: A Model-First IDEF0–GRAFCET Workflow in a Virtual Factory". It contains everything needed to repeat the code-generation experiment (RQ1) and the cross-check of the verification lane (RQ2); it contains no student data.
 
-Status: the materials are released before the experiment. The prompts are frozen with `exec/freeze_prompts.py` after two pilots of eight rows each (one row per task and condition, not counted) and before the first generation of the run plan, and the results (`results/`) are added after the experiment. License: MIT (see `LICENSE`).
+Status: the materials were released before the experiment. The prompts were frozen with `exec/freeze_prompts.py` after two pilots of eight rows each (one row per task and condition, not counted) and before the first generation of the run plan. The main run (240 rows, 840 calls) was made from 2026-11-15T12:30Z to 2026-11-16T00:11Z, and its results are in `results/`. License: MIT (see `LICENSE`).
 
 | Path | Content |
 |---|---|
@@ -30,7 +30,7 @@ Status: the materials are released before the experiment. The prompts are frozen
 | `pilot/vc/vc_check.py`, `pilot/vc/vc_log.txt` | Check of the scene simulator against programs with known verdicts, used in place of a comparison with runs in Factory I/O: the references pass every registered scene test with the fixed 20 ms configuration and with their own configurations at 10 ms and 100 ms, and in 750 test runs over 288 combinations of the alternative assumptions; each of 11 seeded faults, and each reference under two configuration faults (normally closed stop button, driver Scale 1), fails at least one scene test; properties P1–P4 are also checked scan by scan on the compiled code |
 | `analysis/analysis.py` | Wilson intervals, pass@k, Fisher's exact test, Cochran–Mantel–Haenszel test (primary test of RQ1), false accepts and Cohen's kappa (RQ2), and the GRAFCET models run as GVM programs (the primary measure of RQ1 since 2026-11-14, decided after the first pilot) with the check of the ST programs against them; `--table9` writes the results table of Section 5.5 |
 | `analysis/power_sim.py` | Monte Carlo power of the Cochran–Mantel–Haenszel test quoted in Section 3.2 |
-| `results/` (added after the experiment) | Run sheet `runs.csv`; the text artifacts of every sample (IDEF0 and GRAFCET models, ST code, NuSMV models, compilation and test logs); the raw responses of the model (`<run_id>/raw/`) and the call log with the token usage of every call (`llm_ledger.jsonl`); `manifest.csv` with the SHA-256 of every artifact. Screen recordings of the scene tests are listed in the manifest but not included |
+| `results/` | Run sheet `runs.csv` with the verdicts of the scoring tools; the text artifacts of every sample (IDEF0 and GRAFCET models, ST code, NuSMV models, compilation and test logs); the raw responses of the model (`<run_id>/raw/`; the field `safety_identifier`, which identifies the operator's ChatGPT account, is replaced by `[removed]`), the call log with the token usage of every call (`llm_ledger.jsonl`), and the pauses at the plan usage limit (`pauses.jsonl`); the tables of the scoring tools (`gvm_runs.csv`, `st_gvm_runs.csv`, `nusmv_runs.csv`, `scene_sensitivity.csv`), the report of `analysis/analysis.py` (`report.md`) and its results table (`results_table.csv`); `manifest.csv` with the SHA-256 of every file |
 
 Usage:
 

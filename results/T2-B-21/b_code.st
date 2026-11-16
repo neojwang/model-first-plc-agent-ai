@@ -1,0 +1,86 @@
+FUNCTION_BLOCK FillingControl
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StateNumber : INT := 0;
+    FillTimer : TON;
+    timer_done : BOOL := FALSE;
+END_VAR
+
+(* Stop has priority over all other commands. *)
+IF stop THEN
+    StateNumber := 0;
+ELSE
+    CASE StateNumber OF
+        0:
+            IF start AND NOT LSHH THEN
+                StateNumber := 1;
+            END_IF;
+
+        1:
+            StateNumber := 1;
+
+    ELSE
+        StateNumber := 0;
+    END_CASE;
+END_IF;
+
+(* Start timing in the same scan that filling begins. *)
+FillTimer(
+    IN := (StateNumber = 1),
+    PT := TimerDuration
+);
+timer_done := FillTimer.Q;
+
+IF (StateNumber = 1) AND (timer_done OR LSHH) THEN
+    StateNumber := 0;
+
+    (* Reset immediately so the next filling cycle gets a fresh timer. *)
+    FillTimer(IN := FALSE, PT := TimerDuration);
+END_IF;
+
+fill_valve := (StateNumber = 1) AND NOT stop;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Configurable filling duration; default is ten seconds. *)
+    TimerDuration : TIME := T#10s;
+    StartEdge : R_TRIG;
+    Controller : FillingControl;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+
+Controller(
+    start := StartEdge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+FillValve := Controller.fill_valve;
+DischargeValve := Controller.discharge_valve;
+
+END_PROGRAM

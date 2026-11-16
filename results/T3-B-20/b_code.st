@@ -1,0 +1,96 @@
+FUNCTION_BLOCK TankRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    state_code : INT := 0; (* 0 = idle, 1 = filling, 2 = pause *)
+    filling_active : BOOL;
+    ton_q : BOOL;
+    tof_q : BOOL;
+    fill_timer : TON;
+    pause_timer : TOF;
+END_VAR
+
+(* Call both timers every scan. *)
+filling_active := (state_code = 1);
+
+fill_timer(IN := filling_active, PT := TON_Duration);
+pause_timer(IN := filling_active, PT := TOF_Duration);
+
+ton_q := fill_timer.Q;
+tof_q := pause_timer.Q;
+
+(* Stop and level interlocks take priority over all transitions. *)
+IF stop OR LSH OR LSHH THEN
+    state_code := 0;
+ELSE
+    CASE state_code OF
+        0:
+            IF start THEN
+                state_code := 1;
+            END_IF;
+
+        1:
+            IF ton_q THEN
+                state_code := 2;
+            END_IF;
+
+        2:
+            IF NOT tof_q THEN
+                state_code := 1;
+            END_IF;
+
+    ELSE
+        state_code := 0;
+    END_CASE;
+END_IF;
+
+fill_valve := (state_code = 1) AND NOT stop AND NOT LSH AND NOT LSHH;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Adjustable commissioning defaults. *)
+    TON_Duration : TIME := T#5s;
+    TOF_Duration : TIME := T#5s;
+
+    start_edge : R_TRIG;
+    runtime : TankRuntime;
+END_VAR
+
+start_edge(CLK := StartCommand);
+
+runtime(
+    start := start_edge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := runtime.fill_valve;
+DischargeValve := runtime.discharge_valve;
+
+END_PROGRAM

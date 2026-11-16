@@ -1,0 +1,226 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    StartSignal : BOOL;
+    StopSignal : BOOL;
+    LevelSample : INT;
+    FullScaleValue : INT;
+    h_span : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    SamplePeriodSeconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+    FillCommand : INT := 0;
+    DischargeCommand : INT := 0;
+END_VAR
+VAR CONSTANT
+    REGION_LOW : INT := 0;
+    REGION_MID : INT := 1;
+    REGION_HIGH : INT := 2;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL := FALSE;
+    r : INT := 0;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    t1 : BOOL;
+    t2 : BOOL;
+
+    h : REAL;
+    e : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralTerm : REAL := 0.0;
+    IntegralCandidate : REAL;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    RawDemand : REAL;
+    CandidateDemand : REAL;
+    BoundedDemand : REAL;
+    WasRegulating : BOOL := FALSE;
+END_VAR
+
+(* Acquire the rising-edge event even while stopped or regulating. *)
+StartEdge(CLK := StartSignal);
+start := StartEdge.Q;
+stop := StopSignal;
+
+h := INT_TO_REAL(LevelSample) / INT_TO_REAL(FullScaleValue) * h_span;
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := REGION_LOW;
+ELSIF h < h_max THEN
+    r := REGION_MID;
+ELSE
+    r := REGION_HIGH;
+END_IF;
+
+(* The hold condition is continuous and belongs exclusively to x1. *)
+HoldTimer(
+    IN := x1 AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+(* Evaluate both transitions from the same preceding situation. *)
+t1 := x0 AND start AND NOT stop AND (r <> REGION_HIGH);
+t2 := x1 AND (stop OR settled OR (r = REGION_HIGH));
+
+IF t1 THEN
+    x0 := FALSE;
+    x1 := TRUE;
+ELSIF t2 THEN
+    x0 := TRUE;
+    x1 := FALSE;
+END_IF;
+
+(* Continuous, non-stored GRAFCET actions. *)
+fill_valve := x1;
+discharge_valve := x1;
+
+IF fill_valve THEN
+    (* Initialize a new regulation run without a derivative kick. *)
+    IF NOT WasRegulating THEN
+        PreviousError := e;
+        IntegralTerm := 0.0;
+    END_IF;
+
+    (* Parallel PID; demand is expressed as a fraction of full opening.
+       Ti and Td are in seconds. Ti <= 0 disables integration. *)
+    ProportionalTerm := Kp * e;
+    DerivativeTerm := 0.0;
+
+    IF (Td > 0.0) AND (SamplePeriodSeconds > 0.0) THEN
+        DerivativeTerm :=
+            Kp * Td * (e - PreviousError) / SamplePeriodSeconds;
+    END_IF;
+
+    IF Ti <= 0.0 THEN
+        IntegralTerm := 0.0;
+    END_IF;
+
+    RawDemand := ProportionalTerm + IntegralTerm + DerivativeTerm;
+
+    (* Suspend integration whenever the demand is clamped.
+       Reject an integration increment that would itself cause clamping. *)
+    IF (RawDemand >= 0.0) AND (RawDemand <= 1.0)
+       AND (Ti > 0.0) AND (SamplePeriodSeconds > 0.0) THEN
+        IntegralCandidate :=
+            IntegralTerm + Kp * e * SamplePeriodSeconds / Ti;
+        CandidateDemand :=
+            ProportionalTerm + IntegralCandidate + DerivativeTerm;
+
+        IF (CandidateDemand >= 0.0) AND (CandidateDemand <= 1.0) THEN
+            IntegralTerm := IntegralCandidate;
+            RawDemand := CandidateDemand;
+        END_IF;
+    END_IF;
+
+    IF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSIF RawDemand > 1.0 THEN
+        BoundedDemand := 1.0;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    FillCommand :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(FullScaleValue));
+    PreviousError := e;
+ELSE
+    FillCommand := 0;
+    BoundedDemand := 0.0;
+
+    (* Remove the completed hold condition immediately on leaving x1. *)
+    HoldTimer(IN := FALSE, PT := t_h);
+    settled := FALSE;
+END_IF;
+
+IF discharge_valve THEN
+    DischargeCommand := REAL_TO_INT(0.4 * INT_TO_REAL(FullScaleValue));
+ELSE
+    DischargeCommand := 0;
+END_IF;
+
+WasRegulating := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : LevelControlRuntime;
+
+    h_span : REAL := 10.0;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME := T#10s;
+
+    (* Initial tuning values; commission these for the simulated plant. *)
+    Kp : REAL := 1.0;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+
+    SamplePeriodSeconds : REAL := 0.02;
+END_VAR
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+Controller(
+    StartSignal := StartCommand,
+    StopSignal := StopCommand,
+    LevelSample := LevelMeter,
+    FullScaleValue := FULL_SCALE,
+    h_span := h_span,
+    h_sp := h_sp,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    SamplePeriodSeconds := SamplePeriodSeconds
+);
+
+FillValve := Controller.FillCommand;
+DischargeValve := Controller.DischargeCommand;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK MainTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH MainTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

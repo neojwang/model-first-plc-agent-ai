@@ -1,0 +1,39 @@
+== A1 (st_code) ==
+file: T2-W-08/a1_code.st  sha256: 16bc0cc32da1b8751938745b9368a6b83063fb6a53536c936f6335e9f3f360f7
+task: T2; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+   T2 (a): set TimerDuration (line 7, TIME): (none) -> T#15s
+   T2 (a): set TimerDuration (line 68, TIME): T#10s -> T#15s
+T2 (a): pass - closed after 15.00 s at h = 1.19 m; step 0 ok
+   T2 (b): set TimerDuration (line 7, TIME): (none) -> T#60s
+   T2 (b): set TimerDuration (line 68, TIME): T#10s -> T#60s
+T2 (b): pass - closed after 34.10 s at h = 2.714 m (LSHH on); step 0 ok
+   T2 (c): set TimerDuration (line 7, TIME): (none) -> T#15s
+   T2 (c): set TimerDuration (line 68, TIME): T#10s -> T#15s
+T2 (c): pass - fill valve off 0 scan(s) after StopCommand; restart ok
+sensitivity, polling phase 40 ms: 3/3 situations pass
+sensitivity, switches +0.05 m: 3/3 situations pass
+sensitivity, switches -0.05 m: 3/3 situations pass
+sensitivity, valve lag 1 s: 3/3 situations pass
+task interval of the configuration: 20 ms
+verdict: 1
+
+== A2 (a2_st_code) ==
+file: T2-W-08/a2_code.st  sha256: d6734fa3e85f3725b6a466fb15bccde8cb7d09c4ee4120b4ebc67a8c52eac31a
+task: T2; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+   T2 (a): set TimerDuration (line 7, TIME): (none) -> T#15s
+   T2 (a): set TimerDuration (line 72, TIME): T#10s -> T#15s
+T2 (a): pass - closed after 15.00 s at h = 1.19 m; step 0 ok
+   T2 (b): set TimerDuration (line 7, TIME): (none) -> T#60s
+   T2 (b): set TimerDuration (line 72, TIME): T#10s -> T#60s
+T2 (b): pass - closed after 34.10 s at h = 2.714 m (LSHH on); step 0 ok
+   T2 (c): set TimerDuration (line 7, TIME): (none) -> T#15s
+   T2 (c): set TimerDuration (line 72, TIME): T#10s -> T#15s
+T2 (c): pass - fill valve off 0 scan(s) after StopCommand; restart ok
+sensitivity, polling phase 40 ms: 3/3 situations pass
+sensitivity, switches +0.05 m: 3/3 situations pass
+sensitivity, switches -0.05 m: 3/3 situations pass
+sensitivity, valve lag 1 s: 3/3 situations pass
+task interval of the configuration: 20 ms
+verdict: 1

@@ -1,0 +1,88 @@
+## A0 context: Control timed tank filling
+
+**Scope:** Control the digital tank’s fill valve using a start event, a filling timer, an overfill switch, and a stop command. Keep the discharge valve closed.
+
+The model uses the required identifiers for receptivities and outputs. Other arrows, such as **Filling-step state**, are internal information flows rather than additional plant I/O.
+
+### ICOM model
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSHH | TimerDuration; Initial-step rule; Stop-priority rule; Filling-completion rule; Discharge-closure rule | fill_valve; discharge_valve | OpenPLC Runtime; Factory I/O tank scene; Modbus TCP connection; PLC state memory; PLC timer |
+| **A1** | **Manage filling-step transitions** | start; stop; LSHH; timer_done | Initial-step rule; Stop-priority rule; Filling-completion rule | Filling-step state | OpenPLC Runtime; PLC state memory |
+| **A2** | **Measure filling-step duration** | Filling-step state | TimerDuration; Timer-reset rule | timer_done | OpenPLC Runtime; PLC timer |
+| **A3** | **Determine valve commands** | Filling-step state; stop; LSHH; timer_done | Initial-step rule; Stop-priority rule; Filling-completion rule; Discharge-closure rule | fill_valve; discharge_valve | OpenPLC Runtime; Modbus TCP connection; Factory I/O valve actuators |
+
+**LSH treatment:** `LSH` is available plant I/O but has no specified control effect in this task. It is therefore not a functional arrow in the IDEF0 model. In particular, reaching the target level at 2.4 m does **not** end filling under the stated requirements.
+
+## Arrow definitions
+
+All arrow labels below are noun phrases, including the required identifier labels.
+
+| Arrow | Meaning |
+|---|---|
+| **start** | One-scan event representing a press of StartCommand |
+| **stop** | Current StopCommand condition |
+| **LSHH** | High-high liquid detection condition at 2.7 m |
+| **timer_done** | Elapsed-duration condition for the active filling step |
+| **TimerDuration** | Configured filling duration |
+| **Filling-step state** | Sequence state: step 0, idle, or step 1, filling |
+| **Initial-step rule** | Initialization in step 0, with both valve commands FALSE |
+| **Stop-priority rule** | Unconditional return to step 0 and both valve commands FALSE whenever stop is TRUE |
+| **Filling-completion rule** | Completion of filling on timer_done or LSHH, whichever occurs first |
+| **Timer-reset rule** | Timer reset outside the filling step and fresh timing on each filling-step entry |
+| **Discharge-closure rule** | Continuous FALSE command for discharge_valve |
+| **fill_valve** | Fill-valve opening command |
+| **discharge_valve** | Discharge-valve opening command |
+
+## Child-function behavior
+
+### A1 — Manage filling-step transitions
+
+- Initialize **Filling-step state** to **step 0**.
+- While in step 0, accept `start` to enter **step 1**, subject to stop priority and the high-high cutoff.
+- While in step 1, return to step 0 when `timer_done` or `LSHH` is TRUE.
+- Whenever `stop` is TRUE, select step 0 regardless of other conditions.
+- A continuously held StartCommand does not cause repeated starts: `start` is a one-scan event, not the maintained button level.
+- If `start` and `LSHH` occur together, remain in step 0; no fill-valve opening is permitted.
+
+### A2 — Measure filling-step duration
+
+- Start timing on entry to step 1.
+- Produce `timer_done` when the active filling duration reaches `TimerDuration`.
+- Reset the timer outside step 1 so each filling cycle receives a fresh timing interval.
+
+### A3 — Determine valve commands
+
+- Set `fill_valve` TRUE only during step 1 and only while `stop`, `LSHH`, and `timer_done` are FALSE.
+- Set `fill_valve` FALSE in step 0.
+- Keep `discharge_valve` FALSE in every state.
+
+The direct completion and stop inputs to A3 express the required output overrides; valve closure must not depend on an extra scan of state-transition processing.
+
+## Internal connections and boundary balance
+
+| Source | Arrow | Destination |
+|---|---|---|
+| A0 boundary | start | A1 |
+| A0 boundary | stop | A1, A3 |
+| A0 boundary | LSHH | A1, A3 |
+| A0 boundary | TimerDuration | A2 |
+| A1 | Filling-step state | A2, A3 |
+| A2 | timer_done | A1, A3 |
+| A3 | fill_valve | A0 boundary |
+| A3 | discharge_valve | A0 boundary |
+
+The rule controls and mechanisms listed at A0 are allocated to its children as shown in the ICOM table. **Timer-reset rule** is a child-level elaboration of timer operation, not an additional external plant signal.
+
+## Physical I/O traceability
+
+| Model identifier | Plant tag / address | Role |
+|---|---|---|
+| start | StartCommand — `%IX100.0` | Rising-edge event derived from the button level |
+| stop | StopCommand — `%IX100.1` | Maintained stop condition |
+| LSH | LSH — `%IX100.2` | Available target-level indication; unused by this control task |
+| LSHH | LSHH — `%IX100.3` | Overfill cutoff |
+| timer_done | Internal timer status | Filling-duration completion |
+| fill_valve | FillValve — `%QX100.0` | TRUE opens the fill valve |
+| discharge_valve | DischargeValve — `%QX100.1` | Always FALSE |

@@ -1,0 +1,25 @@
+### IDEF0 functional model
+
+**A0 — Control timed tank filling** is the context function. Its decomposition comprises **A1–A3**. External signal arrows use the required identifier vocabulary; **filling-step state** is an internal arrow indicating whether the controller is in step 0 or the filling step.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial-step rule; timer-or-high-high termination rule; stop-priority rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC execution clock; Modbus TCP connection; Factory I/O digital tank scene |
+| **A1** | **Determine filling-step state** | `start`; `stop`; `LSHH`; `timer_done` | Initial-step rule; start-transition rule; timer-or-high-high termination rule; stop-priority rule | filling-step state | OpenPLC Runtime; retained step-state memory |
+| **A2** | **Time the filling step** | filling-step state | `TimerDuration`; timer-start and reset rules | `timer_done` | OpenPLC timer instance; PLC execution clock |
+| **A3** | **Generate valve commands** | filling-step state | Step-output rules; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC output logic; Modbus TCP output mapping |
+
+### Meaning of the control arrows
+
+- **Initial-step rule:** Initialize in step 0, with both outputs FALSE.
+- **Start-transition rule:** A `start` event initiates the filling step unless a higher-priority return-to-step-0 condition applies. A held start button does not generate repeated events.
+- **Timer-or-high-high termination rule:** While filling, either `timer_done` or `LSHH` returns the controller to step 0.
+- **Stop-priority rule:** `stop` overrides starting and continued filling, returning the controller to step 0 with both outputs FALSE.
+- **Timer-start and reset rules:** Start timing upon entry to the filling step; assert `timer_done` when `TimerDuration` has elapsed; reset the timer when the filling step is inactive.
+- **Step-output rules:** `fill_valve` is TRUE only in the filling step and FALSE in step 0.
+- **Discharge-inhibition rule:** `discharge_valve` is always FALSE.
+
+**Boundary and decomposition notes:**
+- `timer_done` is internal: **A2 → A1**. The filling-step state flows **A1 → A2** and **A1 → A3**.
+- `LSH` is available in the plant I/O but has **no functional role in this task**: reaching the target-level switch does not terminate filling. It is therefore not shown as a used IDEF0 arrow.
+- `start` denotes the specified one-scan button-press event, not the sustained level of the physical start input.

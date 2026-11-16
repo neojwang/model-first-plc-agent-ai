@@ -1,0 +1,98 @@
+## Scope and conventions
+
+The model covers the **PLC control function**, including input conditioning, step supervision, PID computation, timing, and output generation. The Factory I/O tank is the external plant.
+
+- **Step 0:** idle; both analog outputs are zero.
+- **Step 1:** regulation active.
+- Level and error are normalized to the measuring span:
+  \[
+  h=\frac{\text{LevelMeter}}{\text{FULL\_SCALE}},\qquad
+  e=0.8-h
+  \]
+  Thus, \(h_{\text{target}}=0.8\), \(h_{\max}=0.9\), and \(\varepsilon=0.02\).
+- The required identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve` are used exactly. They denote named signal arrows; descriptive arrow labels are noun phrases.
+- `fill_valve` and `discharge_valve` are Boolean activity signals, **not** the analog output-register values.
+
+## A0 — Control the tank level
+
+### IDEF0 context and decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control the tank level** | StartCommand signal; StopCommand signal; LevelMeter signal | Initial-step rule; start-event rule; stop-priority rule; level set point \(0.8h_{\text{span}}\); overfill limit \(0.9h_{\text{span}}\); tolerance band \(0.02h_{\text{span}}\); hold time 10 s; PID gains \(K_p,T_i,T_d\); output limits 0–100%; integration-suspension rule; discharge opening 40%; FULL_SCALE = 1000; I/O mapping | FillValve analog command; DischargeValve analog command; `fill_valve`; `discharge_valve` | OpenPLC runtime; PLC scan clock; Modbus TCP connection; Factory I/O driver |
+| **A1** | **Acquire and normalize plant signals** | StartCommand signal; StopCommand signal; LevelMeter signal | I/O mapping; FULL_SCALE = 1000; rising-edge definition; initialization policy | `start`; `stop`; normalized level \(h\) | Modbus input image; input scaling arithmetic; edge-detection memory |
+| **A2** | **Evaluate level conditions** | Normalized level \(h\) | Regulation activity `fill_valve`; level set point; overfill limit; tolerance band; hold time; timer-reset rule | Level error \(e\); `r`; `settled` | Comparison arithmetic; continuous-dwell timer; PLC scan clock |
+| **A3** | **Supervise regulation steps** | Current-step record | `start`; `stop`; `settled`; `r`; initial-step rule; transition-priority rules | Updated-step record; `fill_valve`; `discharge_valve` | Step-state memory; transition evaluation logic |
+| **A4** | **Compute the bounded PID demand** | Level error \(e\) | `fill_valve`; PID gains \(K_p,T_i,T_d\); output limits 0–100%; integration-suspension rule; inactive-controller policy; elapsed scan time | Bounded fill demand | PID algorithm; integral-state memory; derivative-state memory; PLC scan clock |
+| **A5** | **Generate valve commands** | Bounded fill demand | `fill_valve`; `discharge_valve`; discharge opening 40%; FULL_SCALE = 1000; I/O mapping; zero-output rule | FillValve analog command; DischargeValve analog command | Output scaling arithmetic; Modbus output image; Factory I/O driver |
+
+The **current-step record** is the previous scan’s **updated-step record**, retained by the step-state memory.
+
+## Child-function arrow connections
+
+These connections make the decomposition explicit rather than leaving the child functions as an unconnected list.
+
+| Source | Arrow | Destination | Destination role |
+|---|---|---|---|
+| A0 boundary | StartCommand signal; StopCommand signal; LevelMeter signal | A1 | Inputs |
+| A1 | Normalized level \(h\) | A2 | Input |
+| A1 | `start`; `stop` | A3 | Controls |
+| A2 | `r`; `settled` | A3 | Controls |
+| A2 | Level error \(e\) | A4 | Input |
+| A3 | `fill_valve` | A2 | Control |
+| A3 | `fill_valve` | A4 | Control |
+| A3 | `fill_valve`; `discharge_valve` | A5 | Controls |
+| A3 | Updated-step record | A3, through retained state | Input on the following scan |
+| A4 | Bounded fill demand | A5 | Input |
+| A3 | `fill_valve`; `discharge_valve` | A0 boundary | Outputs |
+| A5 | FillValve analog command; DischargeValve analog command | A0 boundary | Outputs |
+
+All external controls and mechanisms in the A0 row are allocated to the applicable child rows.
+
+## Required behavior represented by the model
+
+### Signal and condition definitions
+
+| Arrow | Meaning |
+|---|---|
+| `start` | TRUE for one scan on the rising edge of StartCommand |
+| `stop` | Current Boolean value of StopCommand |
+| `r` | LOW when \(h<0.8\); MID when \(0.8\le h<0.9\); HIGH when \(h\ge0.9\) |
+| `settled` | TRUE after \(|e|\le0.02\) has remained continuously true for 10 s during regulation |
+| `fill_valve` | TRUE only while the PID is authorized to drive the fill valve |
+| `discharge_valve` | TRUE only while the discharge valve is authorized to remain at 40% |
+
+The dwell timer resets when regulation is inactive or \(|e|>0.02\). Time accumulated before regulation therefore cannot satisfy `settled`.
+
+### Step supervision
+
+| Current step | Governing condition | Result |
+|---|---|---|
+| Any | `stop` = TRUE | Step 0; both activity signals FALSE |
+| Step 1 | `settled` = TRUE or `r` = HIGH | Step 0; both activity signals FALSE |
+| Step 0 | `start` = TRUE, `stop` = FALSE, and `r` ≠ HIGH | Step 1; both activity signals TRUE |
+| Otherwise | No applicable transition | Current step retained |
+
+**Priority:** stop overrides all other conditions. An overfill condition prevents valve activation even if it coincides with `start`. A new start event is required after completion or stopping; a continuously held StartCommand does not restart regulation.
+
+### PID and output behavior
+
+- In Step 1, A4 calculates PID demand from \(e=h_{\text{sp}}-h\), clamps it to 0–100%, and suspends integration while the output is clamped.
+- A5 converts the bounded demand to a FillValve command in **0–1000**.
+- While `discharge_valve` is TRUE, the DischargeValve command is **400**.
+- When either activity signal is FALSE, its corresponding analog command is **0**.
+- Step 0 and every return to Step 0 therefore command both valves closed.
+
+The PID discretization, derivative formulation, and inactive-state reset or retention policy remain explicit design controls to be selected before implementation; they are not specified by the task.
+
+## Physical I/O boundary
+
+| Arrow | Address | Interpretation |
+|---|---|---|
+| StartCommand signal | `%IX100.0` | BOOL start button |
+| StopCommand signal | `%IX100.1` | BOOL stop request |
+| LevelMeter signal | `%IW100` | INT level measurement; 1000 corresponds to 10 V |
+| FillValve analog command | `%QW100` | INT valve command; 0–1000 corresponds to 0–10 V |
+| DischargeValve analog command | `%QW101` | INT valve command; 400 corresponds to 4 V |
+
+The Factory I/O driver uses **Scale = 100**, with Factory I/O attached as the **Modbus TCP slave device**.

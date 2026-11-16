@@ -1,0 +1,99 @@
+## A0 context and decomposition
+
+**Scope:** Control timed filling of the digital tank. The model includes the step sequence, filling timer, and valve commands. The scene is already configured; scene editing and Modbus configuration are implementation prerequisites, not operating functions.
+
+All function names below are verb phrases. Arrow labels are noun phrases; the required signal identifiers are retained exactly.
+
+### Signal vocabulary and boundary mapping
+
+| Model arrow | Plant interface or meaning |
+|---|---|
+| `start` | One-scan event produced when StartCommand at `%IX100.0` is pressed; not the continuously held button level |
+| `stop` | StopCommand at `%IX100.1`; TRUE for every scan in which stopping is requested |
+| `LSH` | Level indication at `%IX100.2`; TRUE when liquid reaches the 2.4 m switch |
+| `LSHH` | Overfill indication at `%IX100.3`; TRUE when liquid reaches the 2.7 m switch |
+| `timer_done` | Completion indication from the filling-step timer |
+| `fill_valve` | FillValve at `%QX100.0`; TRUE opens the valve |
+| `discharge_valve` | DischargeValve at `%QX100.1`; always FALSE in this task |
+| **TimerDuration** | Configured duration of the filling-step timer |
+
+The boundary input `start` assumes scan-based event extraction from StartCommand by the PLC input-handling mechanism. `timer_done` is an **internal** arrow, not an external PLC input.
+
+### ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | **TimerDuration**; **Initial-step rule**; **Filling-sequence rules**; **Stop-priority rule**; **Discharge-inhibition rule** | `fill_valve`; `discharge_valve` | **OpenPLC Runtime**; **PLC input-event handling**; **Modbus TCP connection**; **Factory I/O tank scene** |
+| **A1** | **Determine filling-step status** | `start`; `stop`; `LSH`; `LSHH`; `timer_done` | **Initial-step rule**; **Filling-sequence rules**; **Stop-priority rule** | **Step status** | **PLC sequence logic**; **Step-state memory** |
+| **A2** | **Measure filling-step duration** | **Step status** | **TimerDuration**; **Timer lifecycle rules** | `timer_done` | **PLC timer facility**; **PLC time base** |
+| **A3** | **Command tank valves** | **Step status**; `stop` | **Valve-command rules**; **Stop-priority rule**; **Discharge-inhibition rule** | `fill_valve`; `discharge_valve` | **PLC output logic**; **Modbus TCP output mapping**; **Factory I/O valve interfaces** |
+
+**Internal control refinement:** **Timer lifecycle rules** and **Valve-command rules** refine the A0 **Filling-sequence rules**.
+
+### Child-function connections
+
+```text
+start ───────────────┐
+stop ────────────────┤
+LSH ─────────────────┤
+LSHH ────────────────┤
+timer_done ──────────┤
+                     ▼
+          A1 Determine filling-step status
+                     │
+                     └── Step status ──┬──► A2 Measure filling-step duration
+                                       │                │
+                                       │                └── timer_done ──► A1
+                                       │
+                                       └──► A3 Command tank valves
+                                                    ▲
+stop ───────────────────────────────────────────────┘
+                                                    │
+                                                    ├── fill_valve
+                                                    └── discharge_valve
+```
+
+## Behavioral meaning of the controls
+
+### A1 — Determine filling-step status
+
+**Step status** has two values:
+
+- **Step 0 — Idle:** Initial state; no output is driven TRUE.
+- **Step 1 — Filling:** The fill valve is requested open and the filling timer is active.
+
+The governing rules are:
+
+| Priority | Condition | Result |
+|---|---|---|
+| Highest | `stop` is TRUE, in either step | Step 0 |
+| Next | Step 1 and either `timer_done` or `LSHH` is TRUE | Step 0 |
+| Otherwise | Step 0 and `start` occurs, with `stop` FALSE | Step 1, subject to immediate `LSHH` termination |
+| Otherwise | No applicable condition | Existing step status |
+
+`LSH` is available as a level indication but has **no control effect** in this task. In particular, it does not terminate filling.
+
+An already-TRUE `LSHH` must not permit a filling interval: the high-high termination condition applies immediately when filling is requested. Once filling ends, another `start` event is required; a held StartCommand does not repeatedly restart the sequence.
+
+### A2 — Measure filling-step duration
+
+The **Timer lifecycle rules** are:
+
+- Start a fresh timing interval on entry to Step 1.
+- Assert `timer_done` when the active interval reaches **TimerDuration**.
+- Reset the timer and clear `timer_done` in Step 0.
+- Do not carry elapsed time from one filling attempt into the next.
+
+Thus, the timer measures time spent in the current filling step, not time since the PLC started.
+
+### A3 — Command tank valves
+
+The **Valve-command rules** and overrides are:
+
+| Condition | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| `stop` TRUE | FALSE | FALSE |
+| Step 0 | FALSE | FALSE |
+| Step 1, with no terminating condition | TRUE | FALSE |
+
+A1 and A3 must be evaluated coherently so that `stop`, `LSHH`, or `timer_done` removes the filling command in the applicable PLC scan, rather than leaving an additional scan of valve opening after termination.

@@ -1,0 +1,236 @@
+FUNCTION_BLOCK LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    FULL_SCALE : INT;
+    h_span : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+END_VAR
+VAR_OUTPUT
+    FillDemand : INT;
+    DischargeDemand : INT;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH.
+       Numeric values avoid using the standard function name MID. *)
+    r : INT;
+
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    start_edge : R_TRIG;
+    hold_timer : TON;
+    sample_timer : TON;
+
+    state_no : INT := 0;
+    entering : BOOL;
+    update_pid : BOOL;
+
+    h : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    e : REAL;
+
+    integral_term : REAL := 0.0;
+    candidate_integral : REAL;
+    derivative_term : REAL;
+    previous_error : REAL := 0.0;
+    unconstrained_output : REAL;
+    pid_output : REAL := 0.0;
+    elapsed_seconds : REAL;
+END_VAR
+
+start_edge(CLK := StartCommand);
+start := start_edge.Q;
+stop := StopCommand;
+
+h_target := 0.8 * h_span;
+h_sp := h_target;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+IF FULL_SCALE > 0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+ELSE
+    h := 0.0;
+END_IF;
+
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+entering := FALSE;
+
+IF stop THEN
+    state_no := 0;
+ELSIF (state_no = 0) AND start THEN
+    state_no := 1;
+    entering := TRUE;
+    integral_term := 0.0;
+    previous_error := e;
+    pid_output := 0.0;
+END_IF;
+
+hold_timer(
+    IN := (state_no = 1) AND NOT stop AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := hold_timer.Q;
+
+(* Periodic PID updates. The TON resets for one scan after each update. *)
+sample_timer(
+    IN := (state_no = 1) AND NOT stop
+          AND NOT entering AND NOT sample_timer.Q,
+    PT := T#100ms
+);
+
+FillDemand := 0;
+DischargeDemand := 0;
+fill_valve := FALSE;
+discharge_valve := FALSE;
+update_pid := FALSE;
+
+CASE state_no OF
+    0:
+        integral_term := 0.0;
+        previous_error := e;
+        pid_output := 0.0;
+
+    1:
+        IF stop OR settled OR (r = 2) THEN
+            state_no := 0;
+            integral_term := 0.0;
+            previous_error := e;
+            pid_output := 0.0;
+        ELSE
+            fill_valve := TRUE;
+            discharge_valve := TRUE;
+
+            update_pid := entering OR sample_timer.Q;
+
+            IF update_pid THEN
+                derivative_term := 0.0;
+                candidate_integral := integral_term;
+
+                IF NOT entering THEN
+                    elapsed_seconds :=
+                        TIME_TO_REAL(sample_timer.ET) / 1000.0;
+
+                    IF elapsed_seconds > 0.0 THEN
+                        IF Ti > 0.0 THEN
+                            candidate_integral :=
+                                integral_term
+                                + Kp * e * elapsed_seconds / Ti;
+                        ELSE
+                            candidate_integral := 0.0;
+                        END_IF;
+
+                        IF Td > 0.0 THEN
+                            derivative_term :=
+                                Kp * Td * (e - previous_error)
+                                / elapsed_seconds;
+                        END_IF;
+                    END_IF;
+                END_IF;
+
+                (* PID output is expressed in percent opening.
+                   Reject integral updates whenever the proposed
+                   output would require clamping. *)
+                unconstrained_output :=
+                    Kp * e + candidate_integral + derivative_term;
+
+                IF unconstrained_output > 100.0 THEN
+                    pid_output := 100.0;
+                ELSIF unconstrained_output < 0.0 THEN
+                    pid_output := 0.0;
+                ELSE
+                    pid_output := unconstrained_output;
+                    integral_term := candidate_integral;
+                END_IF;
+
+                previous_error := e;
+            END_IF;
+
+            IF FULL_SCALE > 0 THEN
+                FillDemand := REAL_TO_INT(
+                    pid_output * INT_TO_REAL(FULL_SCALE) / 100.0
+                );
+                DischargeDemand := REAL_TO_INT(
+                    0.4 * INT_TO_REAL(FULL_SCALE)
+                );
+
+                IF FillDemand < 0 THEN
+                    FillDemand := 0;
+                ELSIF FillDemand > FULL_SCALE THEN
+                    FillDemand := FULL_SCALE;
+                END_IF;
+            END_IF;
+        END_IF;
+
+ELSE
+    state_no := 0;
+    integral_term := 0.0;
+    previous_error := e;
+    pid_output := 0.0;
+END_CASE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    controller : LevelControl;
+
+    h_span : REAL := 10.0;
+    t_h : TIME := T#10s;
+
+    (* Kp: percent opening per volt.
+       Ti and Td: seconds. Tune these values for the plant. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+END_VAR
+
+controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    FULL_SCALE := FULL_SCALE,
+    h_span := h_span,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td
+);
+
+FillValve := controller.FillDemand;
+DischargeValve := controller.DischargeDemand;
+
+END_PROGRAM

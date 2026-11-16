@@ -1,0 +1,57 @@
+Continue as the independent reviewer. Re-generate IEC 61131-3 Structured Text (ST) for OpenPLC from your own GRAFCET below: one PROGRAM Main that calls one FUNCTION_BLOCK, the I/O names of the control task, every variable declared, and the standard function blocks of IEC 61131-3 where the task names them. The code must compile with matiec, the strict IEC 61131-3 compiler of OpenPLC: declare located variables (AT %I..., %Q...) in a VAR block of their own; do not use keywords or names of standard functions (such as STEP, DT, MID) as identifiers or enumeration values; give every CASE branch at least one statement. Output only the code.
+
+Control task:
+# Task T2 - Factory I/O Scene 3, Filling Tank (Timers), simple timer
+
+Plant: a tank in the digital configuration, saved as a user scene and customized with two capacitive level switches.
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: StartCommand AT %IX100.0 : BOOL; StopCommand AT %IX100.1 : BOOL; LSH AT %IX100.2 : BOOL (level switch high at the target level, 2.4 m; TRUE when liquid is detected); LSHH AT %IX100.3 : BOOL (level switch high-high at the overfill limit, 2.7 m; TRUE when liquid is detected).
+- Outputs: FillValve AT %QX100.0 : BOOL (TRUE opens the fill valve); DischargeValve AT %QX100.1 : BOOL (keep FALSE in this task).
+- Parameter: TimerDuration : TIME.
+
+Requirements:
+1. Step 0 is the initial step; it drives no output.
+2. On StartCommand, open the fill valve and start a timer of duration TimerDuration.
+3. Close the fill valve when the timer has elapsed or when LSHH detects the liquid, whichever comes first, and then return to step 0.
+4. Whenever StopCommand is TRUE, return to step 0 with all outputs FALSE.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: start (the event of pressing StartCommand: TRUE only in the scan in which the button is pressed), stop, LSH, LSHH, timer_done (the timer of the filling step has elapsed)
+- outputs: fill_valve, discharge_valve
+
+Your GRAFCET (JSON):
+{
+  "graphs": [
+    {
+      "name": "G1",
+      "steps": ["x0", "x1"],
+      "initial": ["x0"]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "from": ["x0"],
+      "to": ["x1"],
+      "guard": "start & !stop & !LSHH"
+    },
+    {
+      "id": "t2",
+      "from": ["x1"],
+      "to": ["x0"],
+      "guard": "stop | LSHH | timer_done"
+    }
+  ],
+  "outputs": {
+    "fill_valve": "x1",
+    "discharge_valve": "FALSE"
+  },
+  "owned": {
+    "timer_done": {
+      "step": "x1",
+      "neutral": false,
+      "preset": "TimerDuration"
+    }
+  }
+}

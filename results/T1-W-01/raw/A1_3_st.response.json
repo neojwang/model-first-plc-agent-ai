@@ -1,0 +1,208 @@
+{
+ "input_transformations": [],
+ "id": "resp_0281956437463ab6016afa0be73dbc87d09ad28e5b02be3080",
+ "object": "response",
+ "created_at": 1794771943,
+ "completed_at": 1794771954,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_0281956437463ab6016afa0bef3c7087d08ba40ebb153c1828",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-gvvSTcWwjSTBsk4XwITWxu9ROXhOQlj8KLgsw3E7NGX_fUhOOXeux3PVrvXG5NhMa3mLrc6UWmBGjwP-U0_grVpmUhLEtj17x4WCK3dTFZ2wjzq5yC2EB-8JJLNKY2mQve2yjJmYhgIsrwkAj_tmcqyMsEipbQ_31qHqCvYkVk6zGohIm7omyFOaxVjtLk0cqqxnaIfdGuqxiNlbdSf20nJ8f5mPb7wkNz_tp5s4aq85I52ejqi055P2I1oKAR1hNECAhFZDJLH9v9iUDcIpqaIN4HXEtExK1HgR_bcR1UNwClMnZGPLmShyx3FBzTtoUBIClQihnhTcRgx6ib9R1PTubiyyK5K6UcdaytzOu4vnc0HUaiaO16sUtlwnvuebGZCFUIp2rP93pgk_Q0ZtsLBo9zp4f41q1e2onFH2xI-jFpspT9Qbeh860zwDLFA2WQcEzeVfyplpMijsxZS7W2FzIX6Nm4roUgULivLziuKnY2PiCG2iXkgIVlmY-mQ-Hoz1_nXHnawuNRn1gNU0ebUDpYqi7uTf5OFHrWHRtECKIoSc3x2QH9xLJFuS1xz0EPyw45_Sqgb62RSALlOWRSrXvmm_KwxIGNGpKP3YLMbHDTnDr-fjxsuvHCAt_B5HSxkI1inpWnH6k304m2LdAM2DmBIKHz-3nDJvFYZs5p0GeLotEZwpc7WZteeI1qw1MlNKPXwwGXAR9sbrTku7bkeHKQFYzls8utpdVahVGNFX0MYFenvRTVYPqHgNaD2cTshE9edpP1KZ720uTCr124Eo36ulzCmy6hWBfszo3u9mVicI6KFdh0dp08uKosmnOvCslhgQMxvZUZokZArGjgvwA1pDtXF-Pc30148yjZJA5Dw95fRbHHlWoqCesXIs3XKnRb3DCS9cp8mrg2hm7zyanvznHznHQ-QtqcSr8khCzITMPYYU7guZIVOEVIc5RwSROLm3g2U-WU2BQr-3loG1nqleoZ6Uxz0bt1ebGXRYFxL0oqvwe2hYV72YrETxUo-IraMEpe_lw66NkRQkHynUqwNvh2fjP1Yt-ABt1vOMibUCeewbpH_BGjIrmcUYjbzWtInQKnJt4X8M5W9RLfGiiyVvKscIqXrLJp-tZW-AZGQRZGPz6e2cIp_zR649YlBVsx-nCqPIQDAxtbISTf1o3rV7qrQsC6I_viBZkmEzdm9viXHOGp-wWlev1VuXljlW8wvod8gcP_3TP5TTp4qIrFk2bjqwAQ97fv0Eoug8imq13ESGyQlw_Qo1FyzXZXy5c25689dXRr4ejWi2Nv_M62VemDlkaKb-lqAt9PphIUythaN4SEeGB_3-Z4zSP6h3a8I77VbiE22J6RfkG6REeLzUzzlVf5brz001EC63sPiV2leeyUYrOTWCt7PIuIF670aNSIXyCWp8DT-_48YbdbtCL3GY_XUDvPmKmWr7xfvuFtIl3AuPbHumvjIxiiq-5WZjGw2SJVHIpzlWoh3lHhsPGgJ3a2kF1vV_GFQ2DVvF-ZoAidt4_JeJp0gK7W0I-cilShnET-6uEgD3fBM3LKcRH97Jf47woon9oeBb0zspT9habzf33P2oO-xA7ukByKDAgcgDI3Vj4hS1ORINtskyV9pXunHgMtzEEZbuBzXKYKdzjPcMkiYAo_PoY64whOqGtJOaMbezFX3tIPLawO8OGr9kMDzIn9-jO-dicjWfdc9hoF_J7tf1YTpoN2hj8eNu49riKKjKNhihEVfi6Q9RWYBNvXwHPOBd6WX0KBSr4jI9b0c-PMaGpQmVPWjXEuWR0EKxAAzsKnMa4ceKRKthSgaUsAKqfnEH8CFasodUoWT5hKdD9TNEIZk0662K0iofDeHkXU_QPGFXitoVvjMHgb94WJEYiQnMGJkBtmoXMu_9NeNaXucPjLVEtNuVqWMqIeSzAhk7n7poduHIC_CqrZBRcBliYfMDv1qrB0PUoNHyoEL33RW_xtH-9F-KbfTXcoAfbjglkgVX1vV7Tk96s-ioV6WyF8TIskevIVcVjSs9djKY6DzmAmvPiZpeObjkHvb6oeeYBmqyNz0dNkVhSTsr3n7vaghESUX6PZFWs8kPSCihy8cj0SiYd8dUQ3jHFTT1ohpxkVbThy4vA1dNuCdqNHfWXmr8HWj6RSNhVz0VJeI6hUtvzRuuf4Nttg0Q0OZsbk8V6bCKxOX44egHRK9QiDeTS_-68sU95pAG-5N3WCyBS3ueT4Xu8vjMNAC1ZYiFOWH-BVe89DBByFBzYI2XqVZzqGC37h0Wl46jZWBzpJhrPFfewzyXFZDn4rXyqkUHxH1bzwrUQcYprgQfFuTVbqPJzdkYyxth1jhZlL9yaXbyC8VszmTsE-WMQsWFvJO-7XvW_zr30uMqopYDTKuwz3FvxBBnPqISxB2NVTBNUFcX5ykU9MQ6Y1jR_J1NHJI7ejWpSLsXrFQLhi6KAn3_cfevb8Cqg5B9HkJ3REW1a52KfueLCcVg3wMSQLFz83ZCyEclAzBti6Y4JU5LI1eAQ32Pjz-Zcg7ANyDfGugyiaVZ1Dpx4RyrSzrg5NcNPMadlYvAigqPBPB2QAcwGr3ESGtLCv8ZdJ30EPFK4EyIYIl4cgsKB_7DoeyoQamxtSB3p6O_jrYX6B3Aw1tvKprYnBQigLOgssun59pzDR4K5wg7e1viC067yzy2QV48I2maEDpdp5Y2PbANHYwVbUDfaHNoIw7OWIAxS_9h2zVsY1YOig_ktrMgI8Z2rSYnZDhJUIqMpq_kvfKQwRVOqbAFsaTovDwOh1IJe4OULIFzaEqQMrevf5z0mS8AYR4gqSCUyq35-sl22mZYEqbKI4R0dIfgITPPK-7ovWxweANP_kKB-Xq9_-nAPELA2cyK96NlzEZz_ttTxW2TX2mbmHxBQNTHqPoBraDQWrfMeHUJxcvZirbGNgVSSci40a5HpQBT-6slQXgMIzhps9qoTbhSSnXO7-ti7ltGGxd5K-BM4O_JJStyGljvrbrZ_JA5i83Bwb_QMqahhBmfnFPJvwL-GfEJKQWcyKrsgNqcJEnOgnPZUsLotPkDwH2NXNZPX7CZmn6VhY6rfzoXIxTeiNGFGb-FzMvnEHG9cvwXgw_uv-7fV-FK1Q6biyj55QVzu5qekHzPIcS0zHifZoE_P-wgFcvzKbz9yMb1k3MGI1-xWx1URXPCMOOPhN4U_rUXfxfT5Mn803oVDCmHOCqniDz-FLrP9JTqLQyIGEHYvwviMQfw03q7z0KDvdx74CuU35q97dcH1sEmkylNMZo13WJ2SkUwMEPssFCIEtuC8s4jb_Bgj7WRaGKSfOGeEM71wP3S_gAL5rP1LUuq73f0RkHMco1Z-_RHYR7ZqrxgO_tPPnJJv9W6Rk8EKue93aK29bOQk6BcZmOVbLjH-Ag47DysPJ8akYlmc2SthNNQH7LXHcwZY16qJrLF1zyQgr4ECyI2wa5mMwq-MNh2iRTvsrm2pctM5otZjDfsm358XOloT2ubtsKlMD4UwP6iwSSlpqjVt651bFatvgVjBxvu_M1F4lKv3WABGvNlCOGIOA0G7SU3JWdoUBgAVO2RhvIb-FM3FO40XT9AjI9X6V2tiskySaT69xZhufQkMdIU5hwxMTo8Rb69uO2bQhQj7AMBvkiqYaQMO1M-8O0MUJP9E_BPQb7lvv9R3q2EFiXdk0nTAc2lMiPglHcfUAF7yAXK66V8DRryUdEkwtYfuBFjTcpNDWPQuPbyKK9UgYnyYcTZg056TwfHTi5_0Kct2XhM9GCCAh-X5SmzD6qxhIyTMNMHCd5k_Bhdl_3Mvo3HjGJ2ljhAzxPp8zCs7-IRkBd3wDsd1pvo6iuonIe1aO_txGaq2x4lOAqmresT_N1jqxtc38vi4YA1Bpln7-5TLuc8eosaWFcNtZtJ_1Ipahc3wzSOla9stakFPn_dA37gpLVYoxpa_fUq-9zMTDFSgz69hd45IC5u7qsUzb9ZOQL9ECDUNtcen-LSnFkt_08rgFTyEom8Gir2srTkAQ55zWnaLDTwbJYkuVgeeL4c8q9RyL9VBquksvtZII-tPjEaT5tHCGjhZqFKmACkiUR4JbWMyzvJRfGgZlws6RQ254TcN6Ipl1uvQf23Q8Te2pFIaWhdLgnhCpsKIz1bykWqV0VOcDWbcKGmNqyR_jVuezsfxTvu2YTffMAkbgoPdngYwWEt2fEnLdbJb0zhMd8g7BPCvqQOha_NsFU14hOz-dH5ge8_MfAiihd5fOPCD7pR9TS_kydILoT1RT38EjUVw0aUhJqLzuDklh0h7VQsXGaYwPR5QvNk4Vh88VUNudNxoKjXNB3t-AaJnrAuRVMLoLTJwkvoE6aKgssHqAa_N10bmRXfzw5XsNkJt4Eu4tmQ2WFietIxpeNjkV4HhsN-xov_bfcNbGqh-6YcFiDqinLZjKQOqbUo62KgFFn5JzwZLENbF6OJo-IXQE8C4gNEwxhLELlMHKH8ekM2BTKlnYAEiDyY1NPo7V8UtWrEp3NzBQ9SVyqdxm8WsoNlh6H17-G0mmBiBmatHZSEr-8nSkRR4cksfJwmrpJjBx21V6RE0Z2aBaGQB5GcKINDOLs"
+  },
+  {
+   "type": "message",
+   "id": "msg_0281956437463ab6016afa0bef3c6487d0ad12ed460fabde62",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "FUNCTION_BLOCK FB_ConveyorRuntime\nVAR_INPUT\n    sensor_a : BOOL;\n    sensor_b : BOOL;\nEND_VAR\nVAR_OUTPUT\n    conveyor : BOOL := FALSE;\nEND_VAR\nVAR\n    x0 : BOOL := TRUE;\n    x1 : BOOL := FALSE;\n    t1 : BOOL := FALSE;\n    t2 : BOOL := FALSE;\n    command_latch : RS;\nEND_VAR\n\n(* Evaluate transitions from the current situation. *)\nt1 := x0 AND sensor_a AND NOT sensor_b;\nt2 := x1 AND sensor_b;\n\n(* Maintain the active situation with a reset-dominant bistable. *)\ncommand_latch(S := t1, R1 := t2);\n\nx1 := command_latch.Q1;\nx0 := NOT x1;\n\nconveyor := x1;\n\nEND_FUNCTION_BLOCK\n\n\nPROGRAM Main\nVAR\n    SensorA AT %IX100.0 : BOOL;\n    SensorB AT %IX100.1 : BOOL;\n    Conveyor AT %QX100.0 : BOOL;\nEND_VAR\nVAR\n    runtime_logic : FB_ConveyorRuntime;\nEND_VAR\n\nruntime_logic(\n    sensor_a := SensorA,\n    sensor_b := SensorB\n);\n\nConveyor := runtime_logic.conveyor;\n\nEND_PROGRAM",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "d8a25d7f-7a40-4df3-b9a3-7f94dddef6c5",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 3194,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 404,
+  "output_tokens_details": {
+   "reasoning_tokens": 142
+  },
+  "total_tokens": 3598,
+  "attribution": {
+   "items": {
+    "msg_0281956437463ab6016afa0be73e6487d085843d455f69dd37": {
+     "input_tokens": 344,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 344,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0281956437463ab6016afa0be73e6487d091ba08cc9e2b1e1f": {
+     "input_tokens": 565,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 565,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0281956437463ab6016afa0be73e6487d09e91f326109cd746": {
+     "input_tokens": 157,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 157,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0281956437463ab6016afa0be73e6487d0adfa95e0e0d7ca9c": {
+     "input_tokens": 1440,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 1440,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0281956437463ab6016afa0be73e6487d0be48d709d0574bd7": {
+     "input_tokens": 686,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 686,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0281956437463ab6016afa0bef3c6487d0ad12ed460fabde62": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 262,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 262
+      }
+     ]
+    },
+    "rs_0281956437463ab6016afa0bef3c7087d08ba40ebb153c1828": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 142
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 267,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

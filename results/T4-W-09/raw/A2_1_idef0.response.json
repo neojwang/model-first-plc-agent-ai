@@ -1,0 +1,152 @@
+{
+ "input_transformations": [],
+ "id": "resp_0d57f534644d7502016afa09f9c1e887d0b6b0e05bf93c4a0f",
+ "object": "response",
+ "created_at": 1794771449,
+ "completed_at": 1794771491,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_0d57f534644d7502016afa0a0bb29487d0ba6e445c2c237a29",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-goL-tuQ43zRxdPaGvEzRhjBvTa0Ti5YookO-1njc86PMsz5AAdTEKjfYUu1D53-cjCpguYKgyhVy5JOD_dG-2OcltqoU7TcrIw_B5T94u3-Rz3l7k31NMdSBgFJaQ0hCOdpfvy0eMKHE6is2kMRNGbGV2Q4VYIXNAU4EWBZ7-R2QCtHUGMtpwW0g3slpyPG5gUZqmg5q86PQhdCwCYus3Pi89JnqfU7hr4VjOThdP6ABPJOiNz7455jic4e5ZvFWJl4LSzJZrF97gc5S6l45EF_ZfN8wbxShor4WMQMV45yallEl5LPR45Gud3Z2BELa6BB3zNtiidZOpxWrbO1butQ16fcVVdpVTh1Tzfhn5bpZhYtoJyQv_QtoEtCqEheZFmuWNxZRPciFYXs8GFYfUcrakfVKga2d1GblzQw5mlSm08xvC669Y1a1bPgYY7qJohmqWGq3pyZ0IJos__4tJV5TgK9DAhcE79fgff8jR7U_4hK6cFwF7Sr_4eNgIs0p7IhNzayP_AN9-QAkNUAJPg-3yAo-SYqkYYO5DB1Qf3RXR3QHcEkgS3NJdaTxeFUVVByiOlc09eqAb3CTN0_bK5SRLyFV_00zQok5_4gh39QbEiGGH5zJ9OV6bN11fdr1W2R3wjI8JAzjJQaqNQHRcmOlbJrlWS7J7Aono-UEvKRW68R11gT4ebYQ78ar0W-f0w_-5aLlSttM5bDLlAzX2kqaq9bLhixapnKhIYijNpC9eMFVdAYnxhijuv3wZ6AvjDwcbF5Iu9hWLXTTDRPgcu5fiqcKdWFKb8W2VgND3SXPIg17zJvPk8xkgxRuhaBnGWxZnOllQSZLlBfTPsLEmGSo9tBAgZdcGiUb6HNNr4w-APMYFPMambWAQ5-7ugKkydB7Im0bprFVn53xaBnc62Fbgi6grM63wP8Ki-OD3twggnCfVYZEhUAYYFXiIbg6XLyj2F91sOijRUS7KWLQn5vHSSBkGBb7kUfLccIgeaXKUP--qn4autfDFCLryCLko5qDSbbNkn4zVjz-iE88rJ9AoNfEGFCE26JTH9XAaGQYJidXeqp8D9R3EdPnrb92luJJNM2GO_1lMWM-F-BGWY4k5jFtE7RHa7698_F1M_xDa6oDxs7n8A58bI1vnMPF03DSEws7m2qjolsTjeCmJDlSQgiifpPEaHt4EGzgXyj03WONWj8cGcJUyHIKDt3caF0GEtpi0l6WV8JEAOtsgSGjWVcFCUg15j2fD9Tl7SKmTefhxDn5eaAt7UfZ5WWKjtcTP1lk5dVDrbXVQCfNlcYnHa2AEXgZftwi99lBBBPUd06b1rkcncIeK9Rdkd1O2tBSBAw-PCQowW4T8zjA4x5muMUHmOSj-iVgaQrse26lfSxy8paj2TOqhanVzd8fOGWZ5hB_x67a5_7WUg3y1oQ1dTF9l7urzGhavjHwl1UchyaH8kUjGsya_gR2ngfFhIorfxgk4hrvjVd0VCSH45AIorI6TvgEk3-eIm0z6uu1A30lkSudNg0-6a7RS_ZyUrUUBvXLDtM3YddQByWNwrTb5noLvSjxInQi2XNNmUSrBSimDSI8GcC09a0RBoBtuaYY_a6iP4mzUIggbqJHMYdcSYxb427UcwxZ8aNWQWIx8emLkQkLd_R29HWZ4ZBO3Dtxu4o-1CtHw7epeVuKQscEoZP7oasnq2lq14E-M4qoNyoAasiqg9adiMxFVgBSCQxBFViV24eB2kof5vnQ0a6aOtFE0z1fgu6DPgMJ7FDnOd7oTQPFSxk860AQjhEQr58y3ZJVl5gmgtFjmK-YRxv9bGEu_MccYjC1WtbsiuCYpfUqLOAn3MU6896wRIVz6lrogdOykTIeek4KqFYDAgpJ5apCeFSAoEcvBMxTN93ORI8O25ALsVdJb-g0hAsNvr5sTYgU_9O9DilBbf63NkWqzPB7K5F87fj8Z1G891EvsUcaT5QCEQHIs4qdnx2WwUNEbju2fwhQY4jmuq-eC22X59jJ3FbTU2IyOvXEU09CGoBith7zpePEljSnVxpcUnJ5lXRFKCaHHpdI-Qc5k728Q_v0j7RNQdVZvoJKAH91V-N_urG0vqpRhYreCckikOsEFPLQnIF31NaoiV_qDoyI8AJZ1sp-c0hYY2fjTrDH2vsAPorMCwiWOsO55B6sV0KNz0bTpDGFIiqSD0RV3NeSFy1zMx0VdWbC4QyQakLTRg0HuUzGN_wvSHUlYNwRzEulm0Bsz3QZsmgP7biI4HpxhBAoJSL8BGnaUhj8Lwm07A5RkA9MXbBPVzU08BVpMV6cds23wiqZcYW7aSaphU8_jT57i3Ql4jPyLy3S29ZP1DwoksqP3B6EME5UQAJyAdYqu7uTW9Ydo4ycVp_V5Tv4FirQXrOdCmHaezQFYNxKSW99YkRBqYhMItdQ-tUWVIsApRKMWs7Z0CzCMyxrqjnZ4_eZP1tywXlZAUmJ4YSWAW_Pyy8Z6kGjhxkPSQqCM4S3PxTRimd3rVmoPJ7O0dNj7tU5a2o50r_BxRY5bydgmArcAKfwVUEfMVPMYH_IgcvtI82PmsdsQ_L9Xv-qWRDuHzObixpMsbbS1dfxDYXerQbbq11qpgTP9jZHvgxnXWaZ7QXGtalccm2yIGrRamPp7miJVT8Gv4nPivU_NcrIXfXP_-6LwzVzE4HkxHGow2uK1VzRfjdFc__rvOtvUeC8qtKngwE6fNV4exUyZix89AUpAmdeB0szhR9R8smdtzEO5vuPJTIc5zGU46wIhGZ0f275B5IyCofqtmi1_3RaCpgxo1Y9u_-KZvF-c11W3eh7SPo50kyDci93TbBbssmS0Tjg8UHDiEV0sLEIiBX3VF10BfvFqTxVlnCJjuQ3rMSfQRT78JdOxhY4JCebs9WT5qYXpzVcQP8rVh-A1H43j289dTHqQxmwMfFMU3f-Cv2L4FE6-b1SD9mo8FnwH8OsXhE-S9pTKnAAl2y4slal87zUE3FQgVqyXqMnlfpK7gJzM5AGG7Rg1-mBO9zp75KXxeHZWzXtykIugobfwraOuIDzrc0weyPQuZY44M0IWZWu0SNoz0rzYeTn22SxTXp5SI1RQNYSV8j5f4QSNHmVPCPJxuWrYMu_HqHlBzxJWquHxc6DGNfkYJY4mzhEQXEmzFS7AfPxo1aj2CeV08AiZBu7rT_AisFuBaVC3grHLfZxvHNMw2mXn7AHJnjWSCpjW3_2JW_5qY2by3-XcfQGr41AcNNCQ_ikiR7hzXwMhj-RT3B7VRvZnCqJe7A9dtNbYk7YUH2vKcUFXtB_LPBpZHIcUSyQS0lGe3TVQiG80QihKhylPBr5g_Wf2OeDo3Hs-21y8SEDIG6Y-Kci8i7iOOFZKLp073_XDCxWJFzVPuGtGvNT9j1N0LHauB31ZMo_wFaDSpnO5dto_XRefNihCRi5ek9vIcNHzLAwPMBCD1MUw5HkXnzPxrZaB7vAoHQunNUa6sgI16_kOg0saJx7lMXRm7NXUnFtfb8j7oYFRreGUhMDeohTFpFxWmuc-85PA3x5JQRf6np15HmBYkhsXVSEKHKuVX6QWmLCJHmxUAVcULeqUAdK9W-wSIAtKPfA5UTwrvJaurLeqM01IMJmtngYYJ58j0QpaXfEr74NELOKBM4gjvs8sCGTdIh6na4puad4QodjoyaE4HRXTrRMMlI5Fho_4_rJkuqQUXYaVZOvPjEwnuVbi4yuULeg71mJsvqvvXIv64klwIOupA9VH4hIN70FmJIeQ5kcRhu-OUWgj309icVe0W9pNI3YXxnsuaQahTl5dI2Ibz84QFDjJktRXLccRf23Bw00azXVVJhHlIVAGiqAv2187V6fQEwA1bFdqzaufXgYL-bykLcntc4DKjD1fnsbx8-HKGMlaUMQtPeMO_sKSM1ceAdOfF8mxii1D4G8MMCqE9yCYsWXMyupy5zazGs_zh6B7qNwpzMHiL4edYEvKuord6I0CXSsz_1Ok_kM1l1ONZ9QA3Ad-lSIeSE5B6sfg-x3439jBQIeuyQONv8HskyOrUDBzfTPaXyaMUIZpSr-ldFWFSBDCjb7n7ZdhaYdtr5hxtS4gct19_D0yq0agg8qU3O_fQ-xTn9D3HqAZhsL0dasbWaMvRCgTsunZY7V7HsR76-749-ieRF9LM6xtybEEq33BZ4sFaaiiHztdIcGnFX2RG_-QbTnxmyeIiVUnC46-Gz4uefoQ_IlD0ZgBmF1aTj6LrA4dSJZtsYbWBw4l5Z9BUy_IOIlf08jso_ZQTmD_Ln5wHYAfKpVf4HPNLRegNMVmgAXmPOvO3qO8YEMBQQ4i2JkvsrtWTR3NSx2K8aTC1PeM0AaDNNgvT0ozkJ-RwMJ-f2-qYbAzxKMG9gMXQ-9H-hywL8Cy3VTV1bNeeoqJN1Fl7iIBAdItqItg7N-w83TKlFz0VRP5HTeemtWjDE0bVzmD8XGLHkvn0Yq303Aof6ZA25vm5KDCpbz7e3AXEatfkedugD8IgOu6MuYCCLtk15FJ1BWcBi2cE4qISxLuUoBF1hpiMt-Xt0fF4dPqSH0T9hjIUMhjLenCarNBiYWnpo1Yy7_hJGEJB_OHYY_57BBl-HT065b9782AE3DUj4RzcJlNPMHzAjdf5VQRfvogv9lzUMeTZZp9iZBGDT8FMoFylt0zY6_ybwlPkBEG54_wbmG0XZRVJAVY0oqyYfrWJ0CE7Odo21vAv-XUIWRMS2PAS4QAWhGVjdnwopZ17xZkFmR1qZWEAd2eIBE9ZRVIqPWZMWNVtY6d0ls-LkGgna1YMdadMHkKekm_pLxV30PHnbJy_Mk048i-_EshxVjr9qky6t2z3mPIentmNjup_ax1rBVWq24v6V_M0fN6-gJtp8WGfqAstb7yUibF2A7iB78tHFxBG2iBV-aVuSe9L2PoXQZwHQvbwMvqcd_tOmN8WV5IkVSafKr2QnWublQwbsLouMfyqFyXAV8mgBW9CEqaGBVrXIyv6tXM_34VkvMIN_HuZhGeH4SR22OOHKLhtPh8QBnxr9QTvc_WEOOYEB7Dh1z73qVJk07KjyKAMrens9QYtQpK-utqVloArb1sWMkvzsUi8i2TsXHHyPXPmMSDTZ-RYQlZVxgMocACrd6ZqDQOlvKaYCq7_tAJh1WianVCIn-3xxm5LckQmJkK6KJ36mksh9HNEzXLQJIbZoawdq4DA4XgQmOr-tVSupzZDVWC7LwITREKCM-8GG6Qmjf3_hkzlno-YsOAPwyOFjhStkZfNjdCg4Kwc1q-yCB8hLpi7U_vKoajB4TibkZAv3_0kdC1CVzqV1SNj0NL_KnodHVJfQRoX8ZJDTMXH81B_4aZCnOdEylgx-l6mdG2iHRdE-Z0pes5gkuQD6jX2ihgGr0OWvPN3kjufzqG8RSs_JMRazFdJOYoaDHfvV3k0lPYq16sm5490Hq3tFCMPgfvyXbw34smP9FpwpaOXD4b7zSY4YXqKDYi5E8-i05srFS6j59iarsvGRgPYPaphhRC0AbEdjjVWPr2FCvl4cQdY6Cf3RZrAvomZckzswd_5SCLXLRMoP506Lj6jEL1vjysKlVG6KRxQkL-t6s9fakWP6YTRYlPdIIUayrzl5Jdzc9xgsrQ32VddZtOtFyWCgoya6cFPjGpWWTT0V4hs9ZFn7Gn5nyii0z_vizuXfWchkEa5Cq8k4W0ltdzT2h0LSYziu1mTVPVrIpVJpgBE9n19ZmcEHAGQ2rQv8SHglHtcirv03j717rxgzaoLt8_XKM4eYFasKcdhO5z-JKHKRzdtCqHmWoPRttlFrhaGsnnWJOCB14GLmrertP5BQ6K8jjLp8mpiNDow33mLnE0QUeKS9meC3aeP-6BNMyI67vd2eHnzkiXD1L3IzI7Hi-CXwSbVosibc2OXJXdKNaOVMsCzO4pCmnyphB73tcuxyXFdHbaIUOwyNC6W-kmJVCNJ6DMNX8yY_CQlaCTyUmR6O98P3mlwi4eZ-FOsAB_f-QAbx1auz9mbX6EOuDAfNGHjib-NCj5cVctNo5afNxz8uaEcvfSIid8D6uzZ0338sUNwlI3o9PGizrgvisb3PQBfHEHIdWWdsTJPXKE0ka-6ZCujTqVY_JoVG8u1_l8mtuGxiXMOpBDmdPiVYjBgjhQvut6ByYdHBlsK8Jp7f-fiGwbhxlb1v5cF8UEwiOSmzqOL1S4fuX-_J5xejuc5ZRfpt7X9ETMylEiiXXq-WMNC9peO9B6lYfk5F1qRLA5Ijq_BPN8HBn0AmFzcFTJjEtRGqZugteflDGfVSmKAZQ-NMNgGCpPz2IITcz1nt22KUbEeCqjIf6wApcqHDW6Iruq8Yuk7d5NMYLjJlrcNdlLC8Yl6RtNz28_Xzjss_EwQYKK5CrMxPhDqk9ZJR6PmBPs-q9xncWgEqeaz2DvEsBNtYI64YH-FZX4MuEa_iJ7Bj5m2N2dWneKA_jKk2L9YwRdbvrssEHyHL_SyDIRtbAlBuERNWPh2c5K0dpSqUf9vfKPsxoL11Rn6VRgdhwl1Y0cbYukZg_SD-iDitbaZbfAzequIAVIXjthvj6n6sLZLNE7Hj2e0uTQMtXFPtmkWJsOxF8iGAeO0mO_NlN9Zl71m6DfU1YakY_NYBqqYg82jBJ4tRRQvgz02eCiawqQWkYWxAPp26G825UMi8h2b8Jf4BgdzmuwrW2mqPnXeDuRjlp5yhGWVGWhhhjoF610W-Ws8U4JPGO6EMSB8Fu2rQ_B_fmpvikReFR6LwvbsL2EUnIPyPeToehYdxqUUUJyJEYML-bdHqB7eTuSNue9rnVZoIcIoc50DUxxB0uJEM3S7RGBH4_hmBSNGgriGETz9FBiHdkLOSKSnXN7bFYHrwyn-wZui230SxVTMKIAmhtYNmGaUf2PjwCtPD61y7TZsEnL3R-EhKk-sIVpzwA6_P9nj-f-eSD0H28fZvPv94nJjCOjXGgarsMuv1i51TYWUDHMCEmc65nj96z_oUniXpWFMzfpw2P5SzphNT0tg2SYi9u5LnN9w8csKB8l_oPV7Xp9QDBVR8hSqywJ6SHdz0yKUiDR_JWdVGrIWjoO3Oazm_kbMMT6p9KC-2mnGrRS4VjUDSNAo-X26uqa2ZfPXvm6w0EHJDoL1XwcMSxpjN2ION1c0jLJKwqVMTx1jpdHz3U050Q77B67MdGOLGS3y32ZKY96c6qonnQ8zJeeiQROKhQN0nD62if0e7D0jWPE7gKY4cBK5hBNmsetBXYqYbkgbkrXP7peg_xIOYlccCUrsQfH9oBq2yLZwailnpYntrzW3mBoFrzSuJbqDGGGrG5N2TZiggylqtSiKl5eL4MuC1ebacMcf5vqu6Ejyl17yZIBMmOMwIYSOTO_m7FDvIMFk4-Cg6Fun9egHVUjAYTakStmK8QqfYUuTs5C9Xw1qc9TM7twk3jQ=="
+  },
+  {
+   "type": "message",
+   "id": "msg_0d57f534644d7502016afa0a0bb29487d09e7b3ea4210fc28d",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "**Scope:** A0 represents the OpenPLC control application, with the Factory I/O tank outside its boundary. Raw command signals and the level measurement enter the application; analog valve commands leave it. The logical outputs `fill_valve` and `discharge_valve` are internal activity indications, distinct from the physical analog outputs `FillValve` and `DischargeValve`.\n\nIn the table, **inputs** are transformed data, **controls** govern execution, **outputs** are produced results, and **mechanisms** are the resources performing the functions.\n\n| Node | Function | Inputs | Controls | Outputs | Mechanisms |\n|---|---|---|---|---|---|\n| **A0** | **Control the tank level** | StartCommand signal, `%IX100.0`; StopCommand signal, `%IX100.1`; LevelMeter reading, `%IW100` | I/O mapping; `FULL_SCALE = 1000`; measuring span `h_span`; `h_sp = h_target = 0.8 h_span`; `h_max = 0.9 h_span`; `eps = 0.02 h_span`; `t_h = 10 s`; PID gains `Kp`, `Ti`, `Td`; initial-step, sequencing, stop-priority, saturation, and integration-suspension rules | FillValve command, `%QW100`; DischargeValve command, `%QW101` | OpenPLC Runtime; PLC application and scan execution; Modbus TCP connection; Factory I/O driver |\n| **A1** | **Interpret commands and measure level** | StartCommand signal; StopCommand signal; LevelMeter reading | I/O mapping; `FULL_SCALE`; `h_span`; rising-edge definition of `start`; level-region thresholds `h_target` and `h_max` | `start`; `stop`; measured level `h`; level region `r` | PLC input image; rising-edge detector and previous-scan memory; scaling and comparison logic |\n| **A2** | **Evaluate the level error and settling condition** | Measured level `h` | Set point `h_sp`; tolerance `eps`; hold time `t_h`; `fill_valve` as the regulation-active indication; continuous-hold and timer-reset rules | Level error `e`; `settled` | PLC arithmetic; absolute-value comparison; elapsed-time timer |\n| **A3** | **Sequence level regulation** | \u2014 | `start`; `stop`; `settled`; `r`; initial step 0; transition rules and stop priority | `fill_valve`; `discharge_valve` | PLC sequence logic; retained sequence-state memory |\n| **A4** | **Calculate the constrained PID command** | Level error `e` | `fill_valve`; `Kp`, `Ti`, `Td`; scan time; output limits of 0\u2013100%; rule suspending integration while the output is clamped | Clamped PID opening command | PLC PID implementation; integral and derivative state memory; saturation and integration-inhibition logic |\n| **A5** | **Apply analog valve commands** | Clamped PID opening command | `fill_valve`; `discharge_valve`; `stop`; `FULL_SCALE`; fixed discharge opening of 40%; zero-output rule outside regulation; output-address mapping | FillValve command, `%QW100`; DischargeValve command, `%QW101` | PLC scaling and output-selection logic; PLC output image; Modbus TCP connection; Factory I/O driver |\n\n### Functional definitions and interface rules\n\n- **A1 \u2014 Command and measurement interpretation**\n  - `start` is TRUE only for the scan detecting a rising edge of StartCommand.\n  - `stop` follows StopCommand.\n  - The measurement conversion is  \n    `h = LevelMeter \u00d7 h_span / FULL_SCALE`.\n  - `r = LOW` for `h < h_target`; `r = MID` for `h_target <= h < h_max`; `r = HIGH` for `h >= h_max`.\n\n- **A2 \u2014 Settling evaluation**\n  - `e = h_sp - h`.\n  - `settled` becomes TRUE when `|e| <= eps` has remained continuously true for `t_h` during regulation.\n  - The hold timer resets when the error leaves the tolerance band or regulation is inactive.\n\n- **A3 \u2014 Sequence control**\n  - Initially, step 0 is active, with `fill_valve = FALSE` and `discharge_valve = FALSE`.\n  - `start` initiates regulation from step 0, subject to the stop and termination conditions.\n  - During regulation, both logical outputs are TRUE.\n  - `settled` or `r = HIGH` ends regulation and returns the sequence to step 0.\n  - `stop` has priority in every step and forces step 0. A new `start` does not override a simultaneous stop or termination condition.\n\n- **A4\u2013A5 \u2014 Valve control**\n  - While `fill_valve` is TRUE, the PID command is clamped to 0\u2013100%, with integration suspended while clamped; the resulting command is scaled to `0\u20261000` for FillValve.\n  - While `discharge_valve` is TRUE, DischargeValve is `400`, corresponding to 40% opening.\n  - Otherwise, and whenever `stop` is TRUE, both analog commands are `0`. Thus step 0 drives no valve opening.",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "8c42af9d-7406-416a-a551-94619ef4c612",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 647,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 1479,
+  "output_tokens_details": {
+   "reasoning_tokens": 353
+  },
+  "total_tokens": 2126,
+  "attribution": {
+   "items": {
+    "msg_0d57f534644d7502016afa09f9c28887d08637113f9d1be85f": {
+     "input_tokens": 645,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 645,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0d57f534644d7502016afa0a0bb29487d09e7b3ea4210fc28d": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 1126,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 1126
+      }
+     ]
+    },
+    "rs_0d57f534644d7502016afa0a0bb29487d0ba6e445c2c237a29": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 353
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 1131,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

@@ -1,0 +1,94 @@
+## 1. Model scope and notation
+
+The model covers input acquisition, timed sequencing, and valve-command generation in OpenPLC. The Factory I/O tank is the controlled plant.
+
+In IDEF0 terminology, the **A-0 context diagram contains function A0**; its decomposition contains functions **A1–A4**. All function names below are verb phrases, and all arrows are named with noun phrases.
+
+### Signal vocabulary and mapping
+
+| Model signal | Source or destination | Meaning |
+|---|---|---|
+| `start` | Rising edge of `StartCommand`, `%IX100.0` | One-scan start event, not the maintained button level |
+| `stop` | `StopCommand`, `%IX100.1` | Stop demand |
+| `LSH` | `%IX100.2` | Level detection at 2.4 m |
+| `LSHH` | `%IX100.3` | High-high level detection at 2.7 m |
+| `ton_q` | TON output Q | Filling-duration completion indication |
+| `tof_q` | TOF output Q | Filling activity and subsequent off-delay indication |
+| `fill_valve` | `FillValve`, `%QX100.0` | Fill-valve command |
+| `discharge_valve` | `DischargeValve`, `%QX100.1` | Discharge-valve command; always FALSE |
+
+`TON_Duration` and `TOF_Duration` are timing controls, not process inputs.
+
+## 2. A0 context function and child-function ICOM
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand state; StopCommand state; LSH state; LSHH state | `TON_Duration`; `TOF_Duration`; initial-step rule; start-event rule; stop-priority rule; level-termination rule; high-high protection rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC runtime; PLC scan execution; Modbus TCP connection; Factory I/O slave device and configured tag mapping |
+| **A1** | **Acquire inputs and detect the start event** | StartCommand state; StopCommand state; LSH state; LSHH state | Input-address mapping; rising-edge definition; input-sampling policy | `start`; `stop`; `LSH`; `LSHH` | Modbus input image; rising-edge detector; previous-button-state memory |
+| **A2** | **Evaluate filling and pause timing** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON behavior; TOF behavior | `ton_q`; `tof_q` | TON instance; TOF instance; runtime time base; timer-state memory |
+| **A3** | **Select the operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step rule; transition rules; transition-priority rules | Operating-step state; filling-step activity | Sequence evaluator; operating-step memory |
+| **A4** | **Generate interlocked valve commands** | Operating-step state; `stop`; `LSH`; `LSHH` | Fill-permission rule; stop-priority rule; level-termination rule; high-high protection rule; discharge-inhibition rule; output-address mapping | `fill_valve`; `discharge_valve` | Boolean interlock logic; Modbus output image; Factory I/O tag mapping |
+
+**ICOM interpretation:** Inputs are transformed or evaluated; controls constrain that evaluation; outputs are its results; mechanisms perform or support the function. Step and timer memories are implementation resources, not additional external process inputs.
+
+## 3. Child-function connections
+
+These connections define the internal arrows of the A0 decomposition.
+
+| Arrow name | Source | Destination |
+|---|---|---|
+| StartCommand state; StopCommand state; LSH state; LSHH state | A0 input boundary | A1 |
+| `start` | A1 | A3 |
+| `stop`; `LSH`; `LSHH` | A1 | A3 and A4 |
+| Filling-step activity | A3 | A2 |
+| `ton_q`; `tof_q` | A2 | A3 |
+| Operating-step state | A3 | A4 |
+| `fill_valve`; `discharge_valve` | A4 | A0 output boundary |
+
+The A3–A2 feedback represents retained sequence and timer state across PLC scans, not an instantaneous combinational loop.
+
+## 4. Sequence controls governing A3
+
+The following specifies the **transition rules** control arrow. These are behavioral requirements, not PLC code.
+
+| Current step | Condition | Next step |
+|---|---|---|
+| Any step | `stop` is TRUE | Step 0 |
+| Any step | `LSHH` is TRUE | Step 0 |
+| Filling or pause | `LSH` is TRUE | Step 0 |
+| Step 0 | `start` is TRUE, with `stop`, `LSH`, and `LSHH` FALSE | Filling |
+| Filling | `ton_q` is TRUE and `LSH` is FALSE, with no higher-priority condition | Pause |
+| Pause | `tof_q` is FALSE, with no higher-priority condition | Filling |
+| Any step | No applicable transition | Current step |
+
+**Priority:** stop demand first; high-high protection second; normal level termination third; start and timing transitions afterward.
+
+- **Step 0** is the initial step and requests no valve opening.
+- A start event received outside Step 0 is not queued.
+- Returning to Step 0 does not restart filling from a held StartCommand; a new `start` event is required.
+- A detected `LSH` prevents a new filling phase as well as ending an active cycle.
+
+## 5. Timer and output controls
+
+### A2 — Timer behavior
+
+| Timer | Input activity | Required behavior |
+|---|---|---|
+| TON | Filling-step activity | `ton_q` becomes TRUE after uninterrupted filling activity for `TON_Duration`. Leaving filling resets TON. |
+| TOF | Filling-step activity | `tof_q` is TRUE during filling and remains TRUE for `TOF_Duration` after filling ends. Its FALSE state permits the pause-to-filling transition. |
+
+Initially, filling-step activity, `ton_q`, and `tof_q` are FALSE. A stop demand immediately inhibits valve commands; any remaining TOF off-delay does not keep a valve open.
+
+### A4 — Valve-command behavior
+
+| Operating condition | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| Filling, with `stop`, `LSH`, and `LSHH` FALSE | TRUE | FALSE |
+| Step 0 or pause | FALSE | FALSE |
+| `stop`, `LSH`, or `LSHH` TRUE | FALSE | FALSE |
+
+## 6. High-high safety interpretation
+
+Normal termination occurs at **LSH, 2.4 m**. The model additionally treats **LSHH as a protective shutdown input**; this is an explicit engineering interpretation of “LSHH must never be reached.”
+
+That interlock is not proof that the level cannot reach 2.7 m: it acts only after LSHH detection. Preventing that condition requires verification that the margin above LSH accommodates sensor response, PLC/Modbus latency, valve closure, and residual inflow. The LSHH trip is therefore a backup protection, not the normal stopping criterion.

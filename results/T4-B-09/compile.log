@@ -1,0 +1,17 @@
+OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+iec2c: matiec version 0.1 changeset id:
+g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+
+== baseline (st_code) ==
+file: T4-B-09/b_code.st
+sha256: a487bde09adf2b6ac48cd38b79009883a4046ecd0af26ab3be077b54c53cc9e7
+preparation: configuration present in the file; compiled as is
+step 1: iec2c -f -l -p -r -R -a -I <OpenPLC_v3>/webserver/lib -T <tmp> <tmp>/program.st
+exit 1
+<tmp>/program.st:36-5..36-26: error: invalid variable(s) declaration.
+<tmp>/program.st:90-13..90-22: error: invalid variable before ':=' in ST assignment statement.
+<tmp>/program.st:92-17..92-26: error: invalid variable before ':=' in ST assignment statement.
+<tmp>/program.st:103-61..103-70: error: invalid expression after '+' in ST expression.
+
+4 error(s) found. Bailing out!
+verdict: 0

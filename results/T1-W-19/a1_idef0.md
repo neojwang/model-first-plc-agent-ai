@@ -1,0 +1,45 @@
+## A0 context model
+
+**Scope:** PLC control of the conveyor in Factory I/O Scene 2, “From A to B (Set and Reset).” The model converts sensor indications into a retained conveyor command; it does not model box generation or removal.
+
+**Bistable selection:** Use the IEC 61131-3 **RS** function block, with **reset dominance**. Thus, `sensor_b` stops the conveyor even when `sensor_a` is also TRUE.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control box transport from A to B | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-on-B requirement; command-retention requirement; reset-priority rule; IEC 61131-3 bistable requirement; I/O address mapping | `conveyor` | OpenPLC Runtime; PLC cyclic execution; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O scene |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Determine conveyor start and stop requests | `sensor_a`; `sensor_b` | Sensor-detection semantics; start-on-A requirement; stop-on-B requirement; input address mapping | Start request; stop request | OpenPLC input image; PLC cyclic execution |
+| A2 | Retain the conveyor command | Start request; stop request | Command-retention requirement; reset-priority rule; IEC 61131-3 bistable requirement | Retained conveyor command | IEC 61131-3 RS function block; function-block instance memory; OpenPLC Runtime |
+| A3 | Apply the conveyor command | Retained conveyor command | Output address mapping; conveyor-command semantics | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O conveyor actuator |
+
+### Arrow connections
+
+All arrow labels below are noun phrases or the required signal identifiers.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `sensor_a` | A0 input boundary | A1 input |
+| `sensor_b` | A0 input boundary | A1 input |
+| Start request | A1 output | A2 input |
+| Stop request | A1 output | A2 input |
+| Retained conveyor command | A2 output | A3 input |
+| `conveyor` | A3 output | A0 output boundary |
+
+### Control definitions
+
+- **Sensor-detection semantics:** TRUE indicates a box at the corresponding sensor.
+- **Start-on-A requirement:** A TRUE `sensor_a` produces a start request.
+- **Stop-on-B requirement:** A TRUE `sensor_b` produces a stop request.
+- **Command-retention requirement:** With neither request active, the RS block retains its previous state.
+- **Reset-priority rule:** A stop request overrides a start request. While `sensor_b` remains TRUE, the conveyor remains stopped.
+- **Conveyor-command semantics:** TRUE runs the conveyor; FALSE stops it.
+- **I/O address mapping:**
+  - `sensor_a` → `%IX100.0`, BOOL.
+  - `sensor_b` → `%IX100.1`, BOOL.
+  - `conveyor` → `%QX100.0`, BOOL.
+
+The A0 controls are allocated to the child functions as shown in their Controls columns. The retained state belongs to the RS function-block mechanism; it is not an additional plant input. No startup-state or restart-inhibition requirement is specified by the task.

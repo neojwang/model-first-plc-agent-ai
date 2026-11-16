@@ -1,0 +1,80 @@
+Continue as the independent reviewer. From the control task and your own IDEF0 model below, derive the behavioral model of the task as an IEC 60848 GRAFCET, written in the JSON schema at the end. Do not rely on any other solution.
+
+Control task:
+# Task T4 - Factory I/O Level Control, PID control
+
+Plant: the tank of the Factory I/O "Level Control" scene in the analog configuration.
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: StartCommand AT %IX100.0 : BOOL; StopCommand AT %IX100.1 : BOOL; LevelMeter AT %IW100 : INT (level meter, 0-10 V; the register value is proportional to the voltage).
+- Outputs: FillValve AT %QW100 : INT (fill valve opening, 0-10 V); DischargeValve AT %QW101 : INT (discharge valve opening, 0-10 V).
+- Constant: FULL_SCALE : INT := 1000 (the register value that corresponds to 10 V; the Factory I/O driver uses Scale = 100).
+- Parameters: set point h_sp = h_target = 0.8 h_span; overfill limit h_max = 0.9 h_span; tolerance band eps = 0.02 h_span; hold time t_h = 10 s; PID gains Kp, Ti, Td; h_span is the measuring span of the level meter (10 V).
+
+Requirements:
+1. Step 0 is the initial step; it drives no output.
+2. On StartCommand, regulate the level: drive the fill valve with the output of a PID controller (error e = h_sp - h), clamp the PID output to 0-100 % of the valve opening and suspend integration while the output is clamped, and hold the discharge valve at a constant opening of 40 % (4 V, that is, 0.4 FULL_SCALE).
+3. End regulation when |e| <= eps has held for t_h, or when h >= h_max; then close both valves and return to step 0.
+4. Whenever StopCommand is TRUE, return to step 0 with all outputs at 0.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: start (the event of pressing StartCommand: TRUE only in the scan in which the button is pressed), stop, settled (|e| <= eps has held for t_h), r (level region: r = LOW for h < h_target, r = MID for h_target <= h < h_max, r = HIGH for h >= h_max)
+- outputs: fill_valve (TRUE while the PID drives the fill valve), discharge_valve (TRUE while the discharge valve is held at 40 %)
+
+Your IDEF0 model:
+The model below treats the task as a **PLC control function**: it receives commands and level measurements and produces analog valve commands. **A0** is the context function; **A1–A5** are its child functions. Internal arrows appear as outputs of their producing functions and as inputs or controls of their consuming functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand at `%IX100.0`; StopCommand at `%IX100.1`; LevelMeter at `%IW100` | I/O mapping and scaling; `FULL_SCALE = 1000`; measuring span `h_span`; `h_sp = h_target = 0.8 h_span`; `h_max = 0.9 h_span`; `eps = 0.02 h_span`; `t_h = 10 s`; PID gains `Kp`, `Ti`, `Td`; initial-step rule; start-event rule; stop-priority rule; completion rules; PID saturation and integration-suspension rules; discharge-opening rule | FillValve command at `%QW100`; DischargeValve command at `%QW101` | OpenPLC Runtime and PLC program; PLC scan clock; Modbus TCP connection; Factory I/O scene and driver |
+| **A1** | **Interpret commands and level measurement** | StartCommand; StopCommand; LevelMeter | I/O mapping; `FULL_SCALE = 1000`; `h_span`; rising-edge definition of `start` | `start` — one-scan press event; `stop` — current stop condition; measured level `h` | PLC input-image access; rising-edge detector and previous-button-state memory; scaling arithmetic |
+| **A2** | **Evaluate level conditions** | Measured level `h` | `h_sp`; `h_target`; `h_max`; `eps`; `t_h`; regulation-state status from A3; continuous in-band timing rule | Level error `e`; level region `r`; completion condition `settled` | PLC arithmetic and comparison operations; hold timer; PLC scan clock |
+| **A3** | **Manage regulation sequence** | `start` | `stop`; `settled`; `r`; initial step 0; stop-priority rule; transition rules | Regulation-state status; `fill_valve`; `discharge_valve` | PLC sequence logic; retained sequence-state memory |
+| **A4** | **Compute bounded PID demand** | Level error `e` | `fill_valve`; PID gains `Kp`, `Ti`, `Td`; PID execution interval; output limits of 0–100%; integration suspension while output is clamped | Bounded fill-opening demand | PID algorithm; PID state memory; saturation logic; integration-inhibition logic; PLC scan clock |
+| **A5** | **Generate analog valve commands** | Bounded fill-opening demand | `fill_valve`; `discharge_valve`; `FULL_SCALE = 1000`; fixed discharge opening of 40%; zero-output rule for step 0 and stop; output-address mapping | FillValve command at `%QW100`; DischargeValve command at `%QW101` | PLC scaling and integer-conversion operations; PLC output-image access; Modbus TCP connection; Factory I/O driver |
+
+### Arrow and behavior definitions
+
+- **Measurement scaling:**  
+  `h = (LevelMeter / FULL_SCALE) × h_span`. Equivalently, calculations may use normalized level or register units. In register-equivalent units, the target, overfill limit, and tolerance are respectively **800**, **900**, and **20**.
+
+- **A2 conditions:**
+  - `e = h_sp − h`.
+  - `r = LOW` when `h < h_target`.
+  - `r = MID` when `h_target ≤ h < h_max`.
+  - `r = HIGH` when `h ≥ h_max`.
+  - `settled` becomes TRUE after `|e| ≤ eps` has remained continuously true for 10 seconds during regulation. The hold timer is cleared when regulation is inactive or the error leaves the tolerance band.
+
+- **A3 sequencing:**
+  - Initialize in step 0 with `fill_valve = FALSE` and `discharge_valve = FALSE`.
+  - A `start` event initiates regulation from step 0, provided `stop` is FALSE.
+  - During regulation, both `fill_valve` and `discharge_valve` are TRUE.
+  - `settled` or `r = HIGH` ends regulation and returns the sequence to step 0.
+  - `stop` overrides all other conditions and returns the sequence to step 0 with both output enables FALSE.
+
+- **A4–A5 output behavior:**
+  - `fill_valve` is the **Boolean PID-drive enable**, not the analog valve-opening value.
+  - While enabled, the PID demand is clamped to 0–100%, and integration is suspended while the output is clamped.
+  - A5 converts that demand to a FillValve command in **0–1000**.
+  - While `discharge_valve` is TRUE, DischargeValve is **400**.
+  - In step 0, both analog commands are **0**; no prior nonzero command is retained.
+
+The table is a functional decomposition, not an execution-order diagram. The scan implementation must nevertheless ensure that stop and termination decisions suppress both valve commands in the same scan.
+
+GRAFCET JSON schema (the tuple of Equation (1) of the paper):
+
+{
+  "graphs": [ {"name": "G1", "steps": ["x0", "x1"], "initial": ["x0"]} ],
+  "transitions": [ {"id": "t1", "from": ["x0"], "to": ["x1"], "guard": "start"} ],
+  "outputs": { "fill_valve": "x1" },
+  "forcing": [ {"by": "x11", "graph": "G1", "situation": ["x0"]} ],
+  "owned": { "timer_done": {"step": "x1", "neutral": false, "preset": "TimerDuration"} }
+}
+
+Rules:
+1. Step names start with the letter x followed by letters or digits (x0, x1, x21, xE1). The main graph is named G1, and x0 is its initial step.
+2. A transition lists its upstream steps ("from"), its downstream steps ("to"), and its receptivity ("guard"). Guards use only the input identifiers of the task card, step names, the operators ! (not), & (and), | (or), parentheses, TRUE and FALSE; the level region of task T4 is tested as r = LOW, r = MID or r = HIGH.
+3. "outputs" gives, for every output identifier of the task card, a Boolean expression over step names that is TRUE while the output is on.
+4. "forcing" is optional: a separate graph (for example G0 for stop handling) may contain a step whose forcing order holds the graph named in "graph" in the listed situation.
+5. "owned" lists every timer or hold condition used in a guard (timer_done, ton_q, tof_q, settled) with the step whose activity it measures, the value it has at the instant that step becomes active ("neutral"), and its preset, written as the parameter name of the task card ("preset"). Conditions that measure the duration of a step are FALSE at that instant; the off-delay output tof_q is measured by the pause step and is TRUE at that instant.
+6. Output only the JSON object, without comments or explanations.

@@ -1,0 +1,18 @@
+The model below treats the function as **controlling the conveyor**, rather than physically transporting the box. Accordingly, `sensor_a` and `sensor_b` are inputs to be processed, while `conveyor` is the resulting command. Requirements are controls; the runtime, communication interface, and function block are mechanisms.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable requirement; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 bistable function block; Modbus TCP interface; Factory I/O plant |
+| **A1** | **Determine the start request** | `sensor_a` | Start-on-A requirement: box detection at A requests conveyor operation; input mapping for `sensor_a` | Start request | OpenPLC input processing and Boolean logic; Modbus TCP interface |
+| **A2** | **Determine the stop request** | `sensor_b` | Stop-at-B requirement: box detection at B requests conveyor stoppage; input mapping for `sensor_b` | Stop request | OpenPLC input processing and Boolean logic; Modbus TCP interface |
+| **A3** | **Retain and issue the conveyor command** | Start request; Stop request | IEC 61131-3 bistable requirement; command-retention rule; stop-priority rule; output mapping for `conveyor` | `conveyor` | OpenPLC Runtime; IEC 61131-3 **RS** function-block instance; Modbus TCP output interface |
+
+**Decomposition and interpretation**
+
+- A1’s **Start request** connects to A3’s set input.
+- A2’s **Stop request** connects to A3’s reset input.
+- A3 retains its command when neither request is active, allowing the box to travel between the sensors.
+- A **reset-dominant RS** block is selected so that `sensor_b = TRUE` forces `conveyor = FALSE`, including when both sensors are TRUE. This is an explicit priority choice consistent with stopping at B; the task permits either SR or RS.
+- The retained state belongs to the bistable mechanism, not to an additional external input.
+
+**Boundary I/O mapping:** `sensor_a` → `%IX100.0`; `sensor_b` → `%IX100.1`; `conveyor` → `%QX100.0`.

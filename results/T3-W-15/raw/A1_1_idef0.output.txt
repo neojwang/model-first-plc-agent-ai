@@ -1,0 +1,83 @@
+## A0 context model — Control timed tank filling
+
+**Boundary:** The model covers input acquisition, timer evaluation, step selection, and output generation in OpenPLC. Factory I/O represents the external tank plant.
+
+The operating sequence is **step 0 → filling step → pause step → filling step**, with a return to step 0 on `LSH` or `stop`. The discharge valve remains closed throughout.
+
+### IDEF0 ICOM tables
+
+All function names are verb phrases. Arrow labels are noun phrases; code-form identifiers identify the required signals.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration parameter; TOF_Duration parameter; initial-step rule; filling and pause rules; stop-priority rule; high-level termination rule; high-high protection rule; discharge-inhibition rule; I/O address map | Fill-valve command `fill_valve`; discharge-valve command `discharge_valve` | OpenPLC Runtime; cyclic PLC task; Modbus TCP connection; Factory I/O digital tank plant |
+| **A1** | **Acquire and condition plant signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O address map; rising-edge detection rule; PLC scan timing | Start event `start`; stop status `stop`; level status `LSH`; high-high level status `LSHH` | PLC input image; Modbus TCP input interface; rising-edge detector and previous-input memory |
+| **A2** | **Evaluate filling and pause timers** | Filling-step activity | TON_Duration parameter; TOF_Duration parameter; TON behavior; TOF behavior; PLC scan timing | On-delay completion status `ton_q`; off-delay status `tof_q` | TON function-block instance; TOF function-block instance; PLC time base |
+| **A3** | **Select the operating step** | Start event `start` | Stop status `stop`; level status `LSH`; high-high level status `LSHH`; on-delay completion status `ton_q`; off-delay status `tof_q`; initial-step rule; transition priorities; step-transition rules | Step-0 activity; filling-step activity; pause-step activity | Step-state memory; PLC sequence evaluator |
+| **A4** | **Issue valve commands** | Step-0 activity; filling-step activity; pause-step activity | Stop status `stop`; level status `LSH`; high-high level status `LSHH`; output-permission rule; discharge-inhibition rule; I/O address map | Fill-valve command `fill_valve`; discharge-valve command `discharge_valve` | PLC output image; Modbus TCP output interface; Factory I/O valve actuators |
+
+### Child-function connections
+
+These connections identify the internal arrows of the A0 decomposition:
+
+| Source | Arrow | Destination |
+|---|---|---|
+| A1 | Start event `start` | A3 input |
+| A1 | Stop status `stop` | A3 and A4 controls |
+| A1 | Level status `LSH` | A3 and A4 controls |
+| A1 | High-high level status `LSHH` | A3 and A4 controls |
+| A3 | Filling-step activity | A2 and A4 inputs |
+| A3 | Step-0 activity; pause-step activity | A4 inputs |
+| A2 | On-delay completion status `ton_q`; off-delay status `tof_q` | A3 controls |
+| A4 | Fill-valve command `fill_valve`; discharge-valve command `discharge_valve` | A0 boundary outputs |
+
+The A3-to-A2-to-A3 connection is an intentional feedback path: filling-step activity drives both timers, and their statuses govern step transitions. IDEF0 represents this functional dependency, not PLC execution order.
+
+## Behavioral controls
+
+### Step-transition rules
+
+Conditions below use the required receptivity identifiers exactly. Higher-priority conditions override lower-priority conditions.
+
+| Priority | Current step | Receptivity | Result |
+|---|---|---|---|
+| 1 | Any step | `stop` | Return to step 0; both outputs FALSE |
+| 2 | Any step | `LSHH` | Return to step 0; both outputs FALSE |
+| 3 | Filling or pause | `LSH` | Return to step 0; both outputs FALSE |
+| 4 | Step 0 | `start AND NOT stop AND NOT LSH AND NOT LSHH` | Enter filling step |
+| 4 | Filling | `ton_q AND NOT LSH` | Enter pause step |
+| 4 | Pause | `NOT tof_q AND NOT LSH` | Enter filling step |
+| — | Any step | No applicable receptivity | Retain current step |
+
+- **Step 0 is initial** and drives no output.
+- `start` is TRUE for one scan on the rising edge of StartCommand. Holding StartCommand does not cause an automatic restart after stopping or reaching the level.
+- The `LSHH` transition is a protective interlock added to support the stated high-high constraint; normal filling terminates at `LSH`.
+
+### Timer controls
+
+| Timer | Input | Parameter | Output | Required behavior |
+|---|---|---|---|---|
+| TON | Filling-step activity | TON_Duration | `ton_q` | TRUE after continuous filling-step activity for TON_Duration; resets when filling-step activity becomes FALSE |
+| TOF | Filling-step activity | TOF_Duration | `tof_q` | TRUE during filling-step activity and for TOF_Duration after that activity becomes FALSE |
+
+Timer instances are evaluated cyclically, including in step 0. A residual TRUE `tof_q` after a stop does **not** authorize any output or automatic restart.
+
+### Output controls and physical mapping
+
+| Step or condition | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| Step 0 | FALSE | FALSE |
+| Filling, with `NOT stop AND NOT LSH AND NOT LSHH` | TRUE | FALSE |
+| Pause | FALSE | FALSE |
+| `stop OR LSH OR LSHH` | FALSE | FALSE |
+
+| Scene tag | PLC address | Model role |
+|---|---|---|
+| StartCommand | `%IX100.0` | Source of `start` |
+| StopCommand | `%IX100.1` | Source of `stop` |
+| LSH | `%IX100.2` | `LSH`, at 2.4 m |
+| LSHH | `%IX100.3` | `LSHH`, at 2.7 m |
+| FillValve | `%QX100.0` | Destination of `fill_valve` |
+| DischargeValve | `%QX100.1` | Destination of `discharge_valve`; always FALSE |
+
+**High-high constraint:** Closing the fill valve at `LSH` is the normal means of preventing `LSHH`. An `LSHH` interlock can limit further filling but cannot itself guarantee that LSHH is never reached, because it acts only after detection. That guarantee also requires validation of sensor operation, communication and scan latency, valve closing time, and residual inflow against the 0.3 m level margin.

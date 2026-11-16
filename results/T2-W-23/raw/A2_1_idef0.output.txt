@@ -1,0 +1,16 @@
+The model below treats **A0** as the context function and **A1–A3** as its child functions. Signal arrows use the required identifier vocabulary; **filling-step status** is an internal arrow indicating whether step 0 or the filling step is active.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial step 0; stop-priority rule; timer-or-high-high termination rule; discharge inhibition | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC program and scan cycle; Factory I/O Modbus TCP interface; digital tank scene with level switches and valves |
+| **A1** | **Manage filling-step transitions** | `start`; `stop`; `LSHH`; `timer_done` | Initial step 0; step 0 → filling step on `start`; filling step → step 0 on `timer_done` or `LSHH`; unconditional return to step 0 while `stop` is TRUE | Filling-step status | PLC transition logic; step-state memory; PLC scan cycle |
+| **A2** | **Measure filling-step duration** | Filling-step status | `TimerDuration`; timer enable during the filling step; timer reset outside the filling step | `timer_done` | PLC timer instance; runtime time base |
+| **A3** | **Generate valve commands** | Filling-step status; `stop` | Filling-step output rule; step-0 output inhibition; stop-priority rule; permanent discharge inhibition | `fill_valve`; `discharge_valve` | PLC output logic; mapped Boolean output image; Modbus TCP output interface |
+
+**Interpretation notes**
+
+- **Internal connections:** A1 supplies filling-step status to A2 and A3. A2 returns `timer_done` to A1.
+- **Start semantics:** `start` is the one-scan press event specified in the task, not the sustained level of `StartCommand`.
+- **Output behavior:** `fill_valve` is TRUE only while the filling step is active and `stop` is FALSE. `discharge_valve` is always FALSE. Consequently, step 0 drives neither output.
+- **Priority:** `stop` overrides starting or continued filling. During filling, either `timer_done` or `LSHH` causes return to step 0 and closure of the fill valve.
+- **Unused sensor:** `LSH` is available in the scene but has no functional role in the stated requirements. It therefore has no connected arrow in this functional model; the 2.4 m level does not terminate filling.

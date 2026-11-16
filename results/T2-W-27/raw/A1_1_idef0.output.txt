@@ -1,0 +1,92 @@
+## A0 context and modeling conventions
+
+**A0 — Control timed tank filling**
+
+The function fills the tank for at most `TimerDuration`, stopping earlier on `LSHH` or `stop`. The initial and inactive state is **step 0**, with both valves closed.
+
+The model uses the specified receptivity and output vocabulary exactly:
+
+- `start`: rising-edge event from `StartCommand`, TRUE for one scan only.
+- `stop`: current level of `StopCommand`.
+- `LSH`, `LSHH`: current level-switch states.
+- `timer_done`: completion indication from the filling-step timer.
+- `fill_valve`, `discharge_valve`: valve commands.
+
+The IDEF0 boundary uses these logical signals. Physical signal acquisition, edge detection, and output mapping are provided by the mechanisms identified below.
+
+### ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TimerDuration`; initial-step rule; start-event rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; command edge detector; state memory; elapsed-time timer; Modbus TCP connection; Factory I/O tank and valves |
+| **A1** | **Determine filling-step state** | `start`; `stop`; `LSHH`; `timer_done` | Initial-step rule; start-event rule; stop-priority rule; timer-or-high-high termination rule | Step state; Filling enable | PLC scan execution; step-state memory |
+| **A2** | **Measure filling duration** | Filling enable | `TimerDuration`; timer-entry rule; timer-reset rule | `timer_done` | Elapsed-time timer; PLC time base |
+| **A3** | **Generate valve commands** | Step state; `stop`; `LSHH`; `timer_done` | Step-output rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | Boolean output logic; OpenPLC output image; Modbus TCP connection; Factory I/O valves |
+
+`LSH` is deliberately **unused**: it is an available boundary input but has no child-function connection because the specified task does not use the target-level switch to terminate filling.
+
+## Child-function responsibilities
+
+### A1 — Determine filling-step state
+
+This function maintains **step 0** and the **filling step**.
+
+- Initialization selects step 0.
+- `stop` has unconditional priority: it selects step 0 regardless of all other signals.
+- In step 0, `start` requests entry into the filling step.
+- During filling, `timer_done` or `LSHH` selects step 0.
+- An asserted `LSHH` prevents an effective filling command, including when it coincides with `start`.
+- Return to step 0 does not automatically restart filling. A subsequent `start` event is required.
+
+**Step state** identifies the selected step. **Filling enable** identifies the active timing interval.
+
+### A2 — Measure filling duration
+
+- Entry into the filling step starts a fresh timing interval.
+- `timer_done` becomes TRUE when that interval reaches `TimerDuration`.
+- Leaving the filling step disables and resets the timer, preventing elapsed time from carrying into the next filling cycle.
+
+### A3 — Generate valve commands
+
+- Step 0 produces `fill_valve = FALSE`.
+- The filling step permits `fill_valve = TRUE` only while `stop`, `LSHH`, and `timer_done` are all FALSE.
+- `discharge_valve` is always FALSE.
+- Stop and termination conditions suppress the fill command in the scan in which they are recognized; they do not permit an extra output scan while the step returns to step 0.
+
+## Arrow connections and parent–child balance
+
+All arrow labels below are noun phrases or the required signal identifiers.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `start` | A0 input boundary | A1 |
+| `stop` | A0 input boundary | A1; A3 |
+| `LSHH` | A0 input boundary | A1; A3 |
+| `LSH` | A0 input boundary | No child connection—unused in this task |
+| `TimerDuration` | A0 control boundary | A2 |
+| Initial-step rule | A0 control boundary | A1 |
+| Start-event rule | A0 control boundary | A1 |
+| Stop-priority rule | A0 control boundary | A1; A3 |
+| Timer-or-high-high termination rule | A0 control boundary | A1; A3 |
+| Discharge-inhibition rule | A0 control boundary | A3 |
+| Step state | A1 | A3 |
+| Filling enable | A1 | A2 |
+| `timer_done` | A2 | A1; A3 |
+| `fill_valve` | A3 | A0 output boundary |
+| `discharge_valve` | A3 | A0 output boundary |
+
+The **timer-entry rule**, **timer-reset rule**, and **step-output rule** are child-level elaborations of the parent’s filling and initial-step requirements. The A1–A2 feedback represents scan-based state and timing interaction, not a prescribed sequential execution order.
+
+## Physical interface mapping
+
+| Logical signal | Physical tag / address | Interpretation |
+|---|---|---|
+| `start` | `StartCommand` — `%IX100.0` | One-scan rising-edge event generated from the raw BOOL |
+| `stop` | `StopCommand` — `%IX100.1` | TRUE while stop is asserted |
+| `LSH` | `LSH` — `%IX100.2` | Liquid detected at 2.4 m; unused by this task |
+| `LSHH` | `LSHH` — `%IX100.3` | Liquid detected at 2.7 m; early filling termination |
+| `timer_done` | Internal timer indication | Filling duration reached |
+| `fill_valve` | `FillValve` — `%QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | `DischargeValve` — `%QX100.1` | Always FALSE |
+
+**Parameter assumption:** `TimerDuration` is a valid, nonnegative `TIME` value. A zero duration implies immediate completion and no sustained fill command.

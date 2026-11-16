@@ -1,0 +1,41 @@
+== A1 (st_code) ==
+file: T3-W-23/a1_code.st  sha256: e2b30482612893dba8f929e72e84f91f30c245bf1c9f499541e108eaf827033c
+task: T3; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+   T3 (a): set TON_Duration (line 7, TIME): (none) -> T#5s
+   T3 (a): set TON_Duration (line 75, TIME): T#5s -> T#5s
+   T3 (a): set TOF_Duration (line 8, TIME): (none) -> T#5s
+   T3 (a): set TOF_Duration (line 76, TIME): T#5s -> T#5s
+T3 (a): pass - 7 filling phases before LSH, 6 pauses; fill after LSH 0.16 s; LSHH not reached
+   T3 (b): set TON_Duration (line 7, TIME): (none) -> T#5s
+   T3 (b): set TON_Duration (line 75, TIME): T#5s -> T#5s
+   T3 (b): set TOF_Duration (line 8, TIME): (none) -> T#5s
+   T3 (b): set TOF_Duration (line 76, TIME): T#5s -> T#5s
+T3 (b): pass - stop in pause True, restart True, stop in filling True
+sensitivity, polling phase 40 ms: 2/2 situations pass
+sensitivity, switches +0.05 m: 2/2 situations pass
+sensitivity, switches -0.05 m: 2/2 situations pass
+sensitivity, valve lag 1 s: 2/2 situations pass
+task interval of the configuration: 20 ms
+verdict: 1
+
+== A2 (a2_st_code) ==
+file: T3-W-23/a2_code.st  sha256: 677215310018cdef1c781f721d903ef871b1526223746f608cdcb06cffde72ce
+task: T3; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+   T3 (a): set TON_Duration (line 7, TIME): (none) -> T#5s
+   T3 (a): set TON_Duration (line 93, TIME): T#5s -> T#5s
+   T3 (a): set TOF_Duration (line 8, TIME): (none) -> T#5s
+   T3 (a): set TOF_Duration (line 94, TIME): T#5s -> T#5s
+T3 (a): pass - 7 filling phases before LSH, 6 pauses; fill after LSH 0.16 s; LSHH not reached
+   T3 (b): set TON_Duration (line 7, TIME): (none) -> T#5s
+   T3 (b): set TON_Duration (line 93, TIME): T#5s -> T#5s
+   T3 (b): set TOF_Duration (line 8, TIME): (none) -> T#5s
+   T3 (b): set TOF_Duration (line 94, TIME): T#5s -> T#5s
+T3 (b): pass - stop in pause True, restart True, stop in filling True
+sensitivity, polling phase 40 ms: 2/2 situations pass
+sensitivity, switches +0.05 m: 2/2 situations pass
+sensitivity, switches -0.05 m: 2/2 situations pass
+sensitivity, valve lag 1 s: 2/2 situations pass
+task interval of the configuration: 20 ms
+verdict: 1

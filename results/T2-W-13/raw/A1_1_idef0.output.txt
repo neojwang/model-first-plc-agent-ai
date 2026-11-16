@@ -1,0 +1,78 @@
+## A0 context model
+
+**A0 — Control timed tank filling**
+
+The function opens the fill valve following a start event, closes it on timer completion or high-high level detection, and returns to the initial state. A stop command overrides all other conditions.
+
+In the IDEF0 model below:
+
+- **Inputs** are signals or state information processed by a function.
+- **Controls** are parameters and rules governing that processing.
+- **Outputs** are the results produced.
+- **Mechanisms** are the resources performing the function.
+- Function names are verb phrases; arrow names are noun phrases, including the prescribed signal identifiers.
+
+### Signal correspondence
+
+The lowercase identifiers below are the exact receptivity and output vocabulary used in the model.
+
+| Model identifier | Plant correspondence | Meaning |
+|---|---|---|
+| `start` | Rising-edge event of StartCommand, `%IX100.0` | TRUE only for the scan in which the button is pressed |
+| `stop` | StopCommand, `%IX100.1` | Stop request |
+| `LSH` | LSH, `%IX100.2` | Liquid detection at 2.4 m |
+| `LSHH` | LSHH, `%IX100.3` | Liquid detection at 2.7 m |
+| `timer_done` | Internal filling-timer completion indication | Filling-step timer elapsed |
+| `fill_valve` | FillValve, `%QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | DischargeValve, `%QX100.1` | Always FALSE in this task |
+
+`LSH` is available plant information but has **no control role in this task**. It does not terminate filling. Consequently, it is not connected to a functional input in this model.
+
+## ICOM decomposition
+
+A0 is decomposed into three child functions. “Filling-state information” identifies either **step 0 — idle** or **step 1 — filling**; it is internal state information, not an additional receptivity.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; Initial-state rule; Start-event rule; Stop-priority rule; Filling-termination rule; Discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan cycle; Start-edge detector; State memory; Filling timer; Modbus TCP connection; Factory I/O tank scene |
+| **A1** | **Determine the filling state** | `start`; `stop`; `LSHH`; `timer_done`; Filling-state information *(state feedback)* | Initial-state rule; Start-event rule; Stop-priority rule; Filling-termination rule | Filling-state information | OpenPLC Runtime; PLC scan cycle; State memory |
+| **A2** | **Measure the filling interval** | Filling-state information | `TimerDuration`; Timer-operation rule | `timer_done` | OpenPLC Runtime; Filling timer; Runtime time base |
+| **A3** | **Command the tank valves** | Filling-state information; `stop`; `LSHH`; `timer_done` | Idle-output rule; Stop-priority rule; Filling-termination rule; Discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Output image; Modbus TCP connection; Factory I/O valve actuators |
+
+### Control-arrow definitions
+
+| Control arrow | Definition |
+|---|---|
+| `TimerDuration` | Preset duration of the filling timer |
+| Initial-state rule | Step 0 is the initial state |
+| Start-event rule | A `start` event in step 0 requests entry into step 1; a `start` event during filling is ignored |
+| Stop-priority rule | `stop` overrides starting and continued filling; the resulting state is step 0 and both outputs are FALSE |
+| Filling-termination rule | `LSHH` or `timer_done` terminates filling and returns the state to step 0; termination takes precedence over a simultaneous `start` |
+| Timer-operation rule | The timer starts on entry to step 1, runs only during step 1, and resets outside step 1 |
+| Idle-output rule | Step 0 commands both outputs FALSE |
+| Discharge-inhibition rule | `discharge_valve` is FALSE in every state |
+
+## Child-function connections
+
+These connections define the A0 decomposition; they are **information flows**, not a PLC execution-order prescription.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `start` | A0 input boundary | A1 |
+| `stop` | A0 input boundary | A1, A3 |
+| `LSHH` | A0 input boundary | A1, A3 |
+| `TimerDuration` | A0 control boundary | A2 |
+| Filling-state information | A1 | A1 state feedback, A2, A3 |
+| `timer_done` | A2 | A1, A3 |
+| `fill_valve` | A3 | A0 output boundary |
+| `discharge_valve` | A3 | A0 output boundary |
+
+## Behavioral interpretation
+
+- **Initially:** step 0; `fill_valve = FALSE`; `discharge_valve = FALSE`.
+- **On `start`:** enter step 1, open the fill valve, and start the timer, provided no overriding stop or high-high condition exists.
+- **During filling:** close the fill valve and return to step 0 when `timer_done` or `LSHH` becomes TRUE, whichever occurs first.
+- **Whenever `stop` is TRUE:** return to step 0 with both outputs FALSE, regardless of other signals.
+- **After termination:** a new `start` event is required for another filling cycle. A held StartCommand does not cause automatic restarting.
+
+The internal `timer_done` arrow does not appear on the A0 boundary because A2 generates it within A0. Closing the fill valve and returning to step 0 must be reflected in the same PLC scan that recognizes a termination condition, without an additional scan of filling.

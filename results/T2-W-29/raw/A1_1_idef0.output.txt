@@ -1,0 +1,75 @@
+## A0 context model
+
+**Scope:** Control the customized digital filling tank using a timed filling step, an overfill cutoff, and a stop override.
+
+The model has two operating steps:
+
+- **Step 0 — Idle:** Initial step; both valve commands are FALSE.
+- **Step 1 — Filling:** The fill valve is open and the filling timer is active.
+
+In IDEF0, inputs are transformed by a function, controls constrain its behavior, outputs are its results, and mechanisms perform the function. Signal arrows below use the required identifier vocabulary wherever they represent receptivities or valve commands.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control timed tank filling | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TimerDuration; initial-step requirement; start-event definition; stop-priority requirement; filling-completion rule; discharge-inhibition requirement; I/O mapping specification | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan cycle; Modbus TCP connection; Factory I/O tank scene; capacitive level switches; valve actuators |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Interpret operator and level signals | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | Start-event definition; input mapping specification | start; stop; LSH; LSHH | PLC input image; rising-edge detector; previous-button-state memory |
+| A2 | Measure filling-step elapsed time | Operating step | TimerDuration; timer initialization requirement; timer reset requirement | timer_done | PLC timer instance; PLC time base |
+| A3 | Select the operating step | start; stop; LSHH; timer_done | Initial-step requirement; stop-priority requirement; step-transition rules | Operating step | PLC execution logic; operating-step memory |
+| A4 | Generate valve commands | Operating step | stop; LSHH; timer_done; discharge-inhibition requirement; output mapping specification | fill_valve; discharge_valve | PLC output image; Modbus TCP connection; Factory I/O valve interfaces |
+
+### Internal arrow connections
+
+These connections define the child diagram without prescribing implementation code:
+
+- **A1 → A3:** `start`, `stop`, `LSHH`
+- **A1 → A4:** `stop`, `LSHH`
+- **A3 → A2:** Operating step
+- **A2 → A3:** `timer_done`
+- **A2 → A4:** `timer_done`
+- **A3 → A4:** Operating step
+- **A4 → A0 boundary:** `fill_valve`, `discharge_valve`
+
+`LSH` is acquired by A1 but has **no downstream consumer in this task**. It is not a filling-completion condition. The internal Operating step / `timer_done` feedback represents state-dependent operation over time, not an execution-order prescription.
+
+## Behavioral controls
+
+### Signal interpretation and mapping
+
+| Arrow or parameter | Source or destination | Meaning |
+|---|---|---|
+| start | StartCommand at `%IX100.0` | One-scan event on a FALSE-to-TRUE transition; a held button does not create repeated start events |
+| stop | StopCommand at `%IX100.1` | Level-sensitive stop request |
+| LSH | LSH at `%IX100.2` | Liquid detection at 2.4 m; monitored but unused by the sequence |
+| LSHH | LSHH at `%IX100.3` | Liquid detection at the 2.7 m overfill limit |
+| timer_done | Filling-step timer | Elapsed-time indication for the current filling step |
+| fill_valve | FillValve at `%QX100.0` | TRUE opens the fill valve |
+| discharge_valve | DischargeValve at `%QX100.1` | Always FALSE |
+| TimerDuration | TIME parameter | Filling-step timer preset |
+
+### Step-transition rules
+
+Rules are evaluated with **stop taking highest priority**.
+
+| Current step | Condition | Resulting step |
+|---|---|---|
+| Any step | `stop` is TRUE | Step 0 |
+| Step 0 | `start` is TRUE, `stop` is FALSE, and `LSHH` is FALSE | Step 1 |
+| Step 0 | Otherwise | Step 0 |
+| Step 1 | `timer_done` or `LSHH` is TRUE | Step 0 |
+| Step 1 | Otherwise | Step 1 |
+
+The Step 0 start guard prevents opening the fill valve when the overfill switch already detects liquid. A `start` event during filling is ignored; it does not restart the timer.
+
+### Timer and output rules
+
+- Initialize in **Step 0**, with the timer inactive and reset.
+- Start the timer when entering **Step 1**, using `TimerDuration`.
+- Reset the timer when leaving Step 1; `timer_done` must not persist into a new filling cycle.
+- Assert `fill_valve` only during Step 1 and only while `stop`, `LSHH`, and `timer_done` are FALSE.
+- Keep `discharge_valve` FALSE in every step.
+- A stop request forces Step 0 and both outputs FALSE in the scan in which it is processed.

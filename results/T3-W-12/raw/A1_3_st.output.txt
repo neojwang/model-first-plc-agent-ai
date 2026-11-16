@@ -1,0 +1,122 @@
+FUNCTION_BLOCK FillingRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    active_state : INT := 0;
+    next_state : INT := 0;
+    filling_active : BOOL := FALSE;
+    ton_timer : TON;
+    tof_timer : TOF;
+    ton_q : BOOL := FALSE;
+    tof_q : BOOL := FALSE;
+END_VAR
+
+(* Evaluate timers using the currently active GRAFCET step. *)
+filling_active := (active_state = 1);
+
+ton_timer(IN := filling_active, PT := TON_Duration);
+tof_timer(IN := filling_active, PT := TOF_Duration);
+
+ton_q := ton_timer.Q;
+tof_q := tof_timer.Q;
+
+(* Evaluate transitions from a single snapshot of the active situation. *)
+next_state := active_state;
+
+CASE active_state OF
+    0:
+        IF start AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 1;
+        END_IF;
+
+    1:
+        IF stop OR LSH OR LSHH THEN
+            next_state := 0;
+        ELSIF ton_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 2;
+        END_IF;
+
+    2:
+        IF stop OR LSH OR LSHH THEN
+            next_state := 0;
+        ELSIF NOT tof_q AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            next_state := 1;
+        END_IF;
+
+ELSE
+    next_state := 0;
+END_CASE;
+
+(* Synchronize timer inputs at the instant of a step change.
+   No additional transition is evaluated during this scan. *)
+IF next_state <> active_state THEN
+    active_state := next_state;
+    filling_active := (active_state = 1);
+
+    ton_timer(IN := filling_active, PT := TON_Duration);
+    tof_timer(IN := filling_active, PT := TOF_Duration);
+
+    ton_q := ton_timer.Q;
+    tof_q := tof_timer.Q;
+END_IF;
+
+fill_valve := (active_state = 1);
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Configurable timing parameters. *)
+    TON_Duration : TIME := T#5s;
+    TOF_Duration : TIME := T#5s;
+
+    runtime_logic : FillingRuntime;
+    start_edge : R_TRIG;
+    initialized : BOOL := FALSE;
+    start_pulse : BOOL := FALSE;
+END_VAR
+
+start_edge(CLK := StartCommand);
+
+IF NOT initialized THEN
+    (* Seed the edge detector without treating an initially held
+       StartCommand as a new button press. *)
+    start_pulse := FALSE;
+    initialized := TRUE;
+ELSE
+    start_pulse := start_edge.Q;
+END_IF;
+
+runtime_logic(
+    start := start_pulse,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := runtime_logic.fill_valve;
+DischargeValve := runtime_logic.discharge_valve;
+
+END_PROGRAM

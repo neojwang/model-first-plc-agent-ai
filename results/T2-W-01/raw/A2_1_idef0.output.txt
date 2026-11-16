@@ -1,0 +1,37 @@
+### IDEF0 functional model
+
+The model boundary is the **tank-filling controller**. Commands and level indications enter the controller; valve commands leave it. The timer indication `timer_done` is generated internally.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TimerDuration`; initial-step rule; start-event rule; timer-or-high-high termination rule; stop-priority rule; discharge-closure rule; I/O mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC program and timer facility; Factory I/O Modbus TCP interface |
+| **A1** | **Determine the filling step** | `start`; `stop`; `LSHH`; `timer_done`; `LSH` *(available indication only)* | Initial state: step 0; transition rules; stop priority | Filling-step status | OpenPLC Runtime; step-state memory; PLC transition logic |
+| **A2** | **Time the filling step** | Filling-step status | `TimerDuration`; timer-start and timer-reset rules | `timer_done` | OpenPLC timer facility; runtime time base |
+| **A3** | **Generate valve commands** | Filling-step status; `stop` | Step-output rules; stop override; permanent discharge-closure rule; output-address mapping | `fill_valve`; `discharge_valve` | OpenPLC output logic; output image; Factory I/O Modbus TCP interface |
+
+### Arrow and control definitions
+
+- **Filling-step status** is the internal state indication shared by A1, A2, and A3: either **step 0** or **filling step**.
+- **A1 transition rules:**
+  - Initially, the state is step 0.
+  - `stop = TRUE` forces step 0, with priority over every other transition.
+  - In step 0, `start` initiates the filling step, provided `stop = FALSE`.
+  - In the filling step, `timer_done OR LSHH` returns the controller to step 0.
+  - Otherwise, the current step is retained.
+- **A2 timer rules:** entering the filling step starts timing for `TimerDuration`; leaving it resets the timer. `timer_done` is returned to A1 as an internal feedback arrow.
+- **A3 output rules:** `fill_valve` is TRUE only while the filling step is active and `stop = FALSE`. `discharge_valve` is always FALSE. Thus, both outputs are FALSE in step 0.
+- **`start`** is the stipulated one-scan press event, not the sustained level of StartCommand. Its implementation requires rising-edge detection of StartCommand.
+- **`LSH`** is available but has **no decision or valve-control role** in this task. Reaching 2.4 m does not terminate filling; only elapsed time, `LSHH`, or `stop` does so.
+
+### I/O mapping control
+
+| Model arrow | Scene tag / address |
+|---|---|
+| `start` | Rising-edge event of StartCommand, `%IX100.0` |
+| `stop` | StopCommand, `%IX100.1` |
+| `LSH` | LSH, `%IX100.2` |
+| `LSHH` | LSHH, `%IX100.3` |
+| `fill_valve` | FillValve, `%QX100.0` |
+| `discharge_valve` | DischargeValve, `%QX100.1` |
+
+In IDEF0 terms, the commands and indications are **inputs** processed by the controller; the requirements and parameter are **controls** governing that processing; and the runtime, timer facility, and communication interface are **mechanisms** performing it.

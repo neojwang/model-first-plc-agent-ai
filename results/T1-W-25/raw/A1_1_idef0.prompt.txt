@@ -1,0 +1,21 @@
+You are a PLC engineer. Model the control task below before any code is written.
+
+Decompose the task into an IDEF0 model (FIPS 183): an A0 context function and its child functions A1, A2, ... Name every function with a verb phrase and every arrow with a noun phrase. For each function, list its inputs, controls, outputs, and mechanisms (ICOM) in a Markdown table with the columns Node | Function | Inputs | Controls | Outputs | Mechanisms.
+
+Control task:
+# Task T1 - Factory I/O Scene 2, From A to B (Set and Reset)
+
+Plant: a conveyor transports a box from sensor A to sensor B (Factory I/O scene "From A to B (Set and Reset)").
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: SensorA AT %IX100.0 : BOOL (TRUE while a box is detected at sensor A); SensorB AT %IX100.1 : BOOL (TRUE while a box is detected at sensor B).
+- Output: Conveyor AT %QX100.0 : BOOL (TRUE runs the conveyor).
+
+Requirements:
+1. When a box is detected at sensor A, start the conveyor.
+2. When the box reaches sensor B, stop the conveyor so that the box stays at sensor B.
+3. Use a bistable function block of IEC 61131-3 (SR or RS) for the conveyor command.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: sensor_a, sensor_b
+- output: conveyor

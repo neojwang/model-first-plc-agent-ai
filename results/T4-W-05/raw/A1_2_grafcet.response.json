@@ -1,0 +1,180 @@
+{
+ "input_transformations": [],
+ "id": "resp_09005e9e8df49157016af9a8e8b97c87d08eb91866f574d107",
+ "object": "response",
+ "created_at": 1794746600,
+ "completed_at": 1794746607,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_09005e9e8df49157016af9a8ec2abc87d09a14111bb094aa35",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-ajstHlhwLPUnKKilwWvxCuY8VqYga_htdw1yj0EW-WoZVDpVOpqdF9RZk3ou6QI_5MR3Rm9P-xOpi5Oj6oVg7ur1yNgJzcuhUzbbU1tLw2ipLT-dWdVWAWKXXTvlA5rsTVWOTCy9FzQ2ab899qfptryL8sDOGTqw9MmHjGGU0-zNNlxUfUYt5-46Pl6fk_7eSSLSj4kVUX9h-4yk41BxvTl9OGlm15PV0ovCZ4JNY1Z6jc4a5i48pE2RvG-T63IZlk0eMYU9dLH3k64BLTrFzBGZZt0uGpsKYHakc6DcCgRueTKqBVYzCc3WTfSNDKbD0uESXXY4dtU74o_d24cF-sCwJIUYeBvHQ2wqd-o8hmolJIfzSKedNVGWwb14wn8zYl8cUKwvVFu9Rqt8SBwxgkA1PZoUMiG9O01WbYkCwKiN-j2Ql8yAceJGU_A9TtTbCmvIAF96FopNwQz_CujQzbBuwShVClFNNu8MVHTnEdWSfRWMb1mlUcYJtU3dq-M_EUFS4zLL1Ay9IhI5RUTv_-q3MCumcDLbCx1rBFTSRWhrMQ9FdCKQ0acBp9BpYOaDBo3PpcKn97Me4oVfIBSfY8KB57dpn5ZbPqpD_EEsP26a0MFCsO5tK9oimVkRU8d2jLeq9nURrWLnUtS1H6jQes7P7_QJfcsL71anUAJLRDJPSMYjT80Wgsvcqsr8D32MqWAchfvQVUrWTc-K2TMq9M9FTWFYZGpjrYSTItXNcFARs9rcRGVtOv8ELkR2ksVrmAXBIJ26slWgVpN6JC2yEMEDDiGNakyADbmmjv72h9fcPasPzjK5J2DKfiUeVPY0qUFFZNOysoaDLW4M9gllLwaBm_Fwwu5iCEGZxUKUaj0Q8n4CU04Nmmy5wFzCJ6HbQUnit002Q7GyTEQMpIIlb_EdfJBKJL9QbHT9JjJDPZOhPD38yYIa8cPUbolkwl_9i8YfR-PFNPSc1EIaY5APx22-LT-hr4Zj3z_GfiJwveUnsczznWewPNSBSUKeCw0zO7NjtXvNuqDx5kDzRNrmTLVzwXYqIBB3yJvuB8JyNojq865hlz5FGPADG01HgJygr7crVghlcTOXkB8vvReWqdv5nvcqv3wI3l5ziF6PmL5wyZ_PQM4EcketACx0of66ODrg4pPBgGcEw1l-9AeC0FTBGZR_v5BdBpADEcEbVqZ5bmatdhIw8TYhSdS-k5og3GIY5OaEsjFKz6fhTLwA5c8oLT8Ve7dtzBPRVRk3_oYph1Ljp-kM_hhVT6zoluZBQkmj2YxqmF6PxHTmvuWBxZ6u368U7Qw4z2gL2WL9sv5xT2ohOEkOytcqRht0LActYNJLIe0j2Ci9BrqE5GF0ZZID62Vo-Nk30E-jvwHhDtl5ElKm_txVAmV70lCXHj76aRRcRUvKAvnfCFemDmXIF7j_cLW7zibVrUBiteqdvcENO3lAxQCdLByTqusepqpVjf1-ZL04uyncAk2Ym4nkFeWejyShtz9ybNhQ5EQg67RHndLoeYV0LmPyQWaY90S6Pkn0zCIEradkbhRuF9VQRK4SV8ih62raj5lO896yY8UOFrzk1PhgRt6vkzkKtJATmBagmE-J6qUSqDJfacWrkH_PVQa4NYT71OZT0gWmaveukzv5_llmuUTOcyDyvlGx96WLK6vvgAnsPeB17w3G_VR9GNUKVYYwopZ0jPRNb24O4CiA91HDh9HH2kwgxoZ8barpI8Q7PfI8jkPakjiqElOOaSok5GVdcl59MjPciZuNML2Rg6dp0_7hgEkzInAM4DBnmcDygUYiMrW7Pr8gZszAPHvWYUr_-hpmXS2jU6XAS0ee8F2-PZqTgmm9GuRuf1E3Q1hbcOoRrfJSHJypHPDmcvFICZ2TOLMJtHv0Y-M0qwiskTULukUDF19OsrWwmrjnoygSAlL5mwt4rF_N8LNgNeMrM6ahmHPh_kpa0jZJ5FdGLRfI4iq7MA7S-76KjNAQzoJnmgPHdVKPw7QuloGQZKqVPAeHAAew3smknAV2uauCFhM2NmxVop7W533ybcA4JQPdA76cqgal_Y07yJCMkx0cgmMEBNqLtJPW5mRa-OIp0HbL0l8srmwt_GDqBnrNWifttOJ6w9uWVS7vQM5GNiMpfwHzaKJiIubf1BXUkvqcjjvRG9pmuV_73-6wa5nPE2YL53S4JaSvJgOhzyMGjLqYPH93psZK7Ys0iwP2Lr6nAAnkHNcI0cCKr6FgIZYDL3_XG5Up37XUm6IJBRhm08UTwnjp1aeE5Wl4WCSUDHlKL3fu6ChD_wNA2XbgX1q"
+  },
+  {
+   "type": "message",
+   "id": "msg_09005e9e8df49157016af9a8ec2ab087d0b88e0cb8f82617a4",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "{\n  \"graphs\": [\n    {\n      \"name\": \"G1\",\n      \"steps\": [\"x0\", \"x1\"],\n      \"initial\": [\"x0\"]\n    }\n  ],\n  \"transitions\": [\n    {\n      \"id\": \"t1\",\n      \"from\": [\"x0\"],\n      \"to\": [\"x1\"],\n      \"guard\": \"start & !stop & ((r = LOW) | (r = MID))\"\n    },\n    {\n      \"id\": \"t2\",\n      \"from\": [\"x1\"],\n      \"to\": [\"x0\"],\n      \"guard\": \"stop | settled | (r = HIGH)\"\n    }\n  ],\n  \"outputs\": {\n    \"fill_valve\": \"x1\",\n    \"discharge_valve\": \"x1\"\n  },\n  \"owned\": {\n    \"settled\": {\n      \"step\": \"x1\",\n      \"neutral\": false,\n      \"preset\": \"t_h\"\n    }\n  }\n}",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "348e6d78-5c36-4702-b706-1dc333ba79d9",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 5018,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 253,
+  "output_tokens_details": {
+   "reasoning_tokens": 41
+  },
+  "total_tokens": 5271,
+  "attribution": {
+   "items": {
+    "msg_09005e9e8df49157016af9a8e8ba4887d08fe008e8797c99e9": {
+     "input_tokens": 648,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 648,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_09005e9e8df49157016af9a8e8ba4887d094fcc5f832d1a776": {
+     "input_tokens": 1655,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 1655,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_09005e9e8df49157016af9a8e8ba4887d0a38212a28d2e3a4a": {
+     "input_tokens": 2713,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 2713,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_09005e9e8df49157016af9a8ec2ab087d0b88e0cb8f82617a4": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 212,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 212
+      }
+     ]
+    },
+    "rs_09005e9e8df49157016af9a8ec2abc87d09a14111bb094aa35": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 41
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 217,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

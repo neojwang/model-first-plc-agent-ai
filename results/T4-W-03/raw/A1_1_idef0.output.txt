@@ -1,0 +1,74 @@
+## A0 context and decomposition
+
+**Model boundary:** the OpenPLC control application, including I/O acquisition, level evaluation, sequence control, PID calculation, and output encoding. The Factory I/O tank is external to this boundary; its level measurement enters the model, and valve-opening commands leave it.
+
+The terms `fill_valve` and `discharge_valve` denote **Boolean operating enables**, not the analog output register values.
+
+### IDEF0 ICOM table
+
+Every function is named with a verb phrase. Arrow labels are noun phrases; required identifiers are retained exactly.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand sample; StopCommand sample; LevelMeter sample | I/O address map; FULL_SCALE constant; level parameters; hold-time requirement; PID gains; initial-state rule; regulation rules; stop-priority rule | FillValve command; DischargeValve command | OpenPLC Runtime; PLC scan clock; Modbus TCP interface |
+| **A1** | **Acquire commands and level** | StartCommand sample; StopCommand sample; LevelMeter sample | I/O address map; FULL_SCALE constant; measuring-span definition; rising-edge detection rule | Start event `start`; stop indication `stop`; measured level `h` | OpenPLC input image; Modbus TCP interface; rising-edge memory |
+| **A2** | **Evaluate level conditions** | Measured level `h` | Level parameters; hold-time requirement; regulation enable `fill_valve`; PLC scan interval | Level error `e`; level region `r`; settling indication `settled` | Arithmetic and comparison operations; non-retentive on-delay timer |
+| **A3** | **Manage regulation sequence** | Start event `start` | Stop indication `stop`; level region `r`; settling indication `settled`; initial-state rule; regulation rules; stop-priority rule | Step state; regulation enable `fill_valve`; discharge enable `discharge_valve` | Sequence-state memory; PLC execution engine |
+| **A4** | **Calculate bounded PID demand** | Level error `e` | Regulation enable `fill_valve`; PID gains; PLC scan interval; output-limit rule; integration-suspension rule | Bounded fill demand | PID calculation mechanism; PID state memory |
+| **A5** | **Encode valve commands** | Bounded fill demand | Regulation enable `fill_valve`; discharge enable `discharge_valve`; stop indication `stop`; FULL_SCALE constant; discharge-opening requirement; I/O address map; zero-output rule | FillValve command; DischargeValve command | Integer conversion mechanism; OpenPLC output image; Modbus TCP interface |
+
+### Boundary arrow definitions
+
+| Arrow | Definition |
+|---|---|
+| StartCommand sample | Boolean input at `%IX100.0`. |
+| StopCommand sample | Boolean input at `%IX100.1`. |
+| LevelMeter sample | Integer input at `%IW100`, proportional to level-meter voltage. |
+| I/O address map | Mapping of the three inputs and the two analog outputs to the specified PLC addresses. |
+| FULL_SCALE constant | `FULL_SCALE = 1000`, corresponding to 10 V with Factory I/O driver Scale = 100. |
+| Level parameters | `h_span = 10 V`, `h_sp = h_target = 0.8 h_span`, `h_max = 0.9 h_span`, and `eps = 0.02 h_span`. |
+| Hold-time requirement | Continuous in-band duration `t_h = 10 s`. |
+| PID gains | Parameters `Kp`, `Ti`, and `Td`. |
+| Initial-state rule | Step 0 is the initial state and commands both outputs to zero. |
+| Regulation rules | Start-event entry into regulation; termination on `settled` or `r = HIGH`; discharge opening of 40% during regulation. |
+| Stop-priority rule | `stop = TRUE` forces step 0 and zero outputs, overriding other conditions. |
+| FillValve command | Integer analog-output command at `%QW100`. |
+| DischargeValve command | Integer analog-output command at `%QW101`. |
+
+### Internal arrows and child-function behavior
+
+| Arrow or rule | Definition and connection |
+|---|---|
+| Start event `start` | A1 → A3. TRUE only for the scan containing a rising edge of StartCommand; a held button does not produce repeated events. |
+| Stop indication `stop` | A1 → A3 and A5. Current Boolean StopCommand condition. |
+| Measured level `h` | A1 → A2. Scaled measurement: `h = LevelMeter / FULL_SCALE × h_span`, using real-valued arithmetic. |
+| Level error `e` | A2 → A4. `e = h_sp − h`. |
+| Level region `r` | A2 → A3. `LOW` for `h < h_target`; `MID` for `h_target <= h < h_max`; `HIGH` for `h >= h_max`. |
+| Settling indication `settled` | A2 → A3. TRUE after `abs(e) <= eps` has remained continuously true for 10 s **during regulation**. The timer resets when regulation is inactive or the error leaves the tolerance band. |
+| Step state | A3 internal state indication: step 0 or regulation step. |
+| Regulation enable `fill_valve` | A3 → A2, A4, and A5. TRUE only while the PID is authorized to drive the fill valve. It does **not** imply a nonzero PID demand. |
+| Discharge enable `discharge_valve` | A3 → A5. TRUE only while the discharge valve is authorized to remain at 40% opening. |
+| Bounded fill demand | A4 → A5. PID demand limited to `[0, 1]`, representing 0–100% valve opening. |
+| Output-limit rule | A4 control. Clamp the PID demand to `[0, 1]`. |
+| Integration-suspension rule | A4 control. Suspend integral accumulation whenever the PID output is clamped; do not accumulate integral action while regulation is inactive. |
+| Discharge-opening requirement | A5 control. Discharge demand is `0.4 FULL_SCALE = 400` while `discharge_valve` is TRUE. |
+| Zero-output rule | A5 control. An inactive valve enable commands zero; `stop = TRUE` commands both outputs to zero regardless of other demands. |
+
+## Sequence interpretation
+
+| Current state | Condition | Result |
+|---|---|---|
+| Any state | `stop` | Enter/remain in step 0; `fill_valve = FALSE`; `discharge_valve = FALSE`; both analog commands are zero. |
+| Step 0 | No `start` | Remain in step 0 with both commands zero. |
+| Step 0 | `start`, without `stop` | Request entry into regulation. The overfill condition remains dominant: `r = HIGH` must not permit valve actuation. |
+| Regulation | `settled` or `r = HIGH` | Close both valves and return to step 0 in the same scan. |
+| Regulation | Neither termination condition, and no `stop` | Keep `fill_valve = TRUE` and `discharge_valve = TRUE`; apply bounded PID fill demand and 40% discharge demand. |
+
+During regulation, A5 produces:
+
+- **FillValve command:** integer representation of `bounded fill demand × 1000`.
+- **DischargeValve command:** `400`.
+
+Outside regulation, both commands are **0**.
+
+The child numbers identify the IDEF0 decomposition, not a mandatory execution order. The implementation must resolve the feedback between condition evaluation and sequence management so that stop and overfill termination take effect before the output image is committed. PID state initialization on a new start should be specified before coding; the task does not prescribe a particular reset or bumpless-restart policy.

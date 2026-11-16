@@ -1,0 +1,65 @@
+## Scope and modeling decisions
+
+The model covers the **PLC control function**. Box movement and sensor actuation belong to the external Factory I/O plant.
+
+- **Inputs:** `sensor_a`, `sensor_b`
+- **Output:** `conveyor`
+- **Bistable selection:** IEC 61131-3 **RS**, with reset dominance. If both sensors are TRUE, the conveyor stops, giving the sensor B stopping requirement priority.
+- Arrows represent Boolean information unless identified as rules, configuration, or execution resources.
+
+## IDEF0 ICOM model
+
+The **A0 context function** is decomposed into **A1–A3**. Every function name is a verb phrase; arrow names are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | Start rule; Stop rule; State-retention rule; Reset-priority rule; I/O mapping configuration | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O slave interface |
+| **A1** | **Generate the start request** | `sensor_a` | Start rule; I/O mapping configuration | Start request | OpenPLC Runtime; Modbus TCP connection; Factory I/O slave interface |
+| **A2** | **Generate the stop request** | `sensor_b` | Stop rule; I/O mapping configuration | Stop request | OpenPLC Runtime; Modbus TCP connection; Factory I/O slave interface |
+| **A3** | **Maintain and issue the conveyor command** | Start request; Stop request | State-retention rule; Reset-priority rule; I/O mapping configuration | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O slave interface |
+
+## Arrow definitions
+
+### Boundary and internal data arrows
+
+| Arrow | Meaning | Source → Destination |
+|---|---|---|
+| `sensor_a` | TRUE while a box is detected at sensor A; mapped to `%IX100.0` | External plant → A0 boundary → A1 |
+| `sensor_b` | TRUE while a box is detected at sensor B; mapped to `%IX100.1` | External plant → A0 boundary → A2 |
+| Start request | Set demand equal to the current value of `sensor_a` | A1 → A3 |
+| Stop request | Reset demand equal to the current value of `sensor_b` | A2 → A3 |
+| `conveyor` | Retained conveyor command; TRUE runs the conveyor; mapped to `%QX100.0` | A3 → A0 boundary → External plant |
+
+### Control arrows
+
+| Arrow | Meaning |
+|---|---|
+| Start rule | Detection at sensor A requests conveyor operation. |
+| Stop rule | Detection at sensor B requests conveyor stoppage. |
+| State-retention rule | With neither request active, the bistable retains its previous command. |
+| Reset-priority rule | An active stop request overrides an active start request. |
+| I/O mapping configuration | Factory I/O driver mappings associate `sensor_a`, `sensor_b`, and `conveyor` with their specified OpenPLC addresses through the Modbus TCP slave interface. |
+
+## Decomposition flow
+
+```text
+sensor_a ──► [A1 Generate the start request] ── Start request ──┐
+                                                             ▼
+                                               [A3 Maintain and issue
+                                                the conveyor command] ──► conveyor
+                                                             ▲
+sensor_b ──► [A2 Generate the stop request] ─── Stop request ───┘
+```
+
+Controls and mechanisms enter the functions as listed in the ICOM table.
+
+### Required retained behavior
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous command retained |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset dominance |
+
+**Unspecified behavior:** Startup initialization and state retention across runtime restarts are not defined by the task and require a separate implementation decision.

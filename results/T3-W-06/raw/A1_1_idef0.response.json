@@ -1,0 +1,152 @@
+{
+ "input_transformations": [],
+ "id": "resp_03e11a4018e68b71016afa01a74e7c87d0afb4a4374813c470",
+ "object": "response",
+ "created_at": 1794769319,
+ "completed_at": 1794769371,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_03e11a4018e68b71016afa01b5cc3887d09d915f278142fec6",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-gG19DrUtZmMrhq7viKXbTfO9CwvjbySe7sKp-SZXhbMi7LHcuFv5w98gd-47G7sG0UMhARuRa5zztTdG5iBOzZmw5i6hbl6-zmrm9xGlmgYxa30STjspgj1eHeP2vZrQUTtHBhR9QIpm0kCYJ3_KQy9W3oFGqWCzXDwOY2N9AzM2ydlL_Bv14Uw0jRbMAHccOLlsGaordl7xRJVhXBws4ib1x8hswtytMr184CiIQx33DWV0LcGdzi_fjPWLp0ltV7aeJ7vGaF84CH2G7K_ke4NyhWz84lfpVvByy817Gzcp885ifoE46QoIr8j-rrp1Ei8mdO7MZBVWIhXKiwXvy8ntunhwPCsBbjznWfmy9gFBslkBWKjNvOuJvS9QP8T4_gn9HXtFJ5GB6KrC3nmm5vbFx_ZA548jXidryCVSPGIIpDCGU-bwd6DdNtxt-A0p1L9xaagWtOr0SXYdg5nSRdBCgIvus8cdY6285FOwKi1nYVC-HMLII4IJ9kpglUZ9BY83teL_5VHA9vx6WW_ly0R_nragNtD8NrUOetkTUbuGOmqF67MSM07b2e7dQeePac5cg3PQDXnNMx-4t5KAEmht9fTEood04StbjAbBjqzqW789j4gfzPJV6unHryS_rD-N_ZnwYM2VM80SBW1bGogf7zr_k4aN75-euPM5xa9XYCULHi7RLKQlKD4kGLz0F2GbGMtfW2MjXzC8QkMIt4-F4fZOP2ZyafOJFq7tl6yf0_PzjtT4t4vaQ7XCF9Idrj2-u4WTN__H63k4kF2CtwmtDxjgSbizAy5-xbiK8HdTwYRTtToeCDMBW3t2yjR0fhlk5N8SoRWVSEvq9WkO7ADlZa40XDaERxJ2nloyZY3qgWJiaq_sjpHyIZ3HGXmcRp7w55xInulkjQvmi3rnyWsDckdYqnaIFiI-1gcoqIPuyN6TFPpYy8Yc9vZMIM4-9_C8e_VXMt7fTEjQhjU-Lw-wFUzClB38BnveQuwPl5cnXcjRfoWJJHY5D4UQ-_eaWnh_3ADKv082ufz_bwcu71sM92RcdMeYKEOwq50r1T0IpgszbETSnrVYgrjWH0GwBgowRCZ-90sYaBdZaDZpNJHZ2-0381S2Mx-N0nj_OrjWZ9cMPLfPm0P9ZqB8RHzDnGZK_qlQlwsqX-0GWTIt55wVeWxwE1BH1acufwC_ZfssOQiXL6a2vc8E8_4rNNqtc9zqlC9qAsPZ4Y5ENHuD3JxTMEBd1Jds3ch5e7KOYfq6G7GG0YK0v2p8nADmDhRVZ6tGMG5NIL-Ko7LzLZ8JeRkEq-18WojrtKfPglQ53pFtzMvZMVgSOX1pgvqHMgQcr2C9Jtk1sK1-EXcqF-eGk7SnHJ0nzaYJtjKBZhTg-L7zU3VFdRFO57J9DKI8x1J19REyVY4aK5NQEb_kMk9Bc2z0GQZTkYAmapTaaqoncMKgZXL0atkysNPZcdOysALTGIQTeEjfuGlQnbYp-8CT6qDHG5IiZvrzasXP4lJx51eSSw7vJK3cogzPuyXhb1vZRbXeZdwv9yK_gFF-O4CUzblhdUXkP-l3zOk1Gn6Z5EWzvIQAZfIQ89OSt66L8BpMnjehfg_p74I8neTRHYWJ7UX7pW9x-2WTR1nzYB_jyoCADSP39ApP-UaTHyejen-sc0n7kaMMpk6VPLEUvyGpliWwebTYh1Ti10BUH3RVvLEoxfkDDyX07juuVPHRJlsD8O0Ai2ZyjSOOi1CGeq7gBuMNA6FkLS_qIluPDPfrc56JXTfTFH0F-HMPpjYGKArySCjDKlwTXpiCU0EMxSOqwZoUB_eF_vWnaAdwLYjBgliAJt-ndtpCx1RZgZt9QMgO2Az6VoVvueP2tczzF6LGvpAzYvqadc7oGV7t7PzJp20uRzBnGpEPK3cGF99C5LCqt5hKvdExt1vem6fCg3Iw2Ap1VExoXXnp8sgd0MCKcBuJkNOf3LEkm2CThVnQS52dDqkB3nYYoVL6n3Q90kC2ItQ4KrooBhOx2giCY3NFTLWEo_32CgOGOxp8HFIWnYGyn1fMCH99aBZc_mAlpINjhJCM2wDqY_lbdRY6O0PO11JVKefDrIWiH-TWLAkAyxU0cO5DCtCgxoZ9u7neZarh7C8_v5kc7ZBaqTYZSvHyjv5lgbIigckH3cxa4ABZ-SqM4uKmiARNRtaBc3NCe9JN3seQdOGYVnSWTqHFxQtsYPi5a0FJkgRP4X9ktN4I0ck0jMPN1wUey4d0a1WAyb3lUTs5PBiFh1TfH7ss5Tt33TqCNIP9F0C66QMmtezpRKOU-0VzGJJOskIDki-1UY6E5GyKUQ57neo3WYefQc3s7ERjDOYRU7DOYojUvWMHQshrvpKPlFJpgveTDkFjVenrlUKKYEywSfxreKgM4NPj6IvwUxY47BKYKFmJJfnvGsdbz_-b5Am2kRSmAQ54wmTWsHeDnu8zvQGsW9v5uDqpJOY-SvahBlvE5sEpgFXj9XqhsrQHO-E7slZsvpzcNwd-scWJPjGDdkb4FV0qSntf5X0SMF-uVIJvkYg60M-lqNaVltXgri-UiJU6iS-KcRj7bTFymMV-pOnCJjc16vbZYEDCBLc9sbYay-h1dL0aLOV1eTRjQN18b9uY2WgvtThYP6MknebtWphfTT2ZTbo2j0Q2l1i16mK3RzDC7tQlcb1tkIDi94_PUaX8aI2gpYynHTC0biFl0vQPj5g6LdjGKUtn0n-9o49oHb0yCdTVDjNF61aXarP-2OTIUO-jhr85LgmcNWGay1UfxQht5TLwSnSRIXRNF-2gyPAIYRqoBq-mQ9YD7-2mFiXPHvJxMk9o-zlLvSDkU40ArRPauXVTCZsRHdvtnrLnxi7Atu2_IZWqru6-aKAgj0C64jB6A5FZcERktGTEq1eQ3MXIdH3hJir4Aq03N9UzYe11Hc9dK6B4uyZx6Q7OxfVnBsapX47C2ZpMkG1S3eUzd-_QYF4IPBpulLf_9NWH7wvCthLYanjBlqIQeveuHUkaX55YrmEdexx6oq9mDzw8yPSaIEVb5M0BlH3T-5UuNg5oZ1A_Ke9wP4t419_sPC1_GxLebw6hFNlYa28mEotBWEckJFIpcsPkKlQYq2xCh2GwfMYjqTDv9-Yc6-DMwfkaOamctzJ7Xf6a1GipwHFgiwRTASvtW46bbevNWvbN0JhGyD9nv8dd8TC7OddQwQIr8WzpSTyb5Hvf2JYQJvYkY9XIc85fCpuwz8EFzdKzzA-iRlGZbPdtlSUn0dJwE6rYk8pnhdl46uJYuTgxNqlG-s6aYlNTcqKSwsNZaVxZyNpFqQU9hrqPf3CkpOfO1wjCxsjDFAcQu-8aLSnSeIbNNYYe7XsJor16g3cJyRFq5cLWPYXPeIqAOr3swCeHxT3D5TN2LNDQsM-D7W25IqFZ1rwC_VLK5GZsMj-l3lbdtioYTg5GPwUIZC7d99S2u_-IrGmBofzhfytQ5GSO-irJIj-hnoqisuj5zQaEYh_TKrjNEmuezyqvWQt7oJjsf06fnvmtV8gkQUqsFXHGiQFiTc4MjM7IxzQxOVToeyy95FlZz5zQSayevSF6hXeiTGFU41RKiRmcU1zCeorkyaG-iqU4Fjy6sNMJZCv1csyahh7xcLJvU06TcXQ7hYxfoF5r__sEAh-7aocSEhxgaCHz19p8lto1ydg2z2goJ9mYx_qBXGrXCSo_AmiYDmMY8JMFzE_pDxSo7Nqe6kJ0FFa6-Z0oXdLfDu1diBDY5iUC3BRxf3uY8W2SMF-F_pkCQFNVvulxBXAsB29X2F1EIgrBQ2Ti0RzHgwUZcjpdcnb2V-jJbdxTe4xVjGcZ6xBYfZfvQD0YoORVwavioS9qBs8UtT0LMw5ZtOd7OClRhOEV1vWH1GxUUM2EzxmznqW8BLOpP4XvWxGabWzdPCe0rFONw5dnq4gazb2Quvr2gxCsq9YFQrLAr9CIj5T7IYZBmm6yI9gA4maDSvM8pGjFxzY6hRFTfDGggwt2yLn2spGZXOu4UmUYuq8Jpl0__kMQnqplb8uppfY4pZ6UDdNPa1hd6eNhnTlw7TaGgYpEqsCNZMqwZwWI1n8A808PFhzaVLqjoiqkLP-OHQF0CzoHH9bHOtklQz6bI2nIeTWaagBiWsPpwyul2o-FaBhW0vkX_etRH3s-2rNg2JlgXX-4W5t4MrAGWJeOfU87E9ZglqA1dmGVX4OFS9rXFju0WI8Od1Vh9_NlxsSF8rMXAu9Q58eX14cg24Zpj64wL7c6VbvXI549JCOrsFWgv7f1XzqIHdTZD35yUFMgRW2cVXPPaXefTmJcq2AjA-1nwTHwFOrLTh5E-k4y04ehmCYdIuPv4phY6qU4N0zvE-B2ZgOxX9K5Bp5LbVB-mE3wBnkiTgovOZVFPv2oO71vY-sAL6ZtwanWx-TBtbgRHUm1cEjvZd00OLBWbOWhv-CiVqqkbTIV-hqCzHLT0PUIPRnPQy3HXd0IBV4emm4NVbTSqJGCe56K-Prf13oNY34uZcuOuFGZGqSyNHBCWN2BFmQOyJgodfqTe76w6e_yU1B0pcXjUJavceHOhbGDJXAdTChyklnOsAP3oufBdPlluuII5Vi_DolU8fvuEIvzxGwmhVZuRYtL_K5ZXmjOYdxHO8Hl8YVOsoVJICZJRO-2xQSasCzNz9vlX3W_OCKkzIpa_RW9LgTw9ddJRp-j6iZMFzJe9jKncjb60qi9WhcNWOncMaZ-tRSuZ6mga45IEBHnPTDloYk07DoW_L478tSPhIjyfHFcVAIok6LPyqoApskuNMvXlKePDYeUrr-MB9FANnxJZhakZ0dnLllO1KWBhE_vq3aDX_pOXQ5Vs79mb89YI9cP10SomGWEu88-7bRWNXOfNcY9DY283JepgPHtXgzML9YCpaXvXkTMEOBAMyDy6x4HF7uml6eK7Ld6E1fXV-0YLoy5dCHgPYGtzv9T4k83cRt6BUSimzeWU10DKul8tj7d0FnczoYE-5AlYv18sfQYaIfM0rHEpb-7D-T0xP91C_ZexZtX5P4lVt6IgsiCA5k6bY7MwKQL2r2UotiMBsWvULe828QK2CmBZp8hYIGITh2XeLyJmLk3cGmyjx29bc0Yl88v7hS8bs-fiNfp5N3nDP2ST_68C81qsKmr7i1kQ5iYj70gzTWZoaj4yO6XR2aiH846fYTKG0zewe6SmcZDZ8woTYcnthYQBiOgxgG_3n5eRY3Uy9BG0CiVfLTkPMq507ORVnkCE54JqU-RlEmIvFH7kA5BuHdp5547numETL98E_qx4zr0ak5-fRbsFCWVWqeY6hz-vSdcp6GGmqFTHcmqH07dG_ILdch4mduGVwaDTvL8o7-ocvcwGFwJLencGZDVpYE9YdIm9c-yUYKr-nfnXx6aysuIsewrQd1zerE5MJhOCabpuV0dr8WJWt8SjzjYnbqCOeGHZxmE-qqm_BI9auwjWPeiP2KkIOIABJ1r2kUP4mN-xOWKIIAt0J19YicWINC9fMHzhRKoFSJEC6-liSqZr2HPuo2H-Iil84WZg-AqduXn8DBdvRMWrleQzuC1KDasQoMep38Ww6Rd1bNgTW31r7OLAIKTzzEZsj1YYf6bGGaeCD-4qf-rTcq97fDoXTLPqvsmth-iaYlcfY6eNTJekUkhca0Az1w6dA1-HOKqj_BwnmJkM3o3zZIX__RSGcSXphZ7wmCyKGUxjZAHJ9H7P7HhuuhAJLHO3h5vC7UBEQHN9z8qkkpL_8m92EyJ4_CsS-_CZhl4qU10YeCdkaSZJgOwIaNg1cpUYZjjBatyVgh-4iLSr6DBd7xkpomItQg6XMGsAX-XP2kR5e99spzw-8x0YudNNgdDLOA4hp1qXldkurFXxuvCz2dEAtmW6upyVjZT57qdk7umUO-8TnYhSB7GUgZBpgHeS7bTcl8LqlZDhNoU1kvGiR7zlqeFOZi5V6CyfRl4x_B2w8OsaG41beCl0dh-0_SUAF8a-1pWc6-7UicPMB62eAaLqA8DJeChjsrL6MFhB2OWIgZ6iFHN93wHL3dqMqHofdu-dt1yVOpbuFWO-9E"
+  },
+  {
+   "type": "message",
+   "id": "msg_03e11a4018e68b71016afa01b5f2a487d08a09eae57b4fc699",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "## A0 context and decomposition\n\n**A0 \u2014 Control timed tank filling**\n\nThe model covers input interpretation, TON/TOF timing, step sequencing, and valve-command generation. The tank, valves, level switches, and operator are external to the controller boundary.\n\nAll arrow labels below are noun phrases; signal identifiers such as `start` and `ton_q` serve as signal noun phrases.\n\n### ICOM table\n\n| Node | Function | Inputs | Controls | Outputs | Mechanisms |\n|---|---|---|---|---|---|\n| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration parameter; TOF_Duration parameter; initial-step rule; filling/pause sequence rules; stop-priority rule; level-limit rules; discharge-disable rule; I/O mapping specification | `fill_valve`; `discharge_valve` | OpenPLC Runtime; cyclic PLC task; TON function-block instance; TOF function-block instance; retained scan-to-scan state; Modbus TCP connection; Factory I/O slave interface |\n| **A1** | **Interpret command and level signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O mapping specification; rising-edge definition for `start`; startup edge-initialization rule | `start`; `stop`; `LSH`; `LSHH` | Input image; rising-edge memory; OpenPLC Runtime; Modbus TCP connection |\n| **A2** | **Evaluate filling and pause timing** | Filling-step activity | TON_Duration parameter; TOF_Duration parameter; TON timing semantics; TOF timing semantics | `ton_q`; `tof_q` | TON function-block instance; TOF function-block instance; PLC time base |\n| **A3** | **Select the operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step rule; filling/pause sequence rules; stop-priority rule; level-limit rules; transition-priority specification | Operating-step state; Filling-step activity | Step-state memory; transition evaluation logic; cyclic PLC task |\n| **A4** | **Generate valve commands** | Operating-step state; `stop`; `LSH`; `LSHH` | Fill-valve authorization rule; discharge-disable rule; I/O mapping specification | `fill_valve`; `discharge_valve` | Output image; OpenPLC Runtime; Modbus TCP connection; Factory I/O slave interface |\n\n### Child-function arrow connections\n\nThese connections define the internal arrows and balance the child model against A0.\n\n| Arrow | Source | Destination |\n|---|---|---|\n| StartCommand signal | A0 input boundary | A1 |\n| StopCommand signal | A0 input boundary | A1 |\n| LSH signal | A0 input boundary | A1 |\n| LSHH signal | A0 input boundary | A1 |\n| `start` | A1 | A3 |\n| `stop` | A1 | A3, A4 |\n| `LSH` | A1 | A3, A4 |\n| `LSHH` | A1 | A3, A4 |\n| Filling-step activity | A3 | A2 |\n| `ton_q` | A2 | A3 |\n| `tof_q` | A2 | A3 |\n| Operating-step state | A3 | A4 |\n| `fill_valve` | A4 | A0 output boundary |\n| `discharge_valve` | A4 | A0 output boundary |\n\nThe A3\u2013A2 feedback represents the dependence between step activity and timer status. It is a functional dependency, not a prescribed program execution order.\n\n## Control definitions\n\n### Signal interpretation and I/O mapping\n\n| Identifier or parameter | Meaning / mapping |\n|---|---|\n| `start` | Rising-edge event from StartCommand at `%IX100.0`; TRUE for one scan per button press, not continuously while held |\n| `stop` | StopCommand at `%IX100.1` |\n| `LSH` | Level-switch signal at `%IX100.2`; switch elevation 2.4 m |\n| `LSHH` | High-high level-switch signal at `%IX100.3`; switch elevation 2.7 m |\n| `ton_q` | Q output of the TON instance |\n| `tof_q` | Q output of the TOF instance |\n| `fill_valve` | FillValve at `%QX100.0` |\n| `discharge_valve` | DischargeValve at `%QX100.1`; always FALSE |\n| TON_Duration | TON preset time |\n| TOF_Duration | TOF preset time |\n\n**Startup edge-initialization assumption:** initialize the StartCommand edge memory from the sampled input so that a button already held during startup does not create a new `start` event.\n\n### Step and transition specification\n\nThe following is a behavioral specification supporting the IDEF0 controls, not PLC code.\n\n| Current step | Condition / receptivity | Next step |\n|---|---|---|\n| Any step | `stop` | Step 0 |\n| Any step | `LSH` or `LSHH`, with `stop` FALSE | Step 0 |\n| Step 0 | `start`, with `stop`, `LSH`, and `LSHH` FALSE | Filling step |\n| Filling step | `ton_q`, with `stop`, `LSH`, and `LSHH` FALSE | Pause step |\n| Pause step | NOT `tof_q`, with `stop`, `LSH`, and `LSHH` FALSE | Filling step |\n| Any step | No applicable transition | Current step |\n\n**Priority:** stop \u2192 level termination \u2192 normal sequence transition. Thus, level detection overrides a simultaneous timer expiration or start event.\n\n### Timer and output rules\n\n| Control | Definition |\n|---|---|\n| Initial-step rule | Step 0 is the initial state; its Filling-step activity is FALSE and both valve commands are FALSE. |\n| TON timing semantics | TON IN equals Filling-step activity; PT equals TON_Duration. `ton_q` becomes TRUE after uninterrupted filling activity for the preset duration. Leaving the filling step resets TON. |\n| TOF timing semantics | TOF IN equals Filling-step activity; PT equals TOF_Duration. `tof_q` is TRUE during filling and remains TRUE for the preset duration after filling ends. |\n| Filling/pause sequence rules | TON expiration causes a pause if no level limit is active. The pause ends when `tof_q` becomes FALSE. Every resumed filling phase starts a new TON interval. |\n| Fill-valve authorization rule | `fill_valve` is TRUE only in the filling step while `stop`, `LSH`, and `LSHH` are all FALSE. It is FALSE in Step 0 and the pause step. |\n| Discharge-disable rule | `discharge_valve` is always FALSE. |\n| Stop-priority rule | `stop` forces Step 0 and both valve commands FALSE, irrespective of timer status. A held start button does not cause an automatic restart after stop release. |\n\n## Safety interpretation and boundary\n\n- **Normal termination occurs at `LSH`**, not at `LSHH`.\n- The model includes **`LSHH` as an additional shutdown/inhibit condition**. This is a conservative protective interpretation of \u201cLSHH must never be reached,\u201d rather than a normal sequence transition.\n- Closing the fill valve on `LSHH` cannot itself guarantee that `LSHH` is never reached. That requirement also depends on valid level signals, valve response, maximum inflow, communication/scan delays, and sufficient margin between 2.4 m and 2.7 m. These physical assumptions must be verified before implementation.\n- Implementation must define a consistent scan policy for timer evaluation, transition evaluation, and output updates; the IDEF0 model does not prescribe that execution order.",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "e9194641-53f1-4954-b99d-a79a2ebef015",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 540,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 1911,
+  "output_tokens_details": {
+   "reasoning_tokens": 260
+  },
+  "total_tokens": 2451,
+  "attribution": {
+   "items": {
+    "msg_03e11a4018e68b71016afa01a74f2087d08d08cd612c014bf5": {
+     "input_tokens": 538,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 538,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_03e11a4018e68b71016afa01b5f2a487d08a09eae57b4fc699": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 1651,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 1651
+      }
+     ]
+    },
+    "rs_03e11a4018e68b71016afa01b5cc3887d09d915f278142fec6": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 260
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 1656,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

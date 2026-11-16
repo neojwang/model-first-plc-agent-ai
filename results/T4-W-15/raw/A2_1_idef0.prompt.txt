@@ -1,0 +1,22 @@
+Act as an independent reviewer who has not seen any earlier solution. Read the control task below and derive, on your own, its functional model in IDEF0 (FIPS 183): the A0 context function and its child functions, with verb-phrase function names, noun-phrase arrow names, and the inputs, controls, outputs, and mechanisms of each function. Give the result as a Markdown table with the columns Node | Function | Inputs | Controls | Outputs | Mechanisms.
+
+Control task:
+# Task T4 - Factory I/O Level Control, PID control
+
+Plant: the tank of the Factory I/O "Level Control" scene in the analog configuration.
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: StartCommand AT %IX100.0 : BOOL; StopCommand AT %IX100.1 : BOOL; LevelMeter AT %IW100 : INT (level meter, 0-10 V; the register value is proportional to the voltage).
+- Outputs: FillValve AT %QW100 : INT (fill valve opening, 0-10 V); DischargeValve AT %QW101 : INT (discharge valve opening, 0-10 V).
+- Constant: FULL_SCALE : INT := 1000 (the register value that corresponds to 10 V; the Factory I/O driver uses Scale = 100).
+- Parameters: set point h_sp = h_target = 0.8 h_span; overfill limit h_max = 0.9 h_span; tolerance band eps = 0.02 h_span; hold time t_h = 10 s; PID gains Kp, Ti, Td; h_span is the measuring span of the level meter (10 V).
+
+Requirements:
+1. Step 0 is the initial step; it drives no output.
+2. On StartCommand, regulate the level: drive the fill valve with the output of a PID controller (error e = h_sp - h), clamp the PID output to 0-100 % of the valve opening and suspend integration while the output is clamped, and hold the discharge valve at a constant opening of 40 % (4 V, that is, 0.4 FULL_SCALE).
+3. End regulation when |e| <= eps has held for t_h, or when h >= h_max; then close both valves and return to step 0.
+4. Whenever StopCommand is TRUE, return to step 0 with all outputs at 0.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: start (the event of pressing StartCommand: TRUE only in the scan in which the button is pressed), stop, settled (|e| <= eps has held for t_h), r (level region: r = LOW for h < h_target, r = MID for h_target <= h < h_max, r = HIGH for h >= h_max)
+- outputs: fill_valve (TRUE while the PID drives the fill valve), discharge_valve (TRUE while the discharge valve is held at 40 %)

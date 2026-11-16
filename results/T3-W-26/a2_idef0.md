@@ -1,0 +1,25 @@
+The model below uses **A0** for the requested context function and **A1–A3** for its decomposition. It is a functional decomposition, not a list of sequential steps: step 0, filling, and pause are operating states managed within A1.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | Filling-cycle requirements; `TON_Duration`; `TOF_Duration`; level-switch settings of 2.4 m and 2.7 m; prohibition on reaching `LSHH`; I/O mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O tank scene; Modbus TCP connection; level switches; valve actuators |
+| **A1** | **Determine the operating step** | `start`; `stop`; `LSH`; `LSHH`¹; `ton_q`; `tof_q`; current operating step | Initial step = step 0; stop priority; filling and pause transition rules; filling completion at `LSH`; prohibition on reaching `LSHH` | Operating step; filling-step activity | OpenPLC cyclic execution; step-state memory |
+| **A2** | **Time filling and pause intervals** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON and TOF operating semantics; both timers’ `IN` connections to filling-step activity | `ton_q`; `tof_q` | TON function-block instance; TOF function-block instance; OpenPLC time base |
+| **A3** | **Set the valve commands** | Operating step; `stop` | Fill valve enabled only in the filling step; no outputs in step 0; fill valve closed in pause; all outputs FALSE during stop; discharge valve always FALSE; output-address mapping | `fill_valve`; `discharge_valve` | OpenPLC output logic and output image; Modbus TCP driver; Factory I/O valve interfaces |
+
+### Rules governing A1
+
+- **Initialization:** select step 0.
+- **Stop override:** whenever `stop` is TRUE, select step 0.
+- **Start:** the one-scan event `start` initiates filling from step 0.
+- **Filling completion:** detection by `LSH` ends filling and selects step 0, taking precedence over a timed pause.
+- **Timed pause:** while filling, `ton_q AND NOT LSH` selects the pause step.
+- **Filling resumption:** while paused, `NOT tof_q` resumes filling, provided neither stop nor level completion requires step 0.
+
+### Interface and interpretation notes
+
+- `start` denotes the rising-edge event derived from **StartCommand**, not its sustained button level. `stop` denotes **StopCommand**.
+- Input mapping: StartCommand → `%IX100.0`; StopCommand → `%IX100.1`; `LSH` → `%IX100.2`; `LSHH` → `%IX100.3`.
+- Output mapping: `fill_valve` → `%QX100.0`; `discharge_valve` → `%QX100.1`.
+- **Internal arrows:** A1 supplies filling-step activity to A2 and the operating step to A3. A2 returns `ton_q` and `tof_q` to A1. The current operating step is retained as state feedback within A1.
+- ¹ **`LSHH` is an available observation, but the task specifies no transition or trip action triggered by it.** “LSHH must never be reached” is therefore modeled as a safety constraint, not as an invented high-high shutdown rule. Demonstrating that constraint requires suitable plant dynamics and stopping margin above `LSH`; the switch heights alone do not prove it.

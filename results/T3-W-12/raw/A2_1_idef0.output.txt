@@ -1,0 +1,23 @@
+### IDEF0 functional model
+
+The model boundary is the **tank-control system**, including sequencing, timing, and valve-command generation. Signal arrows use the prescribed identifiers. The three child functions interact through **filling-step activity** and the timer outputs; their numbering does not imply execution order.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TON_Duration`; `TOF_Duration`; initial-step requirement; filling–pause sequence rules; stop priority; high-level termination requirement; high-high-level avoidance requirement; discharge-valve prohibition | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O digital tank, level switches, and valves; Modbus TCP interface |
+| **A1** | **Manage filling and pause steps** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial step 0; step-transition rules; stop priority; high-level termination requirement; high-high-level avoidance requirement | Filling-step activity; operating-step status | PLC sequence logic; step-state memory |
+| **A2** | **Time filling and pause intervals** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON on-delay semantics; TOF off-delay semantics | `ton_q`; `tof_q` | TON function block; TOF function block; PLC time base and cyclic execution |
+| **A3** | **Generate valve commands** | Filling-step activity; `stop`; `LSH` | Fill-valve enable rule; initial-step and pause-step output restrictions; stop override; discharge-valve prohibition | `fill_valve`; `discharge_valve` | PLC Boolean output logic; mapped digital outputs `%QX100.0` and `%QX100.1`; Factory I/O Modbus TCP driver |
+
+### Rules represented by the control arrows
+
+- **Initial state:** Step 0 is active; `fill_valve = FALSE` and `discharge_valve = FALSE`.
+- **Start:** `start` is a one-scan press event. It requests entry from step 0 into filling, subject to stop priority and high-level termination.
+- **Filling:** Filling-step activity supplies `IN` to **both** timers.
+  - `LSH = TRUE` ends filling and returns the sequence to step 0.
+  - `ton_q = TRUE` with `LSH = FALSE` transfers the sequence to the pause step.
+- **Pause:** The fill valve is closed. Leaving filling makes the TOF input FALSE, but `tof_q` remains TRUE for `TOF_Duration`. When `tof_q = FALSE`, filling resumes, provided neither stop nor high-level termination applies.
+- **Stop:** `stop = TRUE` overrides the sequence, returns it to step 0, and forces both valve commands FALSE. A TOF output that remains TRUE during its off-delay does **not** keep the fill valve open.
+- **Valve commands:** `fill_valve` is TRUE only during filling, with no stop or high-level condition. `discharge_valve` is always FALSE.
+
+**Safety interpretation:** `LSHH` represents the forbidden high-high condition, not a normal filling endpoint. The task specifies termination at `LSH` but does not prescribe a separate `LSHH` transition or alarm action. Accordingly, this model does not invent one. Guaranteeing that 2.7 m is never reached also depends on the plant’s valve-closing delay, inflow, and level overshoot after detection at 2.4 m.

@@ -1,0 +1,64 @@
+## 1. Model scope and conventions
+
+**A0 — Control timed tank filling** is the context function, conventionally shown on the IDEF0 **A-0 context diagram**. Its decomposition contains functions A1–A4.
+
+- **Inputs** are signals or information processed by a function.
+- **Controls** are rules, limits, and parameters governing the function.
+- **Outputs** are produced signals or information.
+- **Mechanisms** are the resources performing the function.
+- Semicolon-separated entries in the table denote separate arrows. All function names are verb phrases; all arrow labels are noun phrases or the required signal identifiers.
+
+The plant’s **LSH** switch is mapped but does **not** terminate filling in this task. Filling terminates only on `timer_done`, `LSHH`, or `stop`.
+
+## 2. IDEF0 ICOM model
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand samples; StopCommand samples; LSHH samples | TimerDuration; Initial-step rule; Start-event rule; Filling-completion rule; Stop-priority rule; Discharge-inhibition rule | fill_valve; discharge_valve | OpenPLC Runtime; Modbus TCP connection; Factory I/O tank scene; PLC state and timing resources |
+| **A1** | **Derive command events and interlock states** | StartCommand samples; StopCommand samples; LSHH samples | Start-event rule | start; stop; LSHH | OpenPLC input processing; Start-command history storage |
+| **A2** | **Measure filling-step elapsed time** | Filling-step status | TimerDuration; Timer-enable rule; Timer-reset rule | timer_done | PLC timer resource; PLC time base |
+| **A3** | **Select the operating step** | start; stop; LSHH; timer_done | Initial-step rule; Start-event rule; Filling-completion rule; Stop-priority rule | Filling-step status; Step-0 status | PLC sequencing logic; Operating-step storage |
+| **A4** | **Command the tank valves** | Filling-step status; Step-0 status | Initial-step rule; Discharge-inhibition rule | fill_valve; discharge_valve | OpenPLC output processing; Modbus TCP connection; Factory I/O valve actuators |
+
+**Boundary note:** `LSH` is an available physical input, but it has no functional consumer in this task. It is therefore documented in the I/O allocation below rather than drawn as a functional input arrow to A0.
+
+## 3. Arrow connections and governing rules
+
+### Internal connections
+
+- **A1 → A3:** `start`, `stop`, `LSHH`
+- **A3 → A2:** Filling-step status
+- **A2 → A3:** `timer_done`
+- **A3 → A4:** Filling-step status; Step-0 status
+- **A4 → A0 boundary:** `fill_valve`; `discharge_valve`
+
+These arrows express functional dependencies, not a prescribed PLC instruction order.
+
+### Control-arrow definitions
+
+| Control arrow | Meaning |
+|---|---|
+| Initial-step rule | Step 0 is the initial state. In step 0, both outputs are FALSE. |
+| Start-event rule | `start` is TRUE for exactly the scan detecting a press of StartCommand. A start event initiates filling only from step 0, with `stop` and `LSHH` FALSE. A held button does not repeatedly start filling. |
+| Filling-completion rule | During filling, either `timer_done` or `LSHH` returns the sequence to step 0 and closes the fill valve. Completion takes precedence over a simultaneous start event. |
+| Stop-priority rule | `stop` overrides all other conditions, selects step 0, and forces both outputs FALSE in that scan. |
+| Timer-enable rule | The filling timer starts when the filling step becomes active and measures that filling interval. |
+| Timer-reset rule | Leaving the filling step resets the timer and clears `timer_done`, providing a fresh interval for the next cycle. |
+| Discharge-inhibition rule | `discharge_valve` remains FALSE in every operating state. |
+| TimerDuration | Preset duration of the filling interval. |
+
+**Output interpretation:** `fill_valve` is TRUE only while the filling step remains active after stop and completion conditions have been evaluated. No additional valve action occurs in step 0.
+
+## 4. Physical I/O allocation
+
+| Required identifier | Physical tag / address | Interpretation |
+|---|---|---|
+| `start` | StartCommand — `%IX100.0` | One-scan press event derived from the input |
+| `stop` | StopCommand — `%IX100.1` | TRUE whenever the stop input is TRUE |
+| `LSH` | LSH — `%IX100.2` | Target-level detection at 2.4 m; unused by this task |
+| `LSHH` | LSHH — `%IX100.3` | Overfill-limit detection at 2.7 m; terminates or inhibits filling |
+| `timer_done` | Internal timer status | Filling timer elapsed indication |
+| `fill_valve` | FillValve — `%QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | DischargeValve — `%QX100.1` | Always FALSE |
+
+**Interlock interpretation:** Treating an already-TRUE `LSHH` as an inhibition prevents even a one-scan opening when a start event occurs at the overfill limit.

@@ -1,0 +1,17 @@
+The model below takes the **tank-control application** as its boundary. Thus, its inputs and outputs are control signals rather than liquid flows. **A0** is the context function; **A1–A3** are its child functions. Internal arrows connect the child functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSH; LSHH | TON_Duration; TOF_Duration; initial-step requirement; filling/pause sequence rules; stop priority; LSH termination requirement; LSHH non-attainment constraint; discharge-valve closure requirement | fill_valve; discharge_valve | OpenPLC Runtime; Modbus TCP connection; Factory I/O tank, level switches, and valve interfaces |
+| **A1** | **Determine the active sequence step** | start; stop; LSH; ton_q; tof_q | Initial step 0; transition rules: step 0 → filling on start; filling → pause on ton_q with LSH FALSE; pause → filling on tof_q FALSE; filling or pause → step 0 on LSH; any step → step 0 on stop; stop priority | Active-step state; filling-step activity | PLC sequence logic; step-state memory |
+| **A2** | **Time filling and pause intervals** | Filling-step activity | TON_Duration; TOF_Duration; TON semantics with IN equal to filling-step activity; TOF semantics with IN equal to filling-step activity | ton_q; tof_q | TON function-block instance; TOF function-block instance; PLC time base |
+| **A3** | **Command the tank valves** | Active-step state; stop | fill_valve TRUE only in the filling step; fill_valve FALSE in step 0 and the pause step; all outputs FALSE on stop; discharge_valve always FALSE | fill_valve; discharge_valve | PLC output logic; output image; Modbus TCP output interface |
+
+**Signal interpretation and traceability**
+
+- **start** is the one-scan rising-edge event derived from `StartCommand` at `%IX100.0`; **stop** is the level of `StopCommand` at `%IX100.1`.
+- **LSH** maps to `%IX100.2` and represents the 2.4 m level switch; **LSHH** maps to `%IX100.3` and represents the 2.7 m level switch.
+- **fill_valve** maps to `FillValve` at `%QX100.0`; **discharge_valve** maps to `DischargeValve` at `%QX100.1`.
+- **Active-step state** and **filling-step activity** are internal noun-phrase arrows, not additional physical I/O.
+
+**LSHH qualification:** LSHH is an available boundary input, but the requirements assign it no transition or valve-command action. It therefore has no consuming child function in this specified model. “LSHH must never be reached” is a safety constraint, not an implied LSHH trip rule. Whether stopping at LSH guarantees that constraint depends on the plant’s response and overshoot; adding an LSHH shutdown would be an additional requirement.

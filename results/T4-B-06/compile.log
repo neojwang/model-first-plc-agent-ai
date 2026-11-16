@@ -1,0 +1,19 @@
+OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+iec2c: matiec version 0.1 changeset id:
+g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+
+== baseline (st_code) ==
+file: T4-B-06/b_code.st
+sha256: 62b77cc161d3f20fd45d05ba4b122aa05b4f765059641f40660cf72e017cf187
+preparation: configuration present in the file; compiled as is
+step 1: iec2c -f -l -p -r -R -a -I <OpenPLC_v3>/webserver/lib -T <tmp> <tmp>/program.st
+exit 0
+POUS.c
+POUS.h
+LOCATED_VARIABLES.h
+VARIABLES.csv
+Config.c
+Config.h
+Res0.c
+step 2: Config0.c or Res0.c not produced by iec2c (the runtime script stops here)
+verdict: 0

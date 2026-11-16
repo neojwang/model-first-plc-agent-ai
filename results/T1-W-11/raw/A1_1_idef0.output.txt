@@ -1,0 +1,61 @@
+## Scope and control policy
+
+The model covers the **PLC control function**, not the physical movement of the box. The conveyor, box, and sensors belong to the controlled plant.
+
+Use a **reset-dominant IEC 61131-3 RS bistable**: detection at B takes precedence over detection at A. Thus, if both sensors are TRUE, the conveyor stops.
+
+External signal arrows use exactly the required identifiers:
+
+| Arrow | PLC mapping | Meaning |
+|---|---|---|
+| `sensor_a` | SensorA, `%IX100.0`, BOOL | Box detection at sensor A |
+| `sensor_b` | SensorB, `%IX100.1`, BOOL | Box detection at sensor B |
+| `conveyor` | Conveyor, `%QX100.0`, BOOL | Conveyor run command |
+
+## IDEF0 ICOM model
+
+The context function is labeled **A0** as requested. In strict FIPS 183 diagram numbering, the context diagram is **A-0**, containing function box A0; the **A0 decomposition diagram** contains A1–A3.
+
+All function names below are verb phrases; all arrow names are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | A-start requirement; B-stop requirement; B-stop priority; Bistable retention requirement; I/O mapping specification | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable instance; Modbus TCP connection; Factory I/O slave device |
+| **A1** | **Derive conveyor requests** | `sensor_a`; `sensor_b` | A-start requirement; B-stop requirement | Start request; Stop request | OpenPLC Runtime |
+| **A2** | **Retain conveyor run state** | Start request; Stop request | B-stop priority; Bistable retention requirement | Retained run state | IEC 61131-3 RS bistable instance; OpenPLC Runtime |
+| **A3** | **Publish conveyor command** | Retained run state | I/O mapping specification | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O slave device |
+
+## Arrow connections
+
+These connections define the child-function data flow and balance it with the A0 boundary.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `sensor_a` | A0 input boundary | A1 input |
+| `sensor_b` | A0 input boundary | A1 input |
+| Start request | A1 output | A2 input |
+| Stop request | A1 output | A2 input |
+| Retained run state | A2 output | A3 input |
+| `conveyor` | A3 output | A0 output boundary |
+| A-start requirement | A0 control boundary | A1 control |
+| B-stop requirement | A0 control boundary | A1 control |
+| B-stop priority | A0 control boundary | A2 control |
+| Bistable retention requirement | A0 control boundary | A2 control |
+| I/O mapping specification | A0 control boundary | A3 control |
+
+## Functional meaning
+
+- **A1 — Derive conveyor requests:** The Start request follows `sensor_a`; the Stop request follows `sensor_b`. These are level-sensitive requests, not edge-detection events.
+- **A2 — Retain conveyor run state:** The RS bistable sets its state on the Start request, resets it on the Stop request, and retains it when neither request is present. Reset dominates simultaneous requests.
+- **A3 — Publish conveyor command:** The retained state becomes `conveyor` at `%QX100.0`, transmitted through the configured Factory I/O Modbus mapping.
+
+### Required state behavior
+
+| `sensor_a` | `sensor_b` | Retained run state / `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous state |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset priority |
+
+**Startup consideration:** The task does not specify initialization or restart retention. That policy must be established before implementation; the table above describes normal cyclic operation.

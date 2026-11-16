@@ -1,0 +1,60 @@
+## Model scope and conventions
+
+This is a **signal-level control model**: the function receives the box-detection signals and produces the conveyor command. Physical box movement is performed by the simulated plant.
+
+In IDEF0 notation, the **A-0 context diagram contains function A0**; the decomposition of A0 contains functions A1–A4 below.
+
+- **Inputs** are information transformed by a function.
+- **Controls** are rules or constraints governing a function.
+- **Outputs** are results produced by a function.
+- **Mechanisms** are resources used to perform a function.
+
+**Priority assumption:** If both sensors are TRUE, stopping takes precedence so that the box remains at sensor B. Therefore, this model selects an IEC 61131-3 **reset-dominant RS** bistable. Simultaneous-sensor priority is not explicitly specified in the task; this choice resolves it.
+
+## A0 context and child-function ICOM table
+
+Every function is named with a verb phrase. Arrow names are noun phrases; the external signal arrows retain the required identifiers exactly.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transport from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; Stop-at-B requirement; IEC 61131-3 bistable requirement; Reset-priority policy; I/O mapping specification | `conveyor` | OpenPLC Runtime; Factory I/O scene; Modbus TCP connection; IEC 61131-3 RS function block |
+| **A1** | **Determine the start request** | `sensor_a` | Start-on-A requirement | Set request | OpenPLC Runtime |
+| **A2** | **Determine the stop request** | `sensor_b` | Stop-at-B requirement | Reset request | OpenPLC Runtime |
+| **A3** | **Retain the conveyor command** | Set request; Reset request | IEC 61131-3 bistable requirement; Reset-priority policy | Retained run command | IEC 61131-3 RS function block; OpenPLC Runtime |
+| **A4** | **Publish the conveyor command** | Retained run command | I/O mapping specification | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+### Control-arrow definitions
+
+| Control arrow | Definition |
+|---|---|
+| Start-on-A requirement | A TRUE value of `sensor_a` requests conveyor operation. |
+| Stop-at-B requirement | A TRUE value of `sensor_b` requests conveyor stoppage. |
+| IEC 61131-3 bistable requirement | The command must be retained using an IEC 61131-3 SR or RS function block, including while neither sensor is active. |
+| Reset-priority policy | The reset request overrides the set request when both are TRUE. |
+| I/O mapping specification | `sensor_a` corresponds to `SensorA AT %IX100.0`; `sensor_b` corresponds to `SensorB AT %IX100.1`; `conveyor` corresponds to `Conveyor AT %QX100.0`. TRUE means detection for the inputs and conveyor operation for the output. |
+
+## A0 decomposition: arrow connections
+
+| Source | Arrow | Destination |
+|---|---|---|
+| A0 input boundary | `sensor_a` | A1 input |
+| A0 input boundary | `sensor_b` | A2 input |
+| A1 output | Set request | A3 input |
+| A2 output | Reset request | A3 input |
+| A3 output | Retained run command | A4 input |
+| A4 output | `conveyor` | A0 output boundary |
+
+The controls and mechanisms listed for A0 are allocated to its child functions as shown in the ICOM table. No additional external signal is introduced by the decomposition.
+
+## Behavioral interpretation
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` command |
+|---|---|---|
+| FALSE | FALSE | Previous command retained |
+| TRUE | FALSE | TRUE — conveyor runs |
+| FALSE | TRUE | FALSE — conveyor stops |
+| TRUE | TRUE | FALSE — reset priority |
+
+A3 therefore preserves the run command after the box leaves sensor A and resets it when the box reaches sensor B. After sensor B clears, the stopped command remains retained until another start request occurs.
+
+**Unspecified startup condition:** The task does not define the bistable’s initial state or restart-retention behavior. These must be agreed before implementation; an initially stopped conveyor is the recommended default.

@@ -1,0 +1,83 @@
+FUNCTION_BLOCK FillingRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    ActiveState : INT := 0;
+    FillingTimer : TON;
+    timer_done : BOOL := FALSE;
+END_VAR
+
+(* Measure the activity duration of x1. *)
+FillingTimer(IN := (ActiveState = 1), PT := TimerDuration);
+timer_done := FillingTimer.Q;
+
+CASE ActiveState OF
+    0:
+        IF start AND NOT stop AND NOT LSHH THEN
+            ActiveState := 1;
+
+            (* Start timing immediately upon entry into x1. *)
+            FillingTimer(IN := TRUE, PT := TimerDuration);
+            timer_done := FALSE;
+        END_IF;
+
+    1:
+        IF stop OR LSHH OR timer_done THEN
+            ActiveState := 0;
+
+            (* Reset the owned timer upon leaving x1. *)
+            FillingTimer(IN := FALSE, PT := TimerDuration);
+            timer_done := FALSE;
+        END_IF;
+
+ELSE
+    ActiveState := 0;
+    FillingTimer(IN := FALSE, PT := TimerDuration);
+    timer_done := FALSE;
+END_CASE;
+
+fill_valve := (ActiveState = 1);
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Configurable filling interval; adjust for the application. *)
+    TimerDuration : TIME := T#10s;
+    StartEdge : R_TRIG;
+    Controller : FillingRuntime;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+
+Controller(
+    start := StartEdge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+FillValve := Controller.fill_valve;
+DischargeValve := Controller.discharge_valve;
+
+END_PROGRAM

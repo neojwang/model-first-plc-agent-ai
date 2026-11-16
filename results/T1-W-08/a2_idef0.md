@@ -1,0 +1,21 @@
+The model below covers the **conveyor-control function**, rather than the physical transport process. **A0** is the context function; **A1–A3** are its child functions. External signal arrows use exactly `sensor_a`, `sensor_b`, and `conveyor`.
+
+A **reset-dominant RS** bistable is selected so that detection at B takes precedence if both sensors are TRUE. This resolves a simultaneous-detection case that the task does not explicitly specify.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-and-hold-at-B requirement; IEC 61131-3 bistable requirement; reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O scene and driver |
+| **A1** | **Determine start and stop requests** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-on-B requirement | Start request; Stop request | OpenPLC input-processing logic |
+| **A2** | **Retain conveyor command** | Start request; Stop request | IEC 61131-3 bistable requirement; reset-priority rule; command-retention rule | Latched conveyor command | IEC 61131-3 RS function block; OpenPLC Runtime |
+| **A3** | **Apply conveyor command** | Latched conveyor command | Output address mapping; Boolean run/stop convention | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O driver and conveyor actuator |
+
+**Arrow definitions and behavior**
+
+- `sensor_a`: Boolean detection at A, mapped from `SensorA AT %IX100.0`.
+- `sensor_b`: Boolean detection at B, mapped from `SensorB AT %IX100.1`.
+- **Start request**: Boolean request equal to `sensor_a`.
+- **Stop request**: Boolean request equal to `sensor_b`.
+- **Latched conveyor command**: RS state—FALSE when the Stop request is TRUE; TRUE when only the Start request is TRUE; otherwise unchanged.
+- `conveyor`: Boolean command mapped to `Conveyor AT %QX100.0`; TRUE runs the conveyor and FALSE stops it.
+
+Thus, the conveyor continues running after the box leaves A, stops when the box reaches B, and remains stopped until a subsequent start request without an active stop request.

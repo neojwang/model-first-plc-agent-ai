@@ -1,0 +1,93 @@
+## A0 context and decomposition
+
+**A0 — Control timed tank filling**
+
+The model covers input interpretation, TON/TOF timing, step sequencing, and valve-command generation. The tank, valves, level switches, and operator are external to the controller boundary.
+
+All arrow labels below are noun phrases; signal identifiers such as `start` and `ton_q` serve as signal noun phrases.
+
+### ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration parameter; TOF_Duration parameter; initial-step rule; filling/pause sequence rules; stop-priority rule; level-limit rules; discharge-disable rule; I/O mapping specification | `fill_valve`; `discharge_valve` | OpenPLC Runtime; cyclic PLC task; TON function-block instance; TOF function-block instance; retained scan-to-scan state; Modbus TCP connection; Factory I/O slave interface |
+| **A1** | **Interpret command and level signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O mapping specification; rising-edge definition for `start`; startup edge-initialization rule | `start`; `stop`; `LSH`; `LSHH` | Input image; rising-edge memory; OpenPLC Runtime; Modbus TCP connection |
+| **A2** | **Evaluate filling and pause timing** | Filling-step activity | TON_Duration parameter; TOF_Duration parameter; TON timing semantics; TOF timing semantics | `ton_q`; `tof_q` | TON function-block instance; TOF function-block instance; PLC time base |
+| **A3** | **Select the operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step rule; filling/pause sequence rules; stop-priority rule; level-limit rules; transition-priority specification | Operating-step state; Filling-step activity | Step-state memory; transition evaluation logic; cyclic PLC task |
+| **A4** | **Generate valve commands** | Operating-step state; `stop`; `LSH`; `LSHH` | Fill-valve authorization rule; discharge-disable rule; I/O mapping specification | `fill_valve`; `discharge_valve` | Output image; OpenPLC Runtime; Modbus TCP connection; Factory I/O slave interface |
+
+### Child-function arrow connections
+
+These connections define the internal arrows and balance the child model against A0.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| StartCommand signal | A0 input boundary | A1 |
+| StopCommand signal | A0 input boundary | A1 |
+| LSH signal | A0 input boundary | A1 |
+| LSHH signal | A0 input boundary | A1 |
+| `start` | A1 | A3 |
+| `stop` | A1 | A3, A4 |
+| `LSH` | A1 | A3, A4 |
+| `LSHH` | A1 | A3, A4 |
+| Filling-step activity | A3 | A2 |
+| `ton_q` | A2 | A3 |
+| `tof_q` | A2 | A3 |
+| Operating-step state | A3 | A4 |
+| `fill_valve` | A4 | A0 output boundary |
+| `discharge_valve` | A4 | A0 output boundary |
+
+The A3–A2 feedback represents the dependence between step activity and timer status. It is a functional dependency, not a prescribed program execution order.
+
+## Control definitions
+
+### Signal interpretation and I/O mapping
+
+| Identifier or parameter | Meaning / mapping |
+|---|---|
+| `start` | Rising-edge event from StartCommand at `%IX100.0`; TRUE for one scan per button press, not continuously while held |
+| `stop` | StopCommand at `%IX100.1` |
+| `LSH` | Level-switch signal at `%IX100.2`; switch elevation 2.4 m |
+| `LSHH` | High-high level-switch signal at `%IX100.3`; switch elevation 2.7 m |
+| `ton_q` | Q output of the TON instance |
+| `tof_q` | Q output of the TOF instance |
+| `fill_valve` | FillValve at `%QX100.0` |
+| `discharge_valve` | DischargeValve at `%QX100.1`; always FALSE |
+| TON_Duration | TON preset time |
+| TOF_Duration | TOF preset time |
+
+**Startup edge-initialization assumption:** initialize the StartCommand edge memory from the sampled input so that a button already held during startup does not create a new `start` event.
+
+### Step and transition specification
+
+The following is a behavioral specification supporting the IDEF0 controls, not PLC code.
+
+| Current step | Condition / receptivity | Next step |
+|---|---|---|
+| Any step | `stop` | Step 0 |
+| Any step | `LSH` or `LSHH`, with `stop` FALSE | Step 0 |
+| Step 0 | `start`, with `stop`, `LSH`, and `LSHH` FALSE | Filling step |
+| Filling step | `ton_q`, with `stop`, `LSH`, and `LSHH` FALSE | Pause step |
+| Pause step | NOT `tof_q`, with `stop`, `LSH`, and `LSHH` FALSE | Filling step |
+| Any step | No applicable transition | Current step |
+
+**Priority:** stop → level termination → normal sequence transition. Thus, level detection overrides a simultaneous timer expiration or start event.
+
+### Timer and output rules
+
+| Control | Definition |
+|---|---|
+| Initial-step rule | Step 0 is the initial state; its Filling-step activity is FALSE and both valve commands are FALSE. |
+| TON timing semantics | TON IN equals Filling-step activity; PT equals TON_Duration. `ton_q` becomes TRUE after uninterrupted filling activity for the preset duration. Leaving the filling step resets TON. |
+| TOF timing semantics | TOF IN equals Filling-step activity; PT equals TOF_Duration. `tof_q` is TRUE during filling and remains TRUE for the preset duration after filling ends. |
+| Filling/pause sequence rules | TON expiration causes a pause if no level limit is active. The pause ends when `tof_q` becomes FALSE. Every resumed filling phase starts a new TON interval. |
+| Fill-valve authorization rule | `fill_valve` is TRUE only in the filling step while `stop`, `LSH`, and `LSHH` are all FALSE. It is FALSE in Step 0 and the pause step. |
+| Discharge-disable rule | `discharge_valve` is always FALSE. |
+| Stop-priority rule | `stop` forces Step 0 and both valve commands FALSE, irrespective of timer status. A held start button does not cause an automatic restart after stop release. |
+
+## Safety interpretation and boundary
+
+- **Normal termination occurs at `LSH`**, not at `LSHH`.
+- The model includes **`LSHH` as an additional shutdown/inhibit condition**. This is a conservative protective interpretation of “LSHH must never be reached,” rather than a normal sequence transition.
+- Closing the fill valve on `LSHH` cannot itself guarantee that `LSHH` is never reached. That requirement also depends on valid level signals, valve response, maximum inflow, communication/scan delays, and sufficient margin between 2.4 m and 2.7 m. These physical assumptions must be verified before implementation.
+- Implementation must define a consistent scan policy for timer evaluation, transition evaluation, and output updates; the IDEF0 model does not prescribe that execution order.

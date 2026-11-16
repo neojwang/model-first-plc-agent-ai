@@ -1,0 +1,14 @@
+The context function is **A0, Control box transfer from A to B**. In IDEF0 notation, it appears on the **A-0 context diagram**; its decomposition into A1–A3 appears on the **A0 diagram**.
+
+The model below uses a **reset-dominant RS bistable**. Reset dominance is an explicit design choice: the task permits either SR or RS but does not specify priority when both sensors are TRUE. Giving `sensor_b` priority ensures that the conveyor remains stopped while a box is detected at B.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-and-hold-at-B requirement; IEC 61131-3 bistable requirement; reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene; IEC 61131-3 RS function block |
+| **A1** | **Acquire sensor states** | `sensor_a`; `sensor_b` | Input address mapping: `sensor_a` ← SensorA at `%IX100.0`, `sensor_b` ← SensorB at `%IX100.1`; TRUE-on-detection definitions; PLC scan timing | Sensor-state snapshot containing `sensor_a` and `sensor_b` | OpenPLC input image; Modbus TCP connection; Factory I/O sensor interfaces |
+| **A2** | **Retain conveyor command** | Sensor-state snapshot containing `sensor_a` and `sensor_b` | Set condition: `sensor_a` = TRUE; reset condition: `sensor_b` = TRUE; reset priority; state-retention rule when neither condition is TRUE | Retained command state | IEC 61131-3 RS function-block instance; instance memory; OpenPLC execution engine |
+| **A3** | **Publish conveyor command** | Retained command state | Output address mapping: `conveyor` → Conveyor at `%QX100.0`; TRUE-runs/FALSE-stops definition; PLC output-update timing | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O conveyor interface |
+
+**Internal arrow connections:** A1’s *Sensor-state snapshot* feeds A2; A2’s *Retained command state* feeds A3. The bistable’s stored state is internal memory, not an additional external input.
+
+The resulting behavior is: `sensor_a` sets the command, the command remains set during travel between sensors, and `sensor_b` resets it. With reset priority, `conveyor` is FALSE whenever `sensor_b` is TRUE.

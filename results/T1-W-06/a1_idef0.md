@@ -1,0 +1,44 @@
+## IDEF0 model
+
+The requested **A0 context function** is decomposed into **A1–A3** below. In formal IDEF0 notation, the context diagram is **A-0**, containing the single function **A0**; its decomposition is diagram **A0**.
+
+### Modeling decisions
+
+- Use an IEC 61131-3 **RS bistable function block** with **reset priority**. If `sensor_a` and `sensor_b` are TRUE simultaneously, the conveyor remains stopped. This resolves the otherwise unspecified simultaneous-input case in favor of stopping at B.
+- Use level-sensitive sensor conditions, not edge detection.
+- Retain the conveyor command inside the RS block when neither sensor is active.
+- Startup initialization and retention across PLC restarts are not specified by the task and must be defined before implementation.
+
+### ICOM table
+
+Function names are verb phrases; arrow names are noun phrases. **Set request** and **Reset request** are internal arrows, not additional plant I/O identifiers.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transport from A to B** | `sensor_a`; `sensor_b` | Start-at-A requirement; Stop-at-B requirement; IEC 61131-3 bistable requirement; Reset-priority policy; Scene I/O mapping | `conveyor` | OpenPLC Runtime; Factory I/O scene; Modbus TCP connection; IEC 61131-3 RS function block |
+| **A1** | **Generate the set request** | `sensor_a` | Start-at-A requirement; Level-sensitive detection rule | Set request | OpenPLC Runtime |
+| **A2** | **Generate the reset request** | `sensor_b` | Stop-at-B requirement; Level-sensitive detection rule | Reset request | OpenPLC Runtime |
+| **A3** | **Retain and issue the conveyor command** | Set request; Reset request | IEC 61131-3 bistable requirement; Reset-priority policy; State-retention rule; Scene I/O mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection |
+
+### Arrow connections and boundary mapping
+
+| Arrow | Source → destination | Meaning / mapping |
+|---|---|---|
+| `sensor_a` | A0 input boundary → A1 input | Box detection at A; `SensorA AT %IX100.0 : BOOL` |
+| `sensor_b` | A0 input boundary → A2 input | Box detection at B; `SensorB AT %IX100.1 : BOOL` |
+| Set request | A1 output → A3 input | TRUE while `sensor_a` is TRUE |
+| Reset request | A2 output → A3 input | TRUE while `sensor_b` is TRUE |
+| `conveyor` | A3 output → A0 output boundary | Retained conveyor command; `Conveyor AT %QX100.0 : BOOL`; TRUE runs the conveyor |
+
+The **Scene I/O mapping** control specifies mapping these addresses to the Factory I/O scene tags through its Modbus TCP slave driver.
+
+### Required command behavior
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` state |
+|---|---|---|
+| FALSE | FALSE | Previous state retained |
+| TRUE | FALSE | TRUE — conveyor runs |
+| FALSE | TRUE | FALSE — conveyor stops |
+| TRUE | TRUE | FALSE — reset has priority |
+
+The retained state belongs to the RS block; it is not an additional plant input or output. Once B is detected, the command stays FALSE after the sensors clear, until a subsequent set request occurs.

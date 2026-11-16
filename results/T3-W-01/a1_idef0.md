@@ -1,0 +1,95 @@
+## 1. A0 context and scope
+
+**A0 — Control timed tank filling**
+
+The model covers input interpretation, step sequencing, timer evaluation, and output actuation. The tank is filled in timed phases separated by timed pauses; discharge remains disabled.
+
+In IDEF0 terms, **inputs** are transformed or evaluated, **controls** constrain the function, **outputs** are its results, and **mechanisms** perform the function.
+
+### ICOM model
+
+All arrow labels below are noun phrases or the required signal identifiers.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration; TOF_Duration; initial-step requirement; filling-and-pause sequence rules; stop priority; level-limit requirements; discharge-disable requirement; I/O address map | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan cycle; Modbus TCP connection; Factory I/O digital tank; level switches; valve actuators |
+| **A1** | **Interpret operator commands and level signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O address map; rising-edge detection rule; input initialization rule | start; stop; LSH; LSHH | PLC input image; rising-edge memory; OpenPLC Runtime; Modbus TCP connection |
+| **A2** | **Evaluate filling and pause timers** | Filling-step activity | TON_Duration; TOF_Duration; TON timing semantics; TOF timing semantics; cyclic evaluation rule | ton_q; tof_q | TON timer instance; TOF timer instance; PLC time base; OpenPLC Runtime |
+| **A3** | **Select the active sequence step** | start; stop; LSH; LSHH; ton_q; tof_q | Initial-step requirement; transition priority rules; filling-and-pause sequence rules; level-limit requirements | Step-0 activity; Filling-step activity; Pause-step activity | Sequence-state memory; PLC scan cycle; OpenPLC Runtime |
+| **A4** | **Command the tank valves** | Filling-step activity; stop; LSH; LSHH | Output actuation rules; stop priority; discharge-disable requirement; I/O address map | fill_valve; discharge_valve | PLC output image; Modbus TCP connection; Factory I/O valve actuators |
+
+### Child-function connections
+
+- **A1 → A3:** `start`, `stop`, `LSH`, `LSHH`
+- **A1 → A4:** `stop`, `LSH`, `LSHH`
+- **A3 → A2:** Filling-step activity
+- **A2 → A3:** `ton_q`, `tof_q`
+- **A3 → A4:** Filling-step activity
+- **A4 → A0 boundary:** `fill_valve`, `discharge_valve`
+
+The A3–A2 feedback represents state-dependent timer evaluation across PLC scans, not an instantaneous combinational loop.
+
+## 2. Interface definitions
+
+The mapped device signals are boundary inputs; the required vocabulary is used for internal receptivities and output commands.
+
+| Boundary signal or command | Required identifier | Address | Interpretation |
+|---|---|---|---|
+| StartCommand | `start` | `%IX100.0` | Rising-edge event, TRUE for one scan only |
+| StopCommand | `stop` | `%IX100.1` | Level-sensitive stop request |
+| LSH | `LSH` | `%IX100.2` | High-level indication at 2.4 m |
+| LSHH | `LSHH` | `%IX100.3` | High-high-level indication at 2.7 m |
+| FillValve | `fill_valve` | `%QX100.0` | Fill-valve command |
+| DischargeValve | `discharge_valve` | `%QX100.1` | Discharge-valve command; always FALSE |
+
+The Factory I/O driver maps these addresses with Factory I/O acting as the Modbus TCP slave.
+
+**Input initialization rule:** initialize the edge-detection memory from the initial StartCommand value so that a button already held at initialization does not create a fictitious press event.
+
+## 3. Sequence controls for A3
+
+The following table defines controls on **A3**, rather than additional IDEF0 functions. Receptivities use only the specified identifiers.
+
+| Active step | Receptivity | Result |
+|---|---|---|
+| Any step | `stop` | Select step 0 |
+| Any step | `LSH OR LSHH` | Select step 0 |
+| Step 0 | `start AND NOT stop AND NOT LSH AND NOT LSHH` | Select filling step |
+| Filling step | `ton_q AND NOT stop AND NOT LSH AND NOT LSHH` | Select pause step |
+| Pause step | `NOT tof_q AND NOT stop AND NOT LSH AND NOT LSHH` | Select filling step |
+| Any step | No applicable receptivity | Retain the active step |
+
+**Priority:** stop override first, level override second, normal sequence transitions third. Exactly one step is active, and step 0 is active initially. A start event outside step 0 is ignored.
+
+`LSHH` is included as a **defensive override**: its activation closes the fill valve and selects step 0. It is not a normal operating target or a substitute for stopping at `LSH`.
+
+## 4. Timer controls for A2
+
+| Timer | Input activity | Preset control | Output | Required behavior |
+|---|---|---|---|---|
+| TON | Filling-step activity | TON_Duration | `ton_q` | Becomes TRUE after continuous filling-step activity for TON_Duration; resets when that activity becomes FALSE |
+| TOF | Filling-step activity | TOF_Duration | `tof_q` | Is TRUE during filling-step activity and remains TRUE for TOF_Duration after that activity becomes FALSE |
+
+Both timer instances are evaluated every scan, including during step 0 and the pause step.
+
+Thus, leaving the filling step resets TON and starts the TOF off-delay. The pause ends only when `tof_q` is FALSE.
+
+## 5. Output controls for A4
+
+| Output | Actuation rule |
+|---|---|
+| `fill_valve` | TRUE only while the filling step is active and `stop`, `LSH`, and `LSHH` are all FALSE |
+| `discharge_valve` | FALSE in every step and under every command condition |
+
+Step 0 and the pause step therefore command both outputs FALSE. The direct stop and level inhibitions prevent valve energization while those conditions are present, independently of the stored sequence state.
+
+## 6. Safety constraint and validation boundary
+
+**“LSHH must never be reached” is a plant-level constraint, not something the Boolean interlock alone can guarantee.** Normal filling terminates at `LSH` at 2.4 m. The 0.3 m margin to `LSHH` must accommodate:
+
+- Level-switch and communication delays;
+- PLC scan and output-update delays;
+- Fill-valve closing time;
+- Residual inflow after closure.
+
+Before implementation, verify that the worst-case level rise after `LSH` activation remains below 0.3 m. If that cannot be established, the level threshold, flow conditions, or shutdown arrangement must change. Closing the valve upon `LSHH` activation mitigates an abnormal condition but does not satisfy the requirement that `LSHH` never be reached.

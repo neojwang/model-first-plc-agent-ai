@@ -1,0 +1,56 @@
+FUNCTION_BLOCK TransferRuntime
+VAR_INPUT
+    sensor_a : BOOL;
+    sensor_b : BOOL;
+    initialize : BOOL;
+END_VAR
+VAR_OUTPUT
+    conveyor : BOOL;
+END_VAR
+VAR
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    t1 : BOOL;
+    t2 : BOOL;
+    run_latch : RS;
+END_VAR
+
+IF initialize THEN
+    x0 := TRUE;
+    x1 := FALSE;
+    run_latch(S := FALSE, R1 := TRUE);
+END_IF;
+
+t1 := x0 AND sensor_a AND NOT sensor_b;
+t2 := x1 AND sensor_b;
+
+run_latch(S := t1, R1 := t2);
+
+x1 := run_latch.Q1;
+x0 := NOT x1;
+conveyor := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    SensorA AT %IX100.0 : BOOL;
+    SensorB AT %IX100.1 : BOOL;
+    Conveyor AT %QX100.0 : BOOL;
+END_VAR
+VAR
+    runtime_logic : TransferRuntime;
+    first_scan : BOOL := TRUE;
+END_VAR
+
+runtime_logic(
+    sensor_a := SensorA,
+    sensor_b := SensorB,
+    initialize := first_scan
+);
+
+Conveyor := runtime_logic.conveyor;
+first_scan := FALSE;
+
+END_PROGRAM

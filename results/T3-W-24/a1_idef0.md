@@ -1,0 +1,89 @@
+## A0 context and decomposition
+
+**A0 — Control timed tank filling**
+
+The function controls intermittent filling from an initial idle condition, limits each filling phase with TON, pauses between filling phases with TOF, and stops filling when the target level or a stop condition occurs. The discharge valve remains closed.
+
+The model boundary includes PLC input interpretation, timers, step sequencing, and output generation. The Factory I/O tank and Modbus TCP interface are external plant/interface mechanisms.
+
+### ICOM table
+
+Every function name below is a verb phrase. Arrow labels are noun phrases; the required signal identifiers are retained exactly.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration; TOF_Duration; I/O address map; initial-step rule; timed-filling rules; stop-priority rule; target-level completion rule; high-high protection rule; discharge-inhibition rule | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan execution; Modbus TCP connection; Factory I/O digital tank, level switches, and valve actuators |
+| **A1** | **Interpret operator and level signals** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O address map; rising-edge detection rule; input-initialization rule | start; stop; LSH; LSHH | PLC input image; rising-edge detector; previous-command memory |
+| **A2** | **Measure filling and pause intervals** | Filling-step activity | TON_Duration; TOF_Duration; TON timing semantics; TOF timing semantics; timer-initialization rule | ton_q; tof_q | TON timer instance; TOF timer instance; PLC time base; timer-instance memory |
+| **A3** | **Select the active filling step** | start; stop; LSH; LSHH; ton_q; tof_q | Initial-step rule; transition-priority rules; timed-filling rules; target-level completion rule; high-high protection rule | Active-step selection; filling-step activity | Step-state memory; PLC scan execution |
+| **A4** | **Generate valve commands** | Active-step selection; stop; LSH; LSHH | Filling-step output rule; idle-and-pause output rule; stop-priority rule; target-level closure rule; high-high protection rule; discharge-inhibition rule; I/O address map | fill_valve; discharge_valve | PLC output image; Modbus TCP output interface; fill-valve actuator; discharge-valve actuator |
+
+### Child-function connections
+
+These connections define the internal arrows of the A0 decomposition:
+
+| Arrow | Source → Destination |
+|---|---|
+| start | A1 → A3 |
+| stop | A1 → A3, A4 |
+| LSH | A1 → A3, A4 |
+| LSHH | A1 → A3, A4 |
+| Filling-step activity | A3 → A2 |
+| ton_q | A2 → A3 |
+| tof_q | A2 → A3 |
+| Active-step selection | A3 → A4 |
+| fill_valve | A4 → A0 boundary |
+| discharge_valve | A4 → A0 boundary |
+
+The A3 → A2 → A3 connection is stateful feedback through the timer instances, not a combinational loop.
+
+## Control definitions
+
+### Signal vocabulary and address mapping
+
+The raw device tags are boundary signals. The following identifiers are used for receptivities and valve commands:
+
+| Identifier | Meaning / mapping |
+|---|---|
+| `start` | Rising-edge event from `StartCommand` at `%IX100.0`; TRUE only during the scan in which a press is detected |
+| `stop` | Current value of `StopCommand` at `%IX100.1` |
+| `LSH` | Target-level switch at `%IX100.2`, positioned at **2.4 m** |
+| `LSHH` | High-high-level switch at `%IX100.3`, positioned at **2.7 m** |
+| `ton_q` | TON output Q |
+| `tof_q` | TOF output Q |
+| `fill_valve` | Command mapped to `FillValve` at `%QX100.0` |
+| `discharge_valve` | Command mapped to `DischargeValve` at `%QX100.1`; always FALSE |
+
+The I/O address map is a control on both input interpretation and output generation. Factory I/O is the Modbus TCP slave device.
+
+### Step behavior
+
+The steps below are internal sequencing states of A3, **not additional IDEF0 functions**.
+
+| Step | Purpose | Valve commands | Normal exit |
+|---|---|---|---|
+| **Step 0 — Await a start event** | Initial and stopped condition | `fill_valve` FALSE; `discharge_valve` FALSE | `start`, provided `stop`, `LSH`, and `LSHH` are FALSE → filling step |
+| **Filling step — Admit liquid** | Fill for at most TON_Duration per phase | `fill_valve` TRUE unless inhibited; `discharge_valve` FALSE | `LSH` → step 0; otherwise `ton_q` → pause step |
+| **Pause step — Suspend liquid admission** | Wait for the TOF off-delay to expire | Both commands FALSE | `LSH` → step 0; otherwise NOT `tof_q` → filling step |
+
+**Global priority, highest first:**
+
+1. `stop` forces step 0 and both commands FALSE.
+2. `LSHH` forces step 0 and both commands FALSE.
+3. `LSH` ends the cycle, forces step 0, and closes the fill valve.
+4. Normal start and timer transitions apply.
+
+A held StartCommand does not restart filling: a new `start` event is required.
+
+### Timer behavior
+
+- **TON:** IN is filling-step activity. `ton_q` becomes TRUE after continuous filling-step activity for TON_Duration. Leaving the filling step resets TON.
+- **TOF:** IN is filling-step activity. `tof_q` is TRUE during filling and remains TRUE for TOF_Duration after filling-step activity becomes FALSE.
+- In the pause step, NOT `tof_q` permits the next filling phase.
+- Initially, step 0 is active, filling-step activity is FALSE, and both timers are unenergized. An off-delay remaining active after a stop does not energize any valve.
+
+## Safety interpretation and validation constraint
+
+Using `LSHH` as an overriding closure condition is an **explicit protective design assumption**, because the task provides the switch but does not specify its transition behavior.
+
+However, an interlock that acts at 2.7 m cannot by itself guarantee that **LSHH is never reached**. That requirement depends on closure at `LSH` leaving sufficient margin for input/communication latency, PLC scan time, valve closing time, and residual inflow. The 0.3 m margin between the switches must therefore be validated against the plant dynamics. No code should be accepted as satisfying the “never reached” requirement solely because it reacts to `LSHH`.

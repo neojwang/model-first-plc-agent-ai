@@ -1,0 +1,82 @@
+## A0 context and decomposition
+
+**A0 — Control timed tank filling**
+
+The controller fills the tank in timed phases, pauses between phases, and returns to its initial state when the target level is detected or a stop is requested. Discharging is disabled.
+
+The child functions are:
+
+- **A1 — Acquire signals and detect start events**
+- **A2 — Select the operating step**
+- **A3 — Evaluate filling timers**
+- **A4 — Apply output interlocks and command valves**
+
+Function names are verb phrases. Arrow names in the following ICOM table are noun phrases; identifiers such as `start` and `ton_q` retain the required vocabulary.
+
+## ICOM model
+
+A dash indicates no separate arrow in that category.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | TON_Duration; TOF_Duration; initial-step rule; filling/pause sequence rules; stop priority; target-level termination rule; high-high-level safety constraint; discharge prohibition; I/O address map | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan cycle; Modbus TCP connection; Factory I/O tank scene |
+| **A1** | **Acquire signals and detect start events** | StartCommand signal; StopCommand signal; LSH signal; LSHH signal | I/O address map; rising-edge definition; input initialization policy | `start`; `stop`; `LSH`; `LSHH` | OpenPLC input image; Modbus TCP driver; previous-button-state memory |
+| **A2** | **Select the operating step** | Current-step state | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q`; initial-step rule; transition priorities; filling/pause sequence rules | Updated-step state; filling-step activity | PLC sequence logic; step-state memory |
+| **A3** | **Evaluate filling timers** | Filling-step activity | TON_Duration; TOF_Duration; TON behavior; TOF behavior; timer initialization rules | `ton_q`; `tof_q` | TON timer instance; TOF timer instance; PLC time base; timer-state memory |
+| **A4** | **Apply output interlocks and command valves** | Filling-step activity | `stop`; `LSH`; `LSHH`; discharge prohibition; I/O address map | `fill_valve`; `discharge_valve` | PLC output logic; OpenPLC output image; Modbus TCP driver; Factory I/O valve interfaces |
+
+**Feedback arrows:** Updated-step state becomes the next current-step state. Filling-step activity feeds A3 and A4. A3 returns `ton_q` and `tof_q` to A2. These are functional dependencies, not an instruction execution order.
+
+## Sequence definition
+
+Three operating steps are sufficient:
+
+| Step | Meaning | Output behavior |
+|---|---|---|
+| **Step 0 — Await start** | Initial and stopped state | `fill_valve = FALSE`; `discharge_valve = FALSE` |
+| **Step 1 — Fill tank** | Active filling phase | `fill_valve = TRUE` only while no output interlock is present; `discharge_valve = FALSE` |
+| **Step 2 — Pause filling** | Timed interval between filling phases | `fill_valve = FALSE`; `discharge_valve = FALSE` |
+
+### Transition controls
+
+Evaluate the following conditions in priority order:
+
+| Priority | Applicable step | Receptivity | Destination |
+|---|---|---|---|
+| 1 | Any | `stop` | Step 0 |
+| 2 | Any | `LSHH` | Step 0 |
+| 3 | Any | `LSH` | Step 0 |
+| 4 | Step 0 | `start AND NOT stop AND NOT LSH AND NOT LSHH` | Step 1 |
+| 5 | Step 1 | `ton_q AND NOT LSH` | Step 2 |
+| 6 | Step 2 | `NOT tof_q` | Step 1 |
+
+Otherwise, retain the current step. Higher-priority conditions override lower-priority transitions.
+
+- `start` is a one-scan rising-edge event, not the maintained StartCommand level.
+- A start event outside Step 0 is not queued.
+- After a stop or level termination, filling requires a fresh `start` event and clear interlocks.
+
+## Timer behavior
+
+- **TON:** Its input is filling-step activity and its preset is TON_Duration. Leaving Step 1 resets the TON. Each subsequent filling phase therefore receives a new on-delay interval.
+- **TOF:** Its input is also filling-step activity and its preset is TOF_Duration. Its output becomes TRUE during filling and remains TRUE for TOF_Duration after Step 1 is left.
+- Step 2 ends only when `tof_q` is FALSE.
+- Timers do not directly command valves. A remaining TRUE `tof_q` after a stop cannot hold either valve open.
+- Initial conditions are Step 0, inactive filling-step activity, and unelapsed timer states.
+
+## Interface mapping
+
+| Model signal | Plant interface |
+|---|---|
+| `start` | Rising-edge event derived from StartCommand, `%IX100.0` |
+| `stop` | StopCommand, `%IX100.1` |
+| `LSH` | LSH, `%IX100.2`, at 2.4 m |
+| `LSHH` | LSHH, `%IX100.3`, at 2.7 m |
+| `fill_valve` | FillValve, `%QX100.0` |
+| `discharge_valve` | DischargeValve, `%QX100.1`, always FALSE |
+
+### Safety interpretation
+
+`LSH` terminates filling immediately, independently of timer completion. The `LSHH` trip is an additional conservative interlock, not an acceptable normal stopping point.
+
+“LSHH must never be reached” also requires validation of sensor response, scan/communications latency, valve closing time, and residual inflow against the available 0.3 m level margin. Logic alone cannot guarantee that physical constraint.

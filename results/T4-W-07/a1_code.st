@@ -1,0 +1,218 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    level_raw : INT;
+    scale_value : INT;
+    h_span : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    cycle_seconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    fill_command : INT;
+    discharge_command : INT;
+END_VAR
+VAR
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    settled : BOOL := FALSE;
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT := 0;
+    hold_timer : TON;
+    h : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    e : REAL;
+    previous_error : REAL := 0.0;
+    integral_term : REAL := 0.0;
+    candidate_integral : REAL;
+    proportional_term : REAL;
+    derivative_term : REAL;
+    candidate_output : REAL;
+    bounded_output : REAL;
+    pid_active : BOOL := FALSE;
+END_VAR
+
+h := INT_TO_REAL(level_raw) / INT_TO_REAL(scale_value) * h_span;
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+(* The continuous tolerance hold is owned by x1.
+   Its TON resets whenever regulation or the tolerance condition is absent. *)
+hold_timer(
+    IN := x1 AND NOT stop AND (r <> 2) AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := x1 AND hold_timer.Q;
+
+(* Evaluate transitions from the current situation exactly once per scan. *)
+IF x0 THEN
+    IF start AND NOT stop AND (r <> 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+END_IF;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+fill_command := 0;
+discharge_command := 0;
+
+IF x1 THEN
+    (* Positional PID with normalized output in the range 0.0 to 1.0.
+       Ti and Td are in seconds; Ti <= 0 disables integration.
+       Initialize derivative history on each entry into regulation. *)
+    IF NOT pid_active THEN
+        integral_term := 0.0;
+        previous_error := e;
+    END_IF;
+
+    proportional_term := Kp * e;
+    derivative_term := 0.0;
+
+    IF (Td > 0.0) AND (cycle_seconds > 0.0) THEN
+        derivative_term :=
+            Kp * Td * (e - previous_error) / cycle_seconds;
+    END_IF;
+
+    candidate_integral := integral_term;
+
+    IF (Ti > 0.0) AND (cycle_seconds > 0.0) THEN
+        candidate_integral :=
+            integral_term + Kp * e * cycle_seconds / Ti;
+    END_IF;
+
+    candidate_output :=
+        proportional_term + candidate_integral + derivative_term;
+
+    (* Accept the integral update only when no output clamping is needed. *)
+    IF (candidate_output >= 0.0) AND (candidate_output <= 1.0) THEN
+        integral_term := candidate_integral;
+    END_IF;
+
+    bounded_output :=
+        proportional_term + integral_term + derivative_term;
+
+    IF bounded_output > 1.0 THEN
+        bounded_output := 1.0;
+    ELSIF bounded_output < 0.0 THEN
+        bounded_output := 0.0;
+    END_IF;
+
+    fill_command :=
+        REAL_TO_INT(bounded_output * INT_TO_REAL(scale_value));
+    discharge_command :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(scale_value));
+
+    previous_error := e;
+    pid_active := TRUE;
+ELSE
+    integral_term := 0.0;
+    previous_error := e;
+    pid_active := FALSE;
+    settled := FALSE;
+END_IF;
+
+(* Final analog command limits. *)
+IF fill_command < 0 THEN
+    fill_command := 0;
+ELSIF fill_command > scale_value THEN
+    fill_command := scale_value;
+END_IF;
+
+IF discharge_command < 0 THEN
+    discharge_command := 0;
+ELSIF discharge_command > scale_value THEN
+    discharge_command := scale_value;
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    start_edge : R_TRIG;
+    controller : LevelControlRuntime;
+    start : BOOL := FALSE;
+    stop : BOOL := FALSE;
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+    h_span : REAL := 10.0;
+    t_h : TIME := T#10s;
+    (* Initial tuning values; commission these gains for the plant.
+       Kp is normalized valve demand per level unit.
+       Ti and Td are expressed in seconds. *)
+    Kp : REAL := 1.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    (* Must match the configured cyclic task interval. *)
+    cycle_seconds : REAL := 0.02;
+END_VAR
+
+(* Update edge history on every scan, including while stopped. *)
+start_edge(CLK := StartCommand);
+start := start_edge.Q;
+stop := StopCommand;
+
+controller(
+    start := start,
+    stop := stop,
+    level_raw := LevelMeter,
+    scale_value := FULL_SCALE,
+    h_span := h_span,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    cycle_seconds := cycle_seconds
+);
+
+fill_valve := controller.fill_valve;
+discharge_valve := controller.discharge_valve;
+
+FillValve := controller.fill_command;
+DischargeValve := controller.discharge_command;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK MainTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH MainTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

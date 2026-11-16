@@ -1,0 +1,90 @@
+FUNCTION_BLOCK FB_TimedTankFilling
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    FillingTimer : TON;
+    ActiveState : INT := 0;
+    start : BOOL;
+    stop : BOOL;
+    timer_done : BOOL;
+    TimerEnable : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+(* Enable timing on the same scan that filling starts. *)
+TimerEnable := NOT stop AND
+    ((ActiveState = 1) OR ((ActiveState = 0) AND start));
+
+FillingTimer(IN := TimerEnable, PT := TimerDuration);
+timer_done := FillingTimer.Q;
+
+IF stop THEN
+    ActiveState := 0;
+ELSE
+    CASE ActiveState OF
+        0:
+            IF start THEN
+                ActiveState := 1;
+            END_IF;
+
+        1:
+            IF timer_done OR LSHH THEN
+                ActiveState := 0;
+            END_IF;
+
+    ELSE
+        ActiveState := 0;
+    END_CASE;
+END_IF;
+
+(* Reset the owned timer whenever the filling step is inactive. *)
+IF ActiveState <> 1 THEN
+    FillingTimer(IN := FALSE, PT := TimerDuration);
+    timer_done := FALSE;
+END_IF;
+
+fill_valve := (ActiveState = 1) AND NOT stop;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    TankController : FB_TimedTankFilling;
+    TimerDuration : TIME := T#10s;
+END_VAR
+
+TankController(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+FillValve := TankController.fill_valve;
+DischargeValve := TankController.discharge_valve;
+
+END_PROGRAM

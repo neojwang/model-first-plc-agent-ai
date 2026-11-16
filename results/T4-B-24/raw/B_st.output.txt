@@ -1,0 +1,239 @@
+FUNCTION_BLOCK LevelControl
+VAR_INPUT
+    start       : BOOL;
+    stop        : BOOL;
+    LevelMeter  : INT;
+    FULL_SCALE  : INT;
+    h_span      : REAL;
+    h_target    : REAL;
+    h_max       : REAL;
+    eps         : REAL;
+    t_h         : TIME;
+    Kp          : REAL;
+    Ti          : REAL;
+    Td          : REAL;
+    cycle_s     : REAL;
+END_VAR
+
+VAR_OUTPUT
+    settled         : BOOL;
+    r               : INT;
+    fill_valve      : BOOL;
+    discharge_valve : BOOL;
+    FillValve       : INT;
+    DischargeValve  : INT;
+END_VAR
+
+VAR CONSTANT
+    (* Region encoding: LOW = 0, MID = 1, HIGH = 2.
+       Prefixes avoid the reserved standard function name MID. *)
+    REGION_LOW  : INT := 0;
+    REGION_MID  : INT := 1;
+    REGION_HIGH : INT := 2;
+END_VAR
+
+VAR
+    phase             : INT := 0;
+    hold_timer        : TON;
+    h                 : REAL;
+    e                 : REAL;
+    previous_error    : REAL := 0.0;
+    integral_term     : REAL := 0.0;
+    integral_trial    : REAL;
+    proportional_term : REAL;
+    derivative_term   : REAL;
+    output_trial      : REAL;
+    output_percent    : REAL;
+    scale_real        : REAL;
+END_VAR
+
+(* Convert the analog input to the level measuring span. *)
+scale_real := INT_TO_REAL(FULL_SCALE);
+
+IF FULL_SCALE > 0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / scale_real;
+ELSE
+    h := 0.0;
+END_IF;
+
+e := h_target - h;
+
+IF h < h_target THEN
+    r := REGION_LOW;
+ELSIF h < h_max THEN
+    r := REGION_MID;
+ELSE
+    r := REGION_HIGH;
+END_IF;
+
+(* Default outputs also implement the idle and stop behavior. *)
+fill_valve := FALSE;
+discharge_valve := FALSE;
+FillValve := 0;
+DischargeValve := 0;
+
+IF stop THEN
+    phase := 0;
+ELSE
+    CASE phase OF
+        0:
+            IF start THEN
+                integral_term := 0.0;
+                previous_error := e;
+                phase := 1;
+            END_IF;
+
+        1:
+            IF r = REGION_HIGH THEN
+                phase := 0;
+            END_IF;
+
+        ELSE
+            phase := 0;
+    END_CASE;
+END_IF;
+
+(* TON resets whenever the tolerance band is left or regulation ends. *)
+hold_timer(
+    IN := (phase = 1) AND NOT stop
+          AND (r <> REGION_HIGH) AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := hold_timer.Q;
+
+IF settled THEN
+    phase := 0;
+END_IF;
+
+IF phase = 1 THEN
+    (* Ideal PID:
+       Kp is percent opening per unit of level;
+       Ti, Td and cycle_s are expressed in seconds. *)
+    proportional_term := Kp * e;
+    derivative_term := 0.0;
+
+    IF cycle_s > 0.0 THEN
+        derivative_term := Kp * Td * (e - previous_error) / cycle_s;
+    END_IF;
+
+    integral_trial := integral_term;
+
+    IF (Ti > 0.0) AND (cycle_s > 0.0) THEN
+        integral_trial := integral_term + Kp * e * cycle_s / Ti;
+    END_IF;
+
+    output_trial := proportional_term + integral_trial + derivative_term;
+
+    (* Suspend integration whenever the proposed output is clamped. *)
+    IF output_trial > 100.0 THEN
+        output_percent := 100.0;
+    ELSIF output_trial < 0.0 THEN
+        output_percent := 0.0;
+    ELSE
+        output_percent := output_trial;
+        integral_term := integral_trial;
+    END_IF;
+
+    previous_error := e;
+
+    IF FULL_SCALE > 0 THEN
+        fill_valve := TRUE;
+        discharge_valve := TRUE;
+
+        FillValve := REAL_TO_INT(output_percent * scale_real / 100.0);
+        DischargeValve := REAL_TO_INT(0.4 * scale_real);
+
+        IF FillValve < 0 THEN
+            FillValve := 0;
+        ELSIF FillValve > FULL_SCALE THEN
+            FillValve := FULL_SCALE;
+        END_IF;
+    END_IF;
+ELSE
+    integral_term := 0.0;
+    previous_error := e;
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand   AT %IX100.0 : BOOL;
+    StopCommand    AT %IX100.1 : BOOL;
+    LevelMeter     AT %IW100   : INT;
+    FillValve      AT %QW100   : INT;
+    DischargeValve AT %QW101   : INT;
+END_VAR
+
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    cycle_s    : REAL := 0.1;
+END_VAR
+
+VAR
+    h_span   : REAL := 10.0;
+    h_sp     : REAL;
+    h_target : REAL;
+    h_max    : REAL;
+    eps      : REAL;
+    t_h      : TIME := T#10s;
+
+    (* Initial tuning values; adjust for the actual tank dynamics. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+
+    start           : BOOL;
+    stop            : BOOL;
+    settled         : BOOL;
+    r               : INT;
+    fill_valve      : BOOL;
+    discharge_valve : BOOL;
+
+    start_edge : R_TRIG;
+    controller : LevelControl;
+END_VAR
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+start_edge(CLK := StartCommand);
+start := start_edge.Q;
+stop := StopCommand;
+
+controller(
+    start := start,
+    stop := stop,
+    LevelMeter := LevelMeter,
+    FULL_SCALE := FULL_SCALE,
+    h_span := h_span,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    cycle_s := cycle_s
+);
+
+settled := controller.settled;
+r := controller.r;
+fill_valve := controller.fill_valve;
+discharge_valve := controller.discharge_valve;
+
+FillValve := controller.FillValve;
+DischargeValve := controller.DischargeValve;
+
+END_PROGRAM
+
+
+CONFIGURATION Config
+    RESOURCE Res ON PLC
+        TASK ControlTask(INTERVAL := T#100ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

@@ -1,0 +1,23 @@
+== A1 (st_code) ==
+file: T1-W-05/a1_code.st  sha256: 9988afcb2b7bc9a8d8187e34d5e3b1f3c388bd52bc40aa5a9ec3ae13645b8d2f
+task: T1; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+T1 (scene): pass - five boxes stopped and stayed at sensor B
+sensitivity, A-B 0.6 m: 1/1 situations pass
+sensitivity, A-B 4 m: 1/1 situations pass
+sensitivity, box 0.3 m, slide 0.1 m: 1/1 situations pass
+sensitivity, polling phase 40 ms: 1/1 situations pass
+task interval of the configuration: 20 ms
+verdict: 1
+
+== A2 (a2_st_code) ==
+file: T1-W-05/a2_code.st  sha256: 60d45b3dbc44d1b727dd3ddba841324bb04cee7f0f5fdfdb643bc729c43d4c73
+task: T1; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+T1 (scene): pass - five boxes stopped and stayed at sensor B
+sensitivity, A-B 0.6 m: 1/1 situations pass
+sensitivity, A-B 4 m: 1/1 situations pass
+sensitivity, box 0.3 m, slide 0.1 m: 1/1 situations pass
+sensitivity, polling phase 40 ms: 1/1 situations pass
+task interval of the configuration: 20 ms
+verdict: 1

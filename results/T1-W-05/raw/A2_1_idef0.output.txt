@@ -1,0 +1,17 @@
+### IDEF0 functional model
+
+**Scope:** the PLC control function, from the sensor indications to the conveyor actuator command. The physical movement of the box is performed by the plant.
+
+The arrow names **sensor_a**, **sensor_b**, and **conveyor** are used exactly as specified. Their repetition across successive functions represents acquisition, processing, and delivery of the same named signals.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | **sensor_a** — box-presence indication at A; **sensor_b** — box-presence indication at B | Start-on-A requirement; stop-and-hold-at-B requirement; bistable-memory requirement; I/O mapping specification | **conveyor** — maintained conveyor run command | OpenPLC Runtime; IEC 61131-3 SR or RS function block; Modbus TCP connection; Factory I/O plant |
+| **A1** | **Acquire sensor indications** | **sensor_a** — indication from sensor A; **sensor_b** — indication from sensor B | Input mapping specification: **sensor_a** at `%IX100.0`, **sensor_b** at `%IX100.1`; Boolean signal definitions | **sensor_a** — acquired Boolean indication; **sensor_b** — acquired Boolean indication | Factory I/O sensors and Modbus TCP slave interface; OpenPLC input acquisition |
+| **A2** | **Maintain the conveyor run command** | **sensor_a**; **sensor_b** | Set-on-A rule; reset-on-B rule; state-retention rule when neither sensor is active; selected bistable priority semantics | **conveyor** — retained Boolean run command | IEC 61131-3 SR or RS function block; OpenPLC execution and instance memory |
+| **A3** | **Deliver the conveyor run command** | **conveyor** — retained Boolean run command | Output mapping specification: **conveyor** at `%QX100.0`; actuator convention: TRUE = run, FALSE = stop | **conveyor** — command delivered to the plant | OpenPLC output update; Modbus TCP connection; Factory I/O conveyor actuator interface |
+
+**Child-function connections:**  
+External **sensor_a** and **sensor_b** → A1 → A2; A2 **conveyor** → A3 → external **conveyor**. The A2 bistable instance retains its state between executions; no additional external state input is required.
+
+**Priority clarification:** The task permits either SR or RS and does not explicitly resolve simultaneous activation of both sensors. A reset-dominant **RS** block is the natural implementation choice for enforcing the stop-at-B requirement: **sensor_b** forces **conveyor** FALSE even when **sensor_a** is also TRUE. Initial bistable state is not specified by the task.

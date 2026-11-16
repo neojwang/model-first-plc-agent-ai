@@ -1,0 +1,103 @@
+FUNCTION_BLOCK FillingTankControl
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    CurrentState : INT := 0;
+    FillingActive : BOOL := FALSE;
+    ton_q : BOOL := FALSE;
+    tof_q : BOOL := FALSE;
+    FillOnDelay : TON;
+    FillOffDelay : TOF;
+END_VAR
+
+(* Stop and level switches override the filling sequence. *)
+IF stop OR LSH OR LSHH THEN
+    CurrentState := 0;
+END_IF;
+
+(* Both timers use the activity of the filling step. *)
+FillingActive := (CurrentState = 1);
+
+FillOnDelay(
+    IN := FillingActive,
+    PT := TON_Duration
+);
+ton_q := FillOnDelay.Q;
+
+FillOffDelay(
+    IN := FillingActive,
+    PT := TOF_Duration
+);
+tof_q := FillOffDelay.Q;
+
+CASE CurrentState OF
+    0:
+        IF start AND NOT stop AND NOT LSH AND NOT LSHH THEN
+            CurrentState := 1;
+        END_IF;
+
+    1:
+        IF ton_q AND NOT LSH THEN
+            CurrentState := 2;
+        END_IF;
+
+    2:
+        IF NOT tof_q THEN
+            CurrentState := 1;
+        END_IF;
+
+ELSE
+    CurrentState := 0;
+END_CASE;
+
+fill_valve := (CurrentState = 1)
+              AND NOT stop
+              AND NOT LSH
+              AND NOT LSHH;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    TON_Duration : TIME := T#5s;
+    TOF_Duration : TIME := T#5s;
+    StartEdge : R_TRIG;
+    TankControl : FillingTankControl;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+
+TankControl(
+    start := StartEdge.Q,
+    stop := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+FillValve := TankControl.fill_valve;
+DischargeValve := TankControl.discharge_valve;
+
+END_PROGRAM

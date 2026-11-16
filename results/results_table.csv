@@ -1,0 +1,14 @@
+Task,Condition,n,Compiled,R_syn,R_syn 95% CI,Passed,R_fun,R_fun 95% CI,pass@1,pass@5
+T1,workflow,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T1,baseline,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T1,Fisher exact p (descriptive),,,,,,1.0000,,,
+T2,workflow,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T2,baseline,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T2,Fisher exact p (descriptive),,,,,,1.0000,,,
+T3,workflow,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T3,baseline,30,30,1.00,"[0.89, 1.00]",30,1.00,"[0.89, 1.00]",1.00,1.00
+T3,Fisher exact p (descriptive),,,,,,1.0000,,,
+T4,workflow,30,29,0.97,"[0.83, 0.99]",26,0.87,"[0.70, 0.95]",0.87,1.00
+T4,baseline,30,26,0.87,"[0.70, 0.95]",25,0.83,"[0.66, 0.93]",0.83,1.00
+T4,Fisher exact p (descriptive),,,,,,1.0000,,,
+All tasks,Cochran-Mantel-Haenszel (primary),,,,,,"chi2 = 0.000, p = 1.0000",MH odds ratio = 1.30,,

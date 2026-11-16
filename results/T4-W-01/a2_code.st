@@ -1,0 +1,192 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    Kp : REAL := 2.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    CycleSeconds : REAL := 0.02;
+END_VAR
+VAR_OUTPUT
+    FillValve : INT;
+    DischargeValve : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    h_target : REAL := 0.8;
+    h_max : REAL := 0.9;
+    eps : REAL := 0.02;
+    t_h : TIME := T#10s;
+    REGION_LOW : INT := 0;
+    REGION_MID : INT := 1;
+    REGION_HIGH : INT := 2;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    StateNumber : INT := 0;
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    WasRegulating : BOOL := FALSE;
+    h : REAL;
+    ErrorValue : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralTerm : REAL := 0.0;
+    DerivativeTerm : REAL := 0.0;
+    RawDemand : REAL;
+    BoundedDemand : REAL;
+    SampleSeconds : REAL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter) / INT_TO_REAL(FULL_SCALE);
+ErrorValue := h_target - h;
+
+IF h < h_target THEN
+    r := REGION_LOW;
+ELSIF h < h_max THEN
+    r := REGION_MID;
+ELSE
+    r := REGION_HIGH;
+END_IF;
+
+(* CycleSeconds must match the actual periodic invocation interval. *)
+SampleSeconds := CycleSeconds;
+IF SampleSeconds <= 0.0 THEN
+    SampleSeconds := 0.02;
+END_IF;
+
+HoldTimer(
+    IN := (StateNumber = 1)
+          AND NOT stop
+          AND (ABS(ErrorValue) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+IF stop THEN
+    StateNumber := 0;
+ELSE
+    CASE StateNumber OF
+        0:
+            IF start THEN
+                StateNumber := 1;
+            END_IF;
+        1:
+            IF settled OR (r = REGION_HIGH) THEN
+                StateNumber := 0;
+            END_IF;
+    ELSE
+        StateNumber := 0;
+    END_CASE;
+END_IF;
+
+(* An already-high level must not produce a valve-opening pulse. *)
+IF r = REGION_HIGH THEN
+    StateNumber := 0;
+END_IF;
+
+x0 := StateNumber = 0;
+x1 := StateNumber = 1;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+FillValve := 0;
+DischargeValve := 0;
+
+IF x1 THEN
+    IF NOT WasRegulating THEN
+        IntegralTerm := 0.0;
+        PreviousError := ErrorValue;
+    END_IF;
+
+    DerivativeTerm :=
+        Kp * Td * (ErrorValue - PreviousError) / SampleSeconds;
+
+    (* Demand is expressed as a fraction of full valve opening. *)
+    RawDemand := Kp * ErrorValue + IntegralTerm + DerivativeTerm;
+
+    IF RawDemand > 1.0 THEN
+        BoundedDemand := 1.0;
+    ELSIF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    (* Update the integral for the next sample only when unclamped.
+       Ti <= 0 disables integral action. *)
+    IF Ti > 0.0 THEN
+        IF (RawDemand > 0.0) AND (RawDemand < 1.0) THEN
+            IntegralTerm :=
+                IntegralTerm
+                + Kp * ErrorValue * SampleSeconds / Ti;
+        END_IF;
+    ELSE
+        IntegralTerm := 0.0;
+    END_IF;
+
+    PreviousError := ErrorValue;
+
+    FillValve :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(FULL_SCALE));
+    DischargeValve :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+ELSE
+    IntegralTerm := 0.0;
+    DerivativeTerm := 0.0;
+    PreviousError := ErrorValue;
+    RawDemand := 0.0;
+    BoundedDemand := 0.0;
+END_IF;
+
+WasRegulating := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR
+    LevelController : FB_LevelControl;
+    Kp : REAL := 2.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    CycleSeconds : REAL := 0.02;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+LevelController(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleSeconds := CycleSeconds
+);
+
+FillValve := LevelController.FillValve;
+DischargeValve := LevelController.DischargeValve;
+fill_valve := LevelController.fill_valve;
+discharge_valve := LevelController.discharge_valve;
+
+END_PROGRAM

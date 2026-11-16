@@ -1,0 +1,22 @@
+### IDEF0 functional model
+
+**A0** is the context function; **A1–A5** are its child functions. Inputs are transformed data, controls govern execution, outputs are produced data or commands, and mechanisms are the resources performing the functions.
+
+The required identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve` are retained exactly. In particular, `fill_valve` and `discharge_valve` are Boolean operating indications, not the analog values written to the valve registers.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand signal (%IX100.0); StopCommand signal (%IX100.1); LevelMeter value (%IW100) | Start/stop and step-transition requirements; initial step 0; level set point \(h_{sp}=h_{target}=0.8h_{span}\); overfill limit \(h_{max}=0.9h_{span}\); tolerance \(\varepsilon=0.02h_{span}\); hold time \(t_h=10\,s\); PID gains \(K_p,T_i,T_d\); output limits of 0–100%; integration-suspension requirement during clamping; discharge opening of 40%; FULL_SCALE = 1000; I/O mapping and driver Scale = 100 | FillValve command (%QW100); DischargeValve command (%QW101) | OpenPLC Runtime; PLC program and scan clock; Modbus TCP connection; Factory I/O analog Level Control scene and driver |
+| **A1** | **Interpret commands and level measurement** | StartCommand signal; StopCommand signal; LevelMeter value | Input address mapping; FULL_SCALE and measuring span; \(h_{sp}\), \(h_{target}\), and \(h_{max}\); rising-edge detection rule; level-region classification rules | `start` event; `stop` status; measured level \(h\); level error \(e=h_{sp}-h\); level region `r` | PLC input acquisition; scaling and arithmetic logic; edge detector and previous-input memory |
+| **A2** | **Manage regulation sequence** | — | `start`; `stop`; `settled`; `r`; initial step 0; stop priority; regulation-entry rule; completion and overfill termination rules | Step status; `fill_valve` indication; `discharge_valve` indication | PLC sequence logic; step-state memory |
+| **A3** | **Verify sustained level tolerance** | Level error \(e\) | Step status; tolerance \(\varepsilon\); hold time \(t_h\); continuous-in-band timing rule; timer-reset rule outside the tolerance band or outside regulation | `settled` status | PLC timer; PLC scan clock; timing-state memory |
+| **A4** | **Compute bounded PID fill demand** | Level error \(e\) | `fill_valve`; PID gains \(K_p,T_i,T_d\); PID execution interval; output limits of 0–100%; integration-suspension rule while the output is clamped | Bounded PID fill demand | PLC PID computation; PID-state memory; PLC scan clock |
+| **A5** | **Issue analog valve commands** | Bounded PID fill demand | `fill_valve`; `discharge_valve`; `stop`; FULL_SCALE = 1000; discharge opening of 40%; zero-output rule in step 0 and on termination; output address mapping | FillValve command (%QW100); DischargeValve command (%QW101) | PLC output conversion and assignment logic; Modbus TCP connection; Factory I/O driver |
+
+### Interpretation of the internal arrows
+
+- **`start`** is TRUE only for the scan detecting a press of StartCommand. **`stop`** follows StopCommand.
+- **`r`** is `LOW` for \(h<h_{target}\), `MID` for \(h_{target}\le h<h_{max}\), and `HIGH` for \(h\ge h_{max}\).
+- **Sequence:** step 0 is initial and commands zero valve openings. `start` enables regulation unless `stop` is TRUE. During regulation, both `fill_valve` and `discharge_valve` are TRUE. `settled` or `r = HIGH` ends regulation and returns to step 0. `stop` overrides other conditions and immediately requires zero commands.
+- **`settled`** becomes TRUE after \(|e|\le\varepsilon\) has remained continuously true for 10 seconds during regulation.
+- With level expressed in register-equivalent units, the set point, overfill limit, and tolerance are **800**, **900**, and **20**, respectively. The active fill command is the bounded PID percentage scaled to **0–1000**; the active discharge command is **400**. Both commands are **0** when their corresponding operating indications are FALSE.

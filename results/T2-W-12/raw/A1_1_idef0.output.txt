@@ -1,0 +1,87 @@
+## A0 — Control timed tank filling
+
+**Scope:** Control the digital tank’s fill valve using a rising-edge start event, a filling timer, a high-high level cutoff, and a stop override. The discharge valve remains closed.
+
+The requested **A0 context function** is decomposed into **A1–A4** below. Function names are verb phrases; arrow labels are noun phrases or the prescribed signal identifiers.
+
+### ICOM model
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand; StopCommand; LSH; LSHH | TimerDuration; Initial-step rule; Start-event rule; Timer-or-high-high termination rule; Stop-priority rule; Discharge-closure rule | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan cycle; Modbus TCP connection; Factory I/O tank scene; Capacitive level switches; Valve actuators |
+| **A1** | **Acquire signals and detect start events** | StartCommand; StopCommand; LSH; LSHH | I/O address mapping; Start-event rule; Input polarity definitions | start; stop; LSHH | OpenPLC input image; Modbus TCP driver; Previous-command memory |
+| **A2** | **Select the filling step** | start; stop; LSHH; timer_done | Initial-step rule; Step-transition rules; Stop-priority rule | Step state | PLC sequencing logic; Step-state memory |
+| **A3** | **Measure the filling interval** | Step state | TimerDuration; Timer activation rule; Timer reset rule | timer_done | PLC timer service; Timer-instance memory; PLC time base |
+| **A4** | **Drive the valve outputs** | Step state; stop; LSHH; timer_done | Output-enable rule; Stop-priority rule; Discharge-closure rule; I/O address mapping | fill_valve; discharge_valve | OpenPLC output image; Modbus TCP driver; Factory I/O valve actuators |
+
+**LSH treatment:** A1 acquires the LSH input, but it produces no control decision from it. The requirements do **not** specify stopping at the 2.4 m target switch; filling terminates on the timer or LSHH. LSH therefore has no downstream functional arrow in this decomposition.
+
+### Functional connections
+
+```text
+StartCommand ──┐
+StopCommand ───┤
+LSH ───────────┼──> A1 Acquire signals and detect start events
+LSHH ──────────┘           │
+                          ├── start ─────────────> A2
+                          ├── stop ──────────────> A2, A4
+                          └── LSHH ──────────────> A2, A4
+
+A2 Select the filling step
+    └── Step state ─────────────────────────────> A3, A4
+
+A3 Measure the filling interval
+    └── timer_done ─────────────────────────────> A2, A4
+
+A4 Drive the valve outputs
+    ├── fill_valve ─────────────────────────────> Plant
+    └── discharge_valve ────────────────────────> Plant
+```
+
+The feedback between A2 and A3 represents functional dependency, **not PLC execution order**.
+
+## Control definitions
+
+| Control arrow | Definition |
+|---|---|
+| **Initial-step rule** | Initialize in step 0, with both valve outputs FALSE. |
+| **Start-event rule** | `start` is TRUE only for the scan detecting a FALSE-to-TRUE transition of StartCommand. A continuously held command does not generate additional start events. |
+| **Step-transition rules** | Use step 0 for idle and step 1 for filling. Apply the transition table below. |
+| **Stop-priority rule** | Whenever `stop` is TRUE, select step 0 and force both outputs FALSE, regardless of other conditions. |
+| **Timer activation rule** | Enable the filling timer only while step 1 is active. |
+| **Timer reset rule** | Reset the timer and clear `timer_done` while step 0 is active. |
+| **Timer-or-high-high termination rule** | End filling when `timer_done` or `LSHH` becomes TRUE, whichever occurs first. |
+| **Output-enable rule** | Permit `fill_valve` only during step 1, with `stop`, `LSHH`, and `timer_done` all FALSE. |
+| **Discharge-closure rule** | Keep `discharge_valve` FALSE in every step. |
+| **Input polarity definitions** | TRUE indicates an asserted command or liquid detected at the corresponding level switch. |
+| **I/O address mapping** | Bind the plant signals and valve outputs to the addresses listed below. |
+
+### A2 — Step-transition specification
+
+Conditions are listed in priority order.
+
+| Current step | Condition | Selected step | Meaning |
+|---|---|---|---|
+| Any step | `stop` | Step 0 | Stop override |
+| Step 1 | `LSHH` or `timer_done` | Step 0 | Filling termination |
+| Step 0 | `start` and not `LSHH`, with `stop` FALSE | Step 1 | Filling initiation |
+| Step 0 | Otherwise | Step 0 | Idle retention |
+| Step 1 | Otherwise | Step 1 | Filling continuation |
+
+**Boundary behavior:** An already asserted LSHH prevents the fill valve from opening, including when it coincides with `start`. A start event occurring during filling or while stop is asserted is not queued. After termination, another start event is required.
+
+## I/O bindings
+
+The physical output tags retain their supplied names; the functional output arrows use the required vocabulary.
+
+| Functional signal | Plant tag | OpenPLC address | Meaning |
+|---|---|---|---|
+| `start` | StartCommand | `%IX100.0` | One-scan event derived from the command’s rising edge |
+| `stop` | StopCommand | `%IX100.1` | Stop override while TRUE |
+| `LSH` | LSH | `%IX100.2` | Liquid detected at 2.4 m; unused for termination |
+| `LSHH` | LSHH | `%IX100.3` | Liquid detected at 2.7 m; filling cutoff |
+| `timer_done` | Internal filling timer | Internal | Filling interval elapsed |
+| `fill_valve` | FillValve | `%QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | DischargeValve | `%QX100.1` | Always FALSE |
+
+**Parameter:** `TimerDuration : TIME` controls the duration measured by A3. No additional timing behavior or level-based termination is introduced.

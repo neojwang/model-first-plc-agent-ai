@@ -1,0 +1,86 @@
+FUNCTION_BLOCK FB_TimedFilling
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    FillingTimer : TON;
+    StateIndex : INT := 0;
+    start : BOOL;
+    stop : BOOL;
+    timer_done : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+IF stop THEN
+    StateIndex := 0;
+ELSE
+    CASE StateIndex OF
+        0:
+            IF start THEN
+                StateIndex := 1;
+            END_IF;
+        1:
+            StateIndex := 1;
+    ELSE
+        StateIndex := 0;
+    END_CASE;
+END_IF;
+
+FillingTimer(
+    IN := (StateIndex = 1),
+    PT := TimerDuration
+);
+timer_done := FillingTimer.Q;
+
+IF StateIndex = 1 THEN
+    IF stop OR timer_done OR LSHH THEN
+        StateIndex := 0;
+        FillingTimer(IN := FALSE, PT := TimerDuration);
+        timer_done := FALSE;
+    END_IF;
+END_IF;
+
+fill_valve := (StateIndex = 1);
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    FillingController : FB_TimedFilling;
+    TimerDuration : TIME := T#10s; (* Configurable filling duration. *)
+END_VAR
+
+FillingController(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+FillValve := FillingController.fill_valve;
+DischargeValve := FillingController.discharge_valve;
+
+END_PROGRAM

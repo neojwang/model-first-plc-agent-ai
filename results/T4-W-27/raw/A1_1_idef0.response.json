@@ -1,0 +1,152 @@
+{
+ "input_transformations": [],
+ "id": "resp_02685ac45116de87016af9b2eab3d887d0ae1502875f79e164",
+ "object": "response",
+ "created_at": 1794749162,
+ "completed_at": 1794749225,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_02685ac45116de87016af9b2fc39e487d0a5b225e80748016d",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-bL8P56u4iMN87-ovbGm-SQNgN18OCLTl2Hh-hiSCVBSOYdIeGtXk8eOQ4twrh3EQm6ut_iDsN_yvBxo4hApT0gwoDXiKSnnYwrgoHoCDjCNFldpyxzCUUqQl3jtbMcky5NPnSJSvlNrBX1KGp1t9UTp9tUKrWo5dUIlLk1RKlB3by6HOmhjXhw2HcU893vkgS1VsCgZKquG-vpSXJNmwgXXRP82egilOGAAiYhh6b0pF1SfAf9ufzB6eGNKJkvUhqI3N-tnEj4glbgFoOAvAYPyLljtLP_1SJmF3ZWoo7fhBqzGt-S_VLIcFLuJlTg8kOxjkadKxhaS-81Pm7SzRF9-FWt6MM53Ib_kZ6Sh0AdrM800aeN93cJG2_rZo9yHnaj3hcshz4X5QBFAJhNrgPzxNsU7of6ieftYYKaTThv8Ql3Hs6TxFM2xhPbl3eTfnQmeVYAGn-NF8hAHN43pg9qGJmkSkui1brG1C8JXrlq-I0qx_os_g0IDSf3s37FoV6_upQ53qps8o5vS9wvBtTinKj4ycmceGWK8_dE9uIqGRIcFE3L-iUv3TWY6n1EkWOr2wdeRnnd3a7s1oYDJyTbHrYx9YjqnRhWDhB0frv2Wjc1kINohvrCvNiFrcWtpORc0Tyyg0nHNDxAAFazbQ359T3dmsMeo_kRWUcitXWNTaSEcAcF1CgPoWEVzNhZn-PPbrbzI2KN7O9sln4w0EqUCLH0b-wtbFHdZos4qFPNPVZ1LW9waKSEC-7R-d6eU6PNxHBr5R7gyUGc_KZq_NAXA_gJC62aEMMb66d8eruQtJWU93Ti_-CUqz0tL9WhXQmbqO-uj-7ifcseFp_zYqHiY0tR8tLdTJ3-gaF_FUm_6gRU0B4xcerX42HZDNq73Py-rKlz-4bD16urMCtrq0cSaargejSEvruTLkmd91NaARzEfRGdrXamUZm0RuwLqgUWqLWBb1lNXw_0nMMOr_An_D6cXjg6RUeOfX9QhG8cc1tL-ucs7kqsKfoLxL4E-VYs08BR-WMLVFLhqR_xx8wtt5XVXW-5izuAO0zsWC8Lcy4_FK7AdouQb0BtHlEq63ZasSwCnagaEMhy6oCnEQXCi6LsCTXV-Bl9fO7iAEOL5bj5-MPcKcYtzhFmFsxwNkLHU_7KMrlCP-a9TQwDoyWUlG6oXfUPpHMZbIJvcCa1ptktRgHB-oyLu4g6pWhLUWYeJLdPCh-bnJ4307Upoc1NeGkYisYRVwTDKv7TalriupO1Ew9sMAEoD4e7KTSW4H9gbe93gtA5v1AxXjSYzn1T-2_Xz8hGq6qWZIFHtfY3vu_g5eBqUlGIliy2WkEHh1kvW7O0x03H5CuuZ5JROXGpgxil-3C0l6ltLGCA3i7vwazl8XfecHB6l7wV5TIKJ8Yrhr1Q-I8_-Wgkk0s0VgQOLTkfILGsyuPgDrFRQ8tta3tl24_vBzsUTqF67TpN3hKZkX1rZxRqsZpTtX4XzWqMtLyr2CTNbqgmjzERKI5vlGib6eghgZuPoGmDJoKAJkty2wU5OKhSDfu_PxDK28K0rIJFkifjRYJQSFIC-aZXxT3A3ljcjF6369w4tTGBkM3Zutrs5Lldy79fu7j1Mfb6YmX26ItDzeaXVMm8xhs-WgwxjscBah6js1e13eGuaezov7Mpa7t6B0Hq4vx63jEhYno7Tg1i8RLltqjeyO22q4kzWrhEUB3kmXctmMcYe-o1ha6_Kn0MItpWXPUp5Cp8ddi6aCQtfyFLgbVM9oVOZG2_8lRanpdnAGkM9Fer1W0Jn0vLCnBGHOP55m4UugirMdh7la7uG-C9qSr6SnUF8gJAiaNrkQZqWQgPQ4spgxIOBGvQM11AGi6z2dmKs0i7MHofh_e8wnQjwLLcoVI7ECFhEuXRwf22rfBrDoqpb3y-3xMrO8P2m2grrf5drGbvOlW9STYsvMmb1jABtfpPnzUDXm3ezXWIBWGYTGfsow0hGnwIwc_vq72SBG0p5_x1Bs6YdeseE2lA6Tvo0FjrtaiMPW6vXogWX6nZ4bLkjJwyPWTIVXGCKn4T86ZbkntwyPipcUnTA9scwJFPX-HnpJEMckuiO5AUD58V1LxTiipfr9x_U2OT7FWRn9xEl_Z5W7fsWEGj1ggxQPOYeeoKVduhmozfNU_NNNxfNL6Qm0Uk-eGR9DBleBaVkWyW1hJphP3F0y6hSqvnyt_EsFVae1dBPKGadHGjgu_1YhqSt9t585hpuxTTME1gg80SPFaFUWow1639AiwrrIySchMGmVINGybWFehMNxneLz-lttCFt5Z8likqe38oy-Bu-Cxe9uXL3EBjRVW7WlaEs5dSoSOcm_-ioygAkDIrNGNkAOB1yAKLdknSf-yghHqBoxrJFEK2qC8CJTOi1uAQLKf-w8tg95lUo5PxVoIkZvy1m3I5DJNUQJdkDfWQ0b42iWh5Xq0QRqyUgCUu6ZGr8xbw5IlicghSCFqbjx_f6JoNtIRDBDH-fSnLz0noj-VATKDD5pYLGk_rVt06R65EUoPqpWCsxx_otl3lr6B5PTq21T2p7Ff1OFRz8sbrDg05a2dNNDLewET9z0tMINDyj_hCXk6Obbh-59BZXb367CYFNQxov7XtRgLFSqRVYL2eCAQiO8PivKxwayIb5_rp2dFCkhPfS9jEM09GQz-PHGFYIm7uW0acprOVRKYM1QdhOrj7Xu-80UTU-Daa9FPlHMJqBCMDfS2i22vlu1OFdX57M0eid2nYdrJONbw4KSMEyRjMlnxKZN9W43_i-PuFhpfW46cSw9Y0TN3B-bocHqnozsK2BWQIen12oS5QKzT4e0R6qctTy-ZMsqUqCFMuFAAvQpPw_7P5ZCGTM1H12_r4oaoomLslDSmRqydAO7mt1YMLOETQ5vDcEzrGAbFcG0crQ2PY1ztgasgAJ3rWjNiqDPy116Do_fNB4a_ZzJtez1GNS7ipFqzOSU3qwPxJLBxBXd-rDoVc93XbeYyUO0ExvsOWrfbYJYVuTiVteIgxrbGVIO8vxmQRkSsagMatDFeX5CS9PVWE378ZOaIekzm0LDZzYpYGwSr1P6X1TMOX485c-fo0aGUtpOdnS-tVq3PgvEW5RTdvi61xl1qHgT4BMNveUo8LwkgwOdLJJWt8ZjICWo-qx2Nw5h5aF5rIwxJNmkEcjh_EvO6slPsmqaen1P3BIasc1BVhA9g_PW9O4QiyohOCfAC2CaZvO1kp8SwsoB91WR4lHk1Ruu3hDvmPhEpCtDdTLoPTsED63eWZmS91UcrvRVbt-XGjlduZxdHy73wxZx5N8h7HWiQ4r8YfPm_oc_yCFYIOP_G9h2XVIUVbgB7IvhV6c9hOpbg5hGCoXyWkt-SbdC4ITeeNTF-6fG95Mb40xQzmwmdV2gkhfMP-Gy66l23Ccz71aT_VlhJqxNphpJLyaGNGDQmI39WPzL6JpD6z0x8BgvRqLQPq2Wfv7W8pRX-Vyea1nTeEc5WDT5MPYV9lxBCcUTCgOo1Nyi182WVwNCVem5Q6RaQng8cMv6YhCLI3yeE_rYziIyDyuZZohtHAv-70XXDS_MK9oZQkRbo_ntHE_uLpaoCi2oZCmXfxMlp45UuvYbrPgD5R1tqLQ6IcdGRJ6BvhRLBZdHMHZl7snAyJxZCvLAr6OYAmwoqvUsWqUOC33onFDOpKRz5GU9W5gdXStWro7yoYgUze0VIjEk4KGqojuQIo85P-ljGoJU0hAFAmus8-QqIA8BpxZvXCraMjP21PQGW5F7MmLaWkNgIHCjHVD1WlkfZ3eU3WeEn6Wy6FFbGlJ1RlBVMy_LImAz3OxcSKfZTjPnwbfIAvcIq3vGSIj6W_qqk5jqNM5DFOpSEMSSd6au4wKwxnJPWWAX2Nd3BvUdVBP5gnX0mPwubzrPJCbGcfsAwgEC2pxUdhCjUQbqrjbD977A5QKzNZqszESYyaKlJdlR85u-BLngWO2Gwc4Gd7z-Xcug0YgZBesk5HMffQn6RzIhp-Qrz5Mgn8RxVQv6j299jBJ51So-Cry9PRg7WWr02TbWjyYiH5ZAiEAAp3jqcfbFkrO8vEHBCoxr3L2qiInhni7Vs0wKQUFHbzW44ZnQ9CILR9ydMGR3V8tYu5ggtEjpTnsY8j3N-8vGkqCsilcL3wIGmbFPkwgUMkifs5b64SDL21N4P00gaExw2dVblGB-i1gl8UWLriq8gC4xhqDS8vtMjXGAWWA7ogoaloqXvMTfI6TTNXZ9CMOqOJJyDrcAlmdTMFOeQ6Vm0mTv7-3Xxw62_9KBubd4_Ke49YcHnbeJGsbz0cXpUkbwfW-xh2scnyhGC_YtpgaLAmWx90CUs2KARQSpDs0biP___s-pGw3how2zg6xuhXnpFdJD3Ml6lnyAfoQJSPZaNj5oChc937N05wQYadNryTN57pDYxJsUY2pWcPo2jn-yL3R18dCFFeLzEv5hFN8X-PhgXR7r5qcZ4_QtHcCjt_rxOcJebUDQQni6qGT-grfhxGQzUokuozmLzgRTw-1xlbaMouqFLlwvDfTvCH8EPf7o2D4LdIV6dxIH5Pu7vRCZN6YuulYd8p6Myw0zbrRwFxxbd3t33qE9zDHH7SdGkAHQ02j9rL4e5NOdy60ZXHhKZSUZH1aOnL41gLzDYdtfCi4lg4FJ5T3dMKG-18oPv82ooJkT5vehERop5NKMcBwE3R-6_RlujXUTA1DrUdO9xugrmo7oFzUhh0IIqPW-qMvMOOKMbAWNczLhj8bWA4lHXYHPuEPXtvn18mPXw-fzX8sqZUlmblLeSezYx_f000MKMfMauJHtXGMm_PQZ7nu__-tzX38GaTWrU3iXUs9cDr3YPuH8xukK1ctpr1JcmQGIoaQyl5s6wekQdIEVKNZ3Wu_JJuV0ykFLUBoHmh8xQSA5ayIB1AnHvSQdDZh6ODGjXhQybFAVNaxc5HBFnhrl4M9Xnd00zouwzMjTS8em6b_fkP1Cs9_XC61mbDfulsBq5JNFIH3jEsmYeuIueQa5VynPITs69UkUy0xH02RlRav5Y3Jj-_3xrOLJw-NY_uc80gwM7ZseNHW9P37Cv4Qu0o-TJEXU-OWLQ3X78eHIgLoBlOy4JKhu4iYf0pshVEtb_R2qNs7kH8Tlaq1da8V9BnDsxk4Ey68uEgBmmoSFco_F_pKwnpEV2ejoUrcIpQTIoJrLdivd6EnUfKrwFGIWM0FvY8tHVPsE7iKktrMChmQ7eZ__jGuj9WITx358q28MmWNNsovlD8B0qtdixug8H1W8lBHK9dtEFI7eCjOE1Zwulfv2gwaGJygeUun20EWoL35vzGyECvBicJh_pVo45mckEDa0UQa00qNpkTAgoGMSaXZCgK_a87f6whHWhpjJLU8ExnK4FSmz2JSawH6qJfl3dmqc68eMXbZLr49CwaRY7Do3u1_DzLUyV_iP7kKtx5jzNUq3lJNHnK-ZiTF5i4dhftk5OcxNiCK2BN8qI8uc0FPtvRxx2a_0eiy91-vCpg31bavdw=="
+  },
+  {
+   "type": "message",
+   "id": "msg_02685ac45116de87016af9b2fc39e087d093a1039d8128babc",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "## 1. Model boundary and conventions\n\n**A0 \u2014 Control the tank level** is the context function. Its decomposition consists of **A1\u2013A5** below.\n\n- **Inputs** are data transformed by a function.\n- **Controls** are rules, parameters, and conditions governing a function.\n- **Outputs** are results produced by a function.\n- **Mechanisms** are execution resources.\n\nThe model distinguishes the required logical outputs from the physical analog commands:\n\n- **`fill_valve`**: TRUE while the PID drives the fill valve.\n- **`discharge_valve`**: TRUE while the discharge valve is held at 40%.\n- **Fill-valve register value** and **discharge-valve register value**: the physical analog commands written to `%QW100` and `%QW101`.\n\nThe identifiers **`start`**, **`stop`**, **`settled`**, and **`r`** are used exactly as specified.\n\n## 2. A0 context function\n\n| Node | Function | Inputs | Controls | Outputs | Mechanisms |\n|---|---|---|---|---|---|\n| **A0** | **Control the tank level** | StartCommand signal; StopCommand signal; LevelMeter register value | I/O mapping; FULL_SCALE; measuring span; level target; overfill limit; tolerance band; hold time; PID gains; initial-step rule; start-event rule; stop-priority rule; completion rule; output-limiting rule; integration-suspension rule; discharge-opening rule | Fill-valve register value; discharge-valve register value | OpenPLC Runtime; cyclic PLC task; Modbus TCP connection; Factory I/O driver; PID calculation facility; timer facility |\n\n### Context controls\n\n| Control arrow | Definition |\n|---|---|\n| I/O mapping | StartCommand: `%IX100.0`; StopCommand: `%IX100.1`; LevelMeter: `%IW100`; FillValve: `%QW100`; DischargeValve: `%QW101` |\n| FULL_SCALE | `1000`, corresponding to 10 V; Factory I/O driver Scale = 100 |\n| Measuring span | \\(h_{\\text{span}}\\), represented by the level meter\u2019s 0\u201310 V range |\n| Level target | \\(h_{sp}=h_{\\text{target}}=0.8h_{\\text{span}}\\) |\n| Overfill limit | \\(h_{\\max}=0.9h_{\\text{span}}\\) |\n| Tolerance band | \\(\\varepsilon=0.02h_{\\text{span}}\\) |\n| Hold time | \\(t_h=10\\,s\\) |\n| PID gains | \\(K_p,T_i,T_d\\); numerical values are not specified |\n| Initial-step rule | Step 0 is the initial, inactive step; both physical outputs are zero |\n| Start-event rule | `start` is TRUE only during the scan containing a rising edge of StartCommand |\n| Stop-priority rule | `stop` overrides starting and regulation; both physical outputs become zero |\n| Completion rule | Regulation ends when `settled` is TRUE or `r = HIGH` |\n| Output-limiting rule | PID valve demand is limited to 0\u2013100% |\n| Integration-suspension rule | PID integration is suspended while its output is clamped |\n| Discharge-opening rule | Discharge opening is 40% during regulation and zero otherwise |\n\n## 3. A0 decomposition\n\n| Node | Function | Inputs | Controls | Outputs | Mechanisms |\n|---|---|---|---|---|---|---|\n| **A1** | **Acquire and normalize plant signals** | StartCommand signal; StopCommand signal; LevelMeter register value | I/O mapping; FULL_SCALE; measuring span; start-event rule | `start`; `stop`; measured level | OpenPLC input image; Modbus TCP connection; Factory I/O driver; rising-edge memory |\n| **A2** | **Evaluate level conditions** | Measured level | Level target; overfill limit; tolerance band; hold time; regulation status; timer-reset rule | Level error; `r`; `settled` | PLC arithmetic and comparison facilities; timer facility |\n| **A3** | **Manage the regulation sequence** | `start`; `stop`; `settled`; `r` | Initial-step rule; stop-priority rule; completion rule; sequence-transition rules | Active step; regulation status; `fill_valve`; `discharge_valve` | PLC sequence logic; retained scan-to-scan step memory |\n| **A4** | **Calculate the bounded PID demand** | Level error | PID gains; PLC cycle interval; regulation status; output-limiting rule; integration-suspension rule | Bounded fill demand | PID calculation facility; PID state memory; cyclic PLC task |\n| **A5** | **Apply the valve commands** | Bounded fill demand | `fill_valve`; `discharge_valve`; `stop`; FULL_SCALE; discharge-opening rule; zero-output rule; I/O mapping | Fill-valve register value; discharge-valve register value | PLC output image; Modbus TCP connection; Factory I/O driver |\n\n### Child-function details\n\n#### A1 \u2014 Acquire and normalize plant signals\n\n- Produce `start` from the rising edge of StartCommand. A continuously held button does not generate repeated start events.\n- Produce `stop` directly from StopCommand.\n- Convert the level register into the measured level:\n\n\\[\nh=\\frac{\\text{LevelMeter}}{\\text{FULL\\_SCALE}}h_{\\text{span}}\n\\]\n\nThe equivalent register-domain target, overfill limit, and tolerance are **800**, **900**, and **20**, respectively.\n\n#### A2 \u2014 Evaluate level conditions\n\nProduce the level error:\n\n\\[\ne=h_{sp}-h\n\\]\n\nProduce `r` according to:\n\n| Level condition | `r` |\n|---|---|\n| \\(h<h_{\\text{target}}\\) | `LOW` |\n| \\(h_{\\text{target}}\\le h<h_{\\max}\\) | `MID` |\n| \\(h\\ge h_{\\max}\\) | `HIGH` |\n\nProduce `settled` only after \\(|e|\\le\\varepsilon\\) has remained continuously true for 10 seconds **during regulation**.\n\nThe **timer-reset rule** resets the accumulated hold time whenever regulation is inactive or the level leaves the tolerance band. Thus, separate intervals within the band do not accumulate.\n\n#### A3 \u2014 Manage the regulation sequence\n\nStep 1 denotes active regulation.\n\n| Current step | Receptivity | Resulting step | `fill_valve` | `discharge_valve` |\n|---|---|---|---|---|\n| Any | `stop` | Step 0 | FALSE | FALSE |\n| Step 0 | `start` AND NOT `stop` | Step 1 | TRUE | TRUE |\n| Step 0 | NOT `start` AND NOT `stop` | Step 0 | FALSE | FALSE |\n| Step 1 | NOT `stop` AND (`settled` OR `r = HIGH`) | Step 0 | FALSE | FALSE |\n| Step 1 | NOT `stop` AND NOT `settled` AND `r \u2260 HIGH` | Step 1 | TRUE | TRUE |\n\n**Priority:** `stop` is highest priority. The high-level condition also inhibits active valve commands: starting with `r = HIGH` must not cause a one-scan valve-opening pulse.\n\nThe **regulation status** is active only while Step 1 is effective after these priority conditions have been evaluated.\n\n#### A4 \u2014 Calculate the bounded PID demand\n\nDuring regulation:\n\n\\[\nu_{\\text{bounded}}=\\operatorname{clamp}(u_{\\text{PID}},0,100\\%)\n\\]\n\n- Use \\(e=h_{sp}-h\\) as the PID error.\n- Suspend integration whenever output limiting is active.\n- Do not advance integration while regulation is inactive.\n\nPID tuning values and any additional restart-state policy remain implementation parameters; they are not supplied by the task.\n\n#### A5 \u2014 Apply the valve commands\n\n| Condition | Fill-valve register value | Discharge-valve register value |\n|---|---:|---:|\n| `stop` | 0 | 0 |\n| NOT `stop` AND `fill_valve` | \\(u_{\\text{bounded}}\\times\\text{FULL\\_SCALE}/100\\%\\) | Determined by `discharge_valve` |\n| NOT `stop` AND NOT `fill_valve` | 0 | Determined by `discharge_valve` |\n| NOT `stop` AND `discharge_valve` | Determined by `fill_valve` | \\(0.4\\times\\text{FULL\\_SCALE}=400\\) |\n| NOT `stop` AND NOT `discharge_valve` | Determined by `fill_valve` | 0 |\n\nThe **zero-output rule** explicitly writes zero to both analog outputs in Step 0; it does not leave previous output values unchanged.\n\n## 4. Internal arrow connections\n\n| Source | Arrow | Destination |\n|---|---|---|\n| A1 | `start`; `stop` | A3 inputs |\n| A1 | `stop` | A5 control |\n| A1 | Measured level | A2 input |\n| A2 | Level error | A4 input |\n| A2 | `r`; `settled` | A3 inputs |\n| A3 | Regulation status | A2 and A4 controls |\n| A3 | `fill_valve`; `discharge_valve` | A5 controls |\n| A4 | Bounded fill demand | A5 input |\n| A5 | Fill-valve register value; discharge-valve register value | A0 boundary outputs |\n\nThese arrows describe functional dependencies, not a mandatory software execution order. The eventual scan design must nevertheless preserve stop priority, timely completion handling, and zero outputs whenever regulation is inactive.",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "2d0e6627-4764-4b0a-a799-dfdc0d6e1b14",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 650,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 2353,
+  "output_tokens_details": {
+   "reasoning_tokens": 275
+  },
+  "total_tokens": 3003,
+  "attribution": {
+   "items": {
+    "msg_02685ac45116de87016af9b2eab49487d09379a27e3a419c9d": {
+     "input_tokens": 648,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 648,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_02685ac45116de87016af9b2fc39e087d093a1039d8128babc": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 2078,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 2078
+      }
+     ]
+    },
+    "rs_02685ac45116de87016af9b2fc39e487d0a5b225e80748016d": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 275
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 2082,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

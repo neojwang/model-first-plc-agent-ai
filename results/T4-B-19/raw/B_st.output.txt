@@ -1,0 +1,233 @@
+FUNCTION_BLOCK LevelControl
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    h : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    cycle_seconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+    fill_percent : REAL := 0.0;
+    settled : BOOL := FALSE;
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH.
+       Numeric values avoid using the reserved function name MID. *)
+    r : INT := 0;
+END_VAR
+VAR
+    control_state : INT := 0;
+    hold_timer : TON;
+    error_value : REAL := 0.0;
+    previous_error : REAL := 0.0;
+    integral_value : REAL := 0.0;
+    integral_candidate : REAL := 0.0;
+    derivative_value : REAL := 0.0;
+    proportional_value : REAL := 0.0;
+    raw_output : REAL := 0.0;
+    candidate_output : REAL := 0.0;
+END_VAR
+
+error_value := h_target - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+(* Stop has priority over a simultaneous start event. *)
+IF stop THEN
+    control_state := 0;
+ELSE
+    CASE control_state OF
+        0:
+            IF start THEN
+                control_state := 1;
+                integral_value := 0.0;
+                previous_error := error_value;
+            END_IF;
+        1:
+            control_state := 1;
+    ELSE
+        control_state := 0;
+    END_CASE;
+END_IF;
+
+hold_timer(
+    IN := (control_state = 1)
+          AND NOT stop
+          AND (ABS(error_value) <= eps),
+    PT := t_h
+);
+settled := hold_timer.Q;
+
+IF (control_state = 1) AND (settled OR (r = 2)) THEN
+    control_state := 0;
+END_IF;
+
+fill_valve := FALSE;
+discharge_valve := FALSE;
+fill_percent := 0.0;
+
+CASE control_state OF
+    0:
+        integral_value := 0.0;
+        previous_error := error_value;
+        derivative_value := 0.0;
+        raw_output := 0.0;
+
+    1:
+        fill_valve := TRUE;
+        discharge_valve := TRUE;
+
+        (* PID output is expressed as valve opening in percent.
+           Kp is percent per level unit; Ti and Td are seconds. *)
+        proportional_value := Kp * error_value;
+        derivative_value := 0.0;
+
+        IF (Td > 0.0) AND (cycle_seconds > 0.0) THEN
+            derivative_value :=
+                Kp * Td * (error_value - previous_error)
+                / cycle_seconds;
+        END_IF;
+
+        raw_output :=
+            proportional_value + integral_value + derivative_value;
+
+        (* Suspend integration whenever the existing output is
+           saturated. Also reject an integral increment that would
+           push an otherwise valid output outside its limits. *)
+        IF (Ti > 0.0) AND (cycle_seconds > 0.0)
+           AND (raw_output >= 0.0) AND (raw_output <= 100.0) THEN
+            integral_candidate :=
+                integral_value
+                + Kp * error_value * cycle_seconds / Ti;
+
+            candidate_output :=
+                proportional_value + integral_candidate
+                + derivative_value;
+
+            IF (candidate_output >= 0.0)
+               AND (candidate_output <= 100.0) THEN
+                integral_value := integral_candidate;
+                raw_output := candidate_output;
+            END_IF;
+        END_IF;
+
+        IF raw_output < 0.0 THEN
+            fill_percent := 0.0;
+        ELSIF raw_output > 100.0 THEN
+            fill_percent := 100.0;
+        ELSE
+            fill_percent := raw_output;
+        END_IF;
+
+        previous_error := error_value;
+
+ELSE
+    control_state := 0;
+END_CASE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    h_span : REAL := 10.0;
+    h_target : REAL := 8.0;
+    h_max : REAL := 9.0;
+    eps : REAL := 0.2;
+    t_h : TIME := T#10s;
+    cycle_seconds : REAL := 0.02;
+END_VAR
+VAR
+    (* Initial tuning values; adjust for the plant response. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+
+    start_edge : R_TRIG;
+    controller : LevelControl;
+
+    start : BOOL := FALSE;
+    stop : BOOL := FALSE;
+    settled : BOOL := FALSE;
+    r : INT := 0;
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+
+    h : REAL := 0.0;
+    fill_percent : REAL := 0.0;
+END_VAR
+
+start_edge(CLK := StartCommand);
+start := start_edge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter)
+     * h_span / INT_TO_REAL(FULL_SCALE);
+
+controller(
+    start := start,
+    stop := stop,
+    h := h,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    cycle_seconds := cycle_seconds
+);
+
+settled := controller.settled;
+r := controller.r;
+fill_valve := controller.fill_valve;
+discharge_valve := controller.discharge_valve;
+fill_percent := controller.fill_percent;
+
+(* Default every physical output to its safe value each scan. *)
+FillValve := 0;
+DischargeValve := 0;
+
+IF NOT stop THEN
+    IF fill_valve THEN
+        FillValve := REAL_TO_INT(
+            fill_percent * INT_TO_REAL(FULL_SCALE) / 100.0
+        );
+    END_IF;
+
+    IF discharge_valve THEN
+        DischargeValve := REAL_TO_INT(
+            0.4 * INT_TO_REAL(FULL_SCALE)
+        );
+    END_IF;
+END_IF;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+RESOURCE Res0 ON PLC
+    TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+    PROGRAM MainInstance WITH ControlTask : Main;
+END_RESOURCE
+END_CONFIGURATION

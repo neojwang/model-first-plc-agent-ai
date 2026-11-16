@@ -1,0 +1,31 @@
+The model below treats the **controller** as the system boundary: it receives command and level samples and produces analog valve commands. The tank is the controlled external plant.
+
+In IDEF0 terminology, the context diagram is **A-0**, containing function **A0**; its decomposition contains **A1–A5**. Internal arrows connect the child functions and therefore do not appear as external arrows of A0.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control the tank level** | StartCommand samples; StopCommand samples; LevelMeter samples | Initial-step rule; start-event rule; stop priority; level set point **h_sp = h_target = 0.8 h_span**; overfill limit **h_max = 0.9 h_span**; tolerance **eps = 0.02 h_span**; hold time **t_h = 10 s**; PID gains **Kp, Ti, Td**; PID output limits **0–100%**; integration-suspension rule during clamping; discharge opening **40%**; **FULL_SCALE = 1000**; I/O mapping and driver scaling | FillValve command at **%QW100**; DischargeValve command at **%QW101** | OpenPLC Runtime; controller program; scan clock; Modbus TCP connection; Factory I/O driver |
+| **A1** | **Derive command events and level conditions** | StartCommand samples; StopCommand samples; LevelMeter samples | Rising-edge definition of **start**; Boolean definition of **stop**; level scaling; **FULL_SCALE**; **h_span**; **h_sp**; **h_target**; **h_max**; region boundaries | **start**; **stop**; measured level **h**; level error **e**; level region **r** | Input acquisition logic; edge-detection memory; scaling and comparison logic; OpenPLC Runtime |
+| **A2** | **Qualify sustained level accuracy** | Level error **e** | Regulation-step status; **eps**; **t_h**; continuous-in-band timing rule; timer-reset rule outside regulation or outside the tolerance band | **settled** | On-delay timer; scan clock; OpenPLC Runtime |
+| **A3** | **Sequence level regulation** | — | **start**; **stop**; **settled**; **r**; initial step **0**; stop-priority rule; step-transition rules | Regulation-step status; **fill_valve**; **discharge_valve** | Sequence logic; step-state memory; OpenPLC Runtime |
+| **A4** | **Calculate the bounded PID fill demand** | Level error **e** | Regulation-step status; PID gains **Kp, Ti, Td**; scan interval; output limits **0–100%**; integration suspension while the PID output is clamped | Bounded fill demand | PID algorithm; PID state memory; scan clock; OpenPLC Runtime |
+| **A5** | **Issue analog valve commands** | Bounded fill demand | **fill_valve**; **discharge_valve**; **stop**; zero-output rule in step **0**; discharge opening **40%**; **FULL_SCALE = 1000**; output address mapping | FillValve command at **%QW100**; DischargeValve command at **%QW101** | Output-selection and scaling logic; OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+### Arrow definitions and governing rules
+
+- **start**: rising-edge event of StartCommand, TRUE only in the scan in which the button is pressed.
+- **stop**: current Boolean value of StopCommand.
+- **e**: \(h_{sp}-h\).
+- **r**:
+  - **LOW** when \(h<h_{target}\);
+  - **MID** when \(h_{target}\le h<h_{max}\);
+  - **HIGH** when \(h\ge h_{max}\).
+- **settled**: TRUE once \(|e|\le eps\) has remained continuously true for **10 s during regulation**. Leaving the band or leaving regulation resets the qualification timer.
+- **fill_valve**: TRUE while the PID drives the fill valve.
+- **discharge_valve**: TRUE while the discharge valve is held at **40%**.
+
+**A3 transition rules:** initialize in step **0**; enter regulation on **start** when **stop** is FALSE; leave regulation on **settled** or **r = HIGH**. **stop** overrides all other conditions and returns the sequence to step **0**.
+
+**A5 output rules:** in step **0**, or whenever **stop** is TRUE, both analog commands are **0**. During regulation, FillValve receives the bounded PID demand scaled to **0–1000**, and DischargeValve receives **400**.
+
+With the specified linear scaling, the set point, overfill limit, and tolerance correspond respectively to **800**, **900**, and **20** register counts. The Boolean arrows **fill_valve** and **discharge_valve** are internal activity indicators, not substitutes for the analog output commands.

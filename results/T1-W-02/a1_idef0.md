@@ -1,0 +1,68 @@
+## Model scope and conventions
+
+**A0 models the conveyor control function**, from sensor indications to the conveyor command. It does not model the physical box as a material flow.
+
+- **Inputs** are data transformed by a function.
+- **Controls** are rules and constraints governing the function.
+- **Outputs** are data produced by the function.
+- **Mechanisms** are resources that perform the function.
+
+The context function is labeled **A0** as requested; in strict FIPS 183 diagram numbering, the context diagram is **A-0**, containing the A0 function.
+
+### Control decision
+
+Use a **reset-dominant IEC 61131-3 RS bistable**. If `sensor_a` and `sensor_b` are both TRUE, `conveyor` is FALSE. This priority is a design decision consistent with the requirement to stop the box at B; the task does not explicitly specify simultaneous-sensor behavior.
+
+## A0 context and child-function ICOM table
+
+Every function name below is a verb phrase. Every listed arrow is a noun phrase; the external signal arrows use the required identifiers exactly.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transfer from A to B** | `sensor_a`; `sensor_b` | Start-at-A rule; Stop-at-B rule; Command-retention rule; Reset-priority rule; IEC 61131-3 bistable requirement; Scene I/O mapping | `conveyor` | OpenPLC Runtime; Factory I/O scene; Modbus TCP connection |
+| **A1** | **Generate the start request** | `sensor_a` | Start-at-A rule; Sensor A mapping | Start request | OpenPLC Runtime; Modbus TCP input interface |
+| **A2** | **Generate the stop request** | `sensor_b` | Stop-at-B rule; Sensor B mapping | Stop request | OpenPLC Runtime; Modbus TCP input interface |
+| **A3** | **Maintain the conveyor command** | Start request; Stop request | Command-retention rule; Reset-priority rule; IEC 61131-3 bistable requirement; Conveyor output mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP output interface |
+
+## Arrow definitions
+
+| Arrow | Meaning |
+|---|---|
+| `sensor_a` | BOOL indication from SensorA at **%IX100.0**; TRUE while a box is detected at A. |
+| `sensor_b` | BOOL indication from SensorB at **%IX100.1**; TRUE while a box is detected at B. |
+| Start request | Level-sensitive set request, asserted while `sensor_a` is TRUE. |
+| Stop request | Level-sensitive reset request, asserted while `sensor_b` is TRUE. |
+| `conveyor` | BOOL conveyor command at **%QX100.0**; TRUE runs the conveyor. |
+| Start-at-A rule | A box detection at A requires conveyor operation, subject to stop priority. |
+| Stop-at-B rule | A box detection at B requires conveyor stoppage. |
+| Command-retention rule | With neither request asserted, the previous conveyor command is retained. |
+| Reset-priority rule | The stop request overrides the start request when both are asserted. |
+| IEC 61131-3 bistable requirement | The conveyor command must be maintained using an IEC 61131-3 SR or RS function block; this model selects RS. |
+| Scene I/O mapping | The combined Sensor A, Sensor B, and conveyor address assignments in the Factory I/O Modbus TCP driver. |
+| Sensor A mapping | SensorA assignment to **%IX100.0**. |
+| Sensor B mapping | SensorB assignment to **%IX100.1**. |
+| Conveyor output mapping | Conveyor assignment to **%QX100.0**. |
+
+## Child-function connections and boundary balance
+
+- A0 input `sensor_a` → **A1** input.
+- A0 input `sensor_b` → **A2** input.
+- **A1** output **Start request** → **A3** input.
+- **A2** output **Stop request** → **A3** input.
+- **A3** output `conveyor` → A0 output.
+- A0 controls and mechanisms are allocated to the children as shown in the ICOM table. **Scene I/O mapping** is decomposed into the three individual mapping controls.
+
+The bistable’s retained state is internal to **A3**, rather than an additional external input.
+
+## Behavioral check
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous value retained |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset priority |
+
+Thus, the conveyor continues running after the box leaves A and stops when the box reaches B. While `sensor_b` remains TRUE, the conveyor remains stopped.
+
+**Unspecified lifecycle behavior:** initial state, power-cycle retention, and restart behavior are not defined by the task and must be resolved before implementation.

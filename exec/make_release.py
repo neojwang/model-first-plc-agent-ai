@@ -7,7 +7,9 @@
 With --runs, the run sheet and the text artifacts of every sample (models, prompts' responses, ST code,
 NuSMV models, compilation and test logs), the raw responses of the model (<run_id>/raw/) and the call log
 (llm_ledger.jsonl) are copied to OUT_DIR/results/, and results/manifest.csv lists every artifact with its
-SHA-256; binary files such as screen recordings are listed but not copied.
+SHA-256; binary files such as screen recordings are listed but not copied.  The tables written by the scoring
+tools and the report of analysis/analysis.py are copied too when they lie next to the run sheet (SCORING), and
+the record of the pauses at the plan usage limit (pauses.jsonl) when it lies in ARTIFACTS.
 """
 import argparse
 import csv
@@ -45,6 +47,8 @@ DIRS = ['exec/prompts/tasks', 'exec/prompts/templates']
 ARTIFACT_COLS = ['a1_idef0', 'a1_grafcet_json', 'st_code', 'a2_idef0', 'a2_grafcet_json', 'a2_st_code',
                  'compile_log', 'test_log']
 TEXT_EXT = {'.md', '.json', '.jsonl', '.st', '.smv', '.txt', '.log', '.csv'}
+SCORING = ['gvm_runs.csv', 'st_gvm_runs.csv', 'nusmv_runs.csv', 'scene_sensitivity.csv', 'results_table.csv',
+           'report.md']
 
 
 def add_results(out, runs, base):
@@ -97,12 +101,15 @@ def add_results(out, runs, base):
                 shutil.copy2(src, dst)
                 copied += 1
                 man.append((r['run_id'], 'raw', rel, 'included', hashlib.sha256(data).hexdigest(), len(data)))
-    ledger = os.path.join(base, 'llm_ledger.jsonl')
-    if os.path.isfile(ledger):
-        data = open(ledger, 'rb').read()
-        shutil.copy2(ledger, os.path.join(res, 'llm_ledger.jsonl'))
-        copied += 1
-        man.append(('', 'ledger', 'llm_ledger.jsonl', 'included', hashlib.sha256(data).hexdigest(), len(data)))
+    extra = [('ledger', os.path.join(base, 'llm_ledger.jsonl')), ('pauses', os.path.join(base, 'pauses.jsonl'))]
+    extra += [('scoring', os.path.join(os.path.dirname(os.path.abspath(runs)), n)) for n in SCORING]
+    for col, src in extra:
+        if os.path.isfile(src):
+            name = os.path.basename(src)
+            data = open(src, 'rb').read()
+            shutil.copy2(src, os.path.join(res, name))
+            copied += 1
+            man.append(('', col, name, 'included', hashlib.sha256(data).hexdigest(), len(data)))
     with open(os.path.join(res, 'manifest.csv'), 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
         w.writerow(['run_id', 'column', 'path', 'state', 'sha256', 'bytes'])

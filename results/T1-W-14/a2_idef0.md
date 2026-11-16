@@ -1,0 +1,18 @@
+**Scope:** the model covers the conveyor controller, from the scene’s sensor signals to its conveyor command. The external signal identifiers are exactly `sensor_a`, `sensor_b`, and `conveyor`. Other arrow names denote internal information flows.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor movement from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-and-hold-at-B requirement; IEC 61131-3 bistable-block requirement; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 SR or RS function block; Modbus TCP connection; Factory I/O scene and driver |
+| A1 | Derive start and stop requests | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-on-B requirement; sensor Boolean semantics | Start request; stop request | OpenPLC Runtime; Boolean logic |
+| A2 | Maintain the conveyor command | Start request; stop request | Bistable retention rule; IEC 61131-3 SR or RS semantics | Retained conveyor command | IEC 61131-3 SR or RS function-block instance; OpenPLC Runtime |
+| A3 | Apply the conveyor command | Retained conveyor command | Output Boolean semantics; output address mapping | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+**Arrow and control definitions**
+
+- **Start request:** asserted while `sensor_a` is TRUE.
+- **Stop request:** asserted while `sensor_b` is TRUE.
+- **Bistable retention rule:** the start request sets the retained command; the stop request resets it; with neither request asserted, the previous command is retained.
+- **I/O address mapping:** `sensor_a` → `%IX100.0`; `sensor_b` → `%IX100.1`; `conveyor` → `%QX100.0`.
+- **Output Boolean semantics:** TRUE runs the conveyor; FALSE stops it.
+
+**Unspecified case:** the task permits either SR or RS and does not explicitly define simultaneous-sensor priority. An RS block gives stop priority; an SR block gives start priority. If stopping at B must prevail when both sensors are TRUE, use RS.

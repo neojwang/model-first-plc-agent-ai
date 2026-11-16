@@ -1,0 +1,21 @@
+The model below treats **A0 as the context function** and **A1–A5 as its decomposition**. Inputs are transformed information; controls specify when or how a function operates; mechanisms are the resources that perform it.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand signal; StopCommand signal; LevelMeter register value | Initial-step and stop-priority rules; regulation and termination rules; FULL_SCALE = 1000; measuring span h_span; h_sp = h_target = 0.8 h_span; h_max = 0.9 h_span; eps = 0.02 h_span; t_h = 10 s; PID gains Kp, Ti, Td; PID output limits of 0–100%; integration-suspension rule; discharge opening of 40%; I/O address mapping and driver Scale = 100 | FillValve command at %QW100; DischargeValve command at %QW101 | OpenPLC Runtime; PLC control program; PID and timer facilities; Modbus TCP connection; Factory I/O driver and analog Level Control plant |
+| **A1** | **Acquire and interpret plant signals** | StartCommand at %IX100.0; StopCommand at %IX100.1; LevelMeter at %IW100 | I/O mapping; FULL_SCALE and h_span; rising-edge detection rule; level-region thresholds h_target and h_max | **start**; **stop**; measured level h; **r** | OpenPLC input acquisition; rising-edge detector with previous-scan memory; Modbus TCP connection and Factory I/O driver |
+| **A2** | **Evaluate level error and settling** | Measured level h | h_sp; eps; t_h; **fill_valve** as the regulation-active indication; continuous-band timing rule; timer-reset rule when regulation is inactive or the error leaves the tolerance band | Level error e = h_sp − h; **settled** | OpenPLC arithmetic and comparison logic; timer and runtime time base |
+| **A3** | **Manage regulation state** | — | **start**; **stop**; **settled**; **r**; initial state of step 0; start-transition rule; termination rule; stop-priority rule | **fill_valve**; **discharge_valve**; current-step status | OpenPLC state-transition logic; state memory |
+| **A4** | **Calculate bounded PID demand** | Level error e | **fill_valve**; Kp, Ti, Td; PID sampling interval; output limits of 0–100%; integration suspension while the output is clamped | Bounded fill-opening demand | OpenPLC PID calculation; PID state memory; runtime time base |
+| **A5** | **Issue valve commands** | Bounded fill-opening demand | **fill_valve**; **discharge_valve**; FULL_SCALE = 1000; discharge opening of 40%; zero-output rule when regulation is inactive; output address mapping | FillValve command at %QW100; DischargeValve command at %QW101 | OpenPLC output logic; Modbus TCP connection; Factory I/O driver and valve interfaces |
+
+### Arrow and behavior definitions
+
+- **start** is TRUE only for the scan detecting a press of StartCommand. **stop** follows StopCommand.
+- **r** is **LOW** when h < h_target, **MID** when h_target ≤ h < h_max, and **HIGH** when h ≥ h_max.
+- **settled** becomes TRUE only after |e| ≤ eps has remained continuously true for 10 seconds during regulation.
+- **A3** initializes in step 0 with **fill_valve = FALSE** and **discharge_valve = FALSE**. A **start** event begins regulation unless **stop** is TRUE. During regulation, **settled** or **r = HIGH** returns the controller to step 0. **stop** overrides all other conditions.
+- **fill_valve** and **discharge_valve** are Boolean activity outputs, **not** analog valve commands. In regulation, A5 converts the bounded PID demand into a FillValve register value from **0 to 1000**, and sets DischargeValve to **400**. Otherwise, both register commands are **0**.
+- “Step 0 drives no output” is interpreted as **both valve commands being zero**, not retention of previous nonzero commands.
+
+The principal internal connections are **A1 → A2** through h, **A1 → A3** through start/stop/r, **A2 → A3** through settled, **A2 → A4** through e, **A3 → A2/A4/A5** through the activity outputs, and **A4 → A5** through the bounded fill-opening demand. These are functional dependencies, not a prescribed execution sequence.

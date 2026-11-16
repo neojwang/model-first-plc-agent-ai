@@ -1,0 +1,74 @@
+## A0 context model
+
+**A0 — Control timed tank filling**
+
+The model boundary is the PLC control application. The tank, switches, valves, and operator buttons are external to that boundary. The OpenPLC runtime and Factory I/O communication interface provide the execution mechanisms.
+
+Signal identifiers are arrow names; the other arrow names below are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | StartCommand; StopCommand; LSH; LSHH | TimerDuration; Initial-step rule; Start-event rule; Timer-completion rule; High-high cutoff rule; Stop-priority rule; Discharge-inhibition rule; I/O address map | fill_valve; discharge_valve | OpenPLC runtime; PLC scan cycle; Modbus TCP connection; Factory I/O slave interface |
+
+### Context-arrow definitions
+
+| Arrow | Definition |
+|---|---|
+| StartCommand | Raw start-button signal at `%IX100.0` |
+| StopCommand | Raw stop-button signal at `%IX100.1` |
+| LSH | Target-level detection at `%IX100.2`; TRUE when liquid reaches the 2.4 m switch |
+| LSHH | High-high detection at `%IX100.3`; TRUE when liquid reaches the 2.7 m switch |
+| TimerDuration | Configured duration of the filling-step timer |
+| fill_valve | Fill-valve command, mapped to `FillValve AT %QX100.0`; TRUE opens the valve |
+| discharge_valve | Discharge-valve command, mapped to `DischargeValve AT %QX100.1`; always FALSE in this task |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A1** | **Acquire signals and detect the start event** | StartCommand; StopCommand; LSH; LSHH | I/O address map; Start-event rule | start; stop; LSH; LSHH | Modbus TCP input image; PLC scan cycle; Start-edge memory |
+| **A2** | **Select the filling step** | start; stop; LSHH; timer_done | Initial-step rule; Step-transition rules; Stop-priority rule; High-high cutoff rule | Step status | OpenPLC runtime; Step-state memory |
+| **A3** | **Measure the filling interval** | Step status | TimerDuration; Timer-enabling rule; Timer-reset rule | timer_done | OpenPLC runtime; Timer instance; PLC time base |
+| **A4** | **Generate the valve commands** | Step status; stop; LSHH | Step-output rules; Stop-priority rule; High-high cutoff rule; Discharge-inhibition rule; I/O address map | fill_valve; discharge_valve | OpenPLC runtime; Modbus TCP output image; Factory I/O slave interface |
+
+### Internal arrows and connections
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| start | A1 | A2 | One-scan event for the pressing of StartCommand |
+| stop | A1 | A2, A4 | Current StopCommand state |
+| LSH | A1 | A0 decomposition boundary | Acquired target-level indication; intentionally unused by this task’s control logic |
+| LSHH | A1 | A2, A4 | Current high-high level indication |
+| Step status | A2 | A3, A4 | Current selection of step 0 or the filling step |
+| timer_done | A3 | A2 | Completion indication for the current filling interval |
+| fill_valve | A4 | A0 output boundary | Fill-valve command |
+| discharge_valve | A4 | A0 output boundary | Discharge-valve command |
+
+**LSH is not a filling cutoff.** Although the scene includes the target-level switch, the stated requirements terminate filling only on `timer_done`, `LSHH`, or `stop`.
+
+## Control definitions
+
+These controls define the behavior of the functions without prescribing PLC code.
+
+| Control arrow | Definition |
+|---|---|
+| Initial-step rule | Step 0 is selected on initialization and commands no energized output. |
+| Start-event rule | `start` is TRUE only for the scan containing a StartCommand pressing event. A held button does not generate repeated start events. |
+| Step-transition rules | In step 0, `start` requests the filling step. In the filling step, `timer_done` or `LSHH` returns the sequence to step 0. A new `start` during filling does not restart the timer. |
+| Stop-priority rule | `stop` overrides all other conditions: step 0 is selected and both output commands are FALSE. |
+| Timer-enabling rule | The timer begins when the filling step begins and measures that filling interval. |
+| Timer-completion rule | The filling interval ends when its elapsed time reaches TimerDuration, unless `LSHH` or `stop` ends filling earlier. |
+| Timer-reset rule | Leaving the filling step clears the timer’s accumulated interval and `timer_done`, preparing the next filling cycle. |
+| High-high cutoff rule | `LSHH` terminates filling and prevents an open fill-valve command while TRUE, including a simultaneous `start` event. |
+| Step-output rules | The filling step requests `fill_valve = TRUE`; step 0 requests `fill_valve = FALSE`. The stop and high-high overrides take precedence. |
+| Discharge-inhibition rule | `discharge_valve` is FALSE in every step and under every input condition. |
+| I/O address map | The physical scene tags use the addresses listed in the context-arrow definitions. |
+
+### Priority and timing interpretation
+
+1. **`stop` has highest priority.**
+2. **`LSHH` prevents or terminates filling.**
+3. **`timer_done` terminates the current filling step.**
+4. **`start` can initiate a new cycle only from step 0.**
+
+Timer activation and the fill-valve opening request belong to the same filling-step entry. Timer completion, high-high detection, or a stop request must close the valve and select step 0 without an intentionally added scan delay. The `Step status` / `timer_done` connection is an IDEF0 feedback relationship, not a prescribed sequential execution order for the child functions.

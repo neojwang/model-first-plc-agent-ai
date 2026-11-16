@@ -1,0 +1,109 @@
+Using the control task and the IDEF0 model below, specify the sequential behavior of the task as a GRAFCET according to IEC 60848, and output it in the JSON schema given at the end.
+
+Control task:
+# Task T2 - Factory I/O Scene 3, Filling Tank (Timers), simple timer
+
+Plant: a tank in the digital configuration, saved as a user scene and customized with two capacitive level switches.
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: StartCommand AT %IX100.0 : BOOL; StopCommand AT %IX100.1 : BOOL; LSH AT %IX100.2 : BOOL (level switch high at the target level, 2.4 m; TRUE when liquid is detected); LSHH AT %IX100.3 : BOOL (level switch high-high at the overfill limit, 2.7 m; TRUE when liquid is detected).
+- Outputs: FillValve AT %QX100.0 : BOOL (TRUE opens the fill valve); DischargeValve AT %QX100.1 : BOOL (keep FALSE in this task).
+- Parameter: TimerDuration : TIME.
+
+Requirements:
+1. Step 0 is the initial step; it drives no output.
+2. On StartCommand, open the fill valve and start a timer of duration TimerDuration.
+3. Close the fill valve when the timer has elapsed or when LSHH detects the liquid, whichever comes first, and then return to step 0.
+4. Whenever StopCommand is TRUE, return to step 0 with all outputs FALSE.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: start (the event of pressing StartCommand: TRUE only in the scan in which the button is pressed), stop, LSH, LSHH, timer_done (the timer of the filling step has elapsed)
+- outputs: fill_valve, discharge_valve
+
+IDEF0 model:
+## A0 context model — Control timed tank filling
+
+**Purpose:** Fill the tank for at most `TimerDuration`, terminating filling immediately on `LSHH` or `stop`.
+
+**Boundary:** The model covers PLC sequence control, timer operation, and valve commands. The tank, switches, valves, and Modbus connection provide the physical/simulated execution mechanisms.
+
+The child functions are:
+
+- **A1 — Manage filling steps**
+- **A2 — Measure filling time**
+- **A3 — Generate valve commands**
+
+All function names are verb phrases. Signal identifiers and internal arrow names below are noun phrases.
+
+## ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial-step rule; start-event rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O digital tank scene; Modbus TCP interface; capacitive level switches; valve actuators |
+| **A1** | **Manage filling steps** | `start`; `stop`; `LSHH`; `timer_done` | Initial-step rule; start-event rule; stop-priority rule; timer-or-high-high termination rule | Filling-step state | OpenPLC Runtime; sequence-state memory |
+| **A2** | **Measure filling time** | Filling-step state | `TimerDuration`; timer-enable rule; timer-reset rule | `timer_done` | OpenPLC Runtime; timer function block; PLC time base |
+| **A3** | **Generate valve commands** | Filling-step state; `stop`; `LSHH`; `timer_done` | Initial-step rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; output image; Modbus TCP interface; valve actuators |
+
+**Unused interface:** `LSH` is available from the plant but is not used by this task. It is therefore documented in the interface mapping below, rather than drawn as a functional arrow with an invented purpose. In particular, reaching 2.4 m does **not** terminate filling.
+
+## Arrow connections and boundary balancing
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| `start` | A0 input boundary | A1 | One-scan event representing a new Start button press |
+| `stop` | A0 input boundary | A1, A3 | Stop request with overriding priority |
+| `LSHH` | A0 input boundary | A1, A3 | Liquid detection at the 2.7 m overfill limit |
+| `TimerDuration` | A0 control boundary | A2 | Configured filling-time limit |
+| Filling-step state | A1 | A2, A3 | Current step: step 0 or filling step |
+| `timer_done` | A2 | A1, A3 | Completion indication for the filling-step timer |
+| `fill_valve` | A3 | A0 output boundary | Fill-valve command |
+| `discharge_valve` | A3 | A0 output boundary | Discharge-valve command, always FALSE |
+
+The behavioral-rule controls listed at A0 are inherited by the indicated child functions. `timer_done` and Filling-step state are internal arrows, not additional plant I/O.
+
+## Behavioral controls
+
+| Control | Required interpretation |
+|---|---|
+| Initial-step rule | Initialization selects step 0. Step 0 commands both outputs FALSE. |
+| Start-event rule | In step 0, `start` selects the filling step only when neither `stop` nor `LSHH` is TRUE. A held Start button does not repeatedly start new cycles. |
+| Stop-priority rule | Whenever `stop` is TRUE, select step 0 and command both outputs FALSE, regardless of other conditions. |
+| Timer-or-high-high termination rule | During filling, either `timer_done` or `LSHH` selects step 0 and closes the fill valve. `LSHH` also inhibits opening when already TRUE. |
+| Timer-enable rule | Entry into the filling step enables timing and opens the fill valve in the same control cycle, subject to the overriding termination conditions. |
+| Timer-reset rule | Step 0 disables and resets the filling timer. A new filling cycle starts with a fresh elapsed time. |
+| Discharge-inhibition rule | `discharge_valve` remains FALSE in every step and under every condition. |
+
+The A1–A2 feedback represents cyclic PLC execution, not an instruction execution order. The implementation must ensure that a stale `timer_done` indication cannot terminate a newly started cycle.
+
+## Plant interface mapping
+
+| Identifier | Scene/runtime mapping | Interpretation |
+|---|---|---|
+| `start` | Rising-edge event derived from `StartCommand AT %IX100.0` | TRUE only in the scan of a new press |
+| `stop` | `StopCommand AT %IX100.1` | Level-sensitive stop request |
+| `LSH` | `LSH AT %IX100.2` | Liquid detected at 2.4 m; unused by this control task |
+| `LSHH` | `LSHH AT %IX100.3` | Liquid detected at 2.7 m |
+| `timer_done` | Internal filling-timer completion indication | Not a Modbus input |
+| `fill_valve` | `FillValve AT %QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | `DischargeValve AT %QX100.1` | Always FALSE |
+| `TimerDuration` | PLC parameter of type `TIME` | Filling-time preset |
+
+**Configuration assumption:** `TimerDuration` is a valid, nonnegative timer preset; parameter validation and fault recovery are outside the stated task.
+
+GRAFCET JSON schema (the tuple of Equation (1) of the paper):
+
+{
+  "graphs": [ {"name": "G1", "steps": ["x0", "x1"], "initial": ["x0"]} ],
+  "transitions": [ {"id": "t1", "from": ["x0"], "to": ["x1"], "guard": "start"} ],
+  "outputs": { "fill_valve": "x1" },
+  "forcing": [ {"by": "x11", "graph": "G1", "situation": ["x0"]} ],
+  "owned": { "timer_done": {"step": "x1", "neutral": false, "preset": "TimerDuration"} }
+}
+
+Rules:
+1. Step names start with the letter x followed by letters or digits (x0, x1, x21, xE1). The main graph is named G1, and x0 is its initial step.
+2. A transition lists its upstream steps ("from"), its downstream steps ("to"), and its receptivity ("guard"). Guards use only the input identifiers of the task card, step names, the operators ! (not), & (and), | (or), parentheses, TRUE and FALSE; the level region of task T4 is tested as r = LOW, r = MID or r = HIGH.
+3. "outputs" gives, for every output identifier of the task card, a Boolean expression over step names that is TRUE while the output is on.
+4. "forcing" is optional: a separate graph (for example G0 for stop handling) may contain a step whose forcing order holds the graph named in "graph" in the listed situation.
+5. "owned" lists every timer or hold condition used in a guard (timer_done, ton_q, tof_q, settled) with the step whose activity it measures, the value it has at the instant that step becomes active ("neutral"), and its preset, written as the parameter name of the task card ("preset"). Conditions that measure the duration of a step are FALSE at that instant; the off-delay output tof_q is measured by the pause step and is TRUE at that instant.
+6. Output only the JSON object, without comments or explanations.

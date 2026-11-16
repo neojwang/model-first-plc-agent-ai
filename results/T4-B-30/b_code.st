@@ -1,0 +1,222 @@
+FUNCTION_BLOCK LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    ScaleValue : INT;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    CycleSeconds : REAL;
+END_VAR
+
+VAR_OUTPUT
+    FillDemand : INT;
+    DischargeDemand : INT;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+VAR CONSTANT
+    (* r encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    REGION_LOW : INT := 0;
+    REGION_MIDDLE : INT := 1;
+    REGION_HIGH : INT := 2;
+    h_span : REAL := 10.0;
+    t_h : TIME := T#10s;
+END_VAR
+
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    StateIndex : INT := 0;
+    h : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    e : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralTerm : REAL := 0.0;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    IntegralCandidate : REAL;
+    RawOutput : REAL;
+    CandidateOutput : REAL;
+    LimitedOutput : REAL;
+    FirstControlScan : BOOL := TRUE;
+    InTolerance : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h_target := 0.8 * h_span;
+h_sp := h_target;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+IF ScaleValue > 0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(ScaleValue);
+ELSE
+    (* Invalid scaling is treated as an overfill condition. *)
+    h := h_span;
+END_IF;
+
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := REGION_LOW;
+ELSIF h < h_max THEN
+    r := REGION_MIDDLE;
+ELSE
+    r := REGION_HIGH;
+END_IF;
+
+IF stop THEN
+    StateIndex := 0;
+ELSIF (StateIndex = 0) AND start THEN
+    StateIndex := 1;
+    IntegralTerm := 0.0;
+    FirstControlScan := TRUE;
+END_IF;
+
+InTolerance := (StateIndex = 1)
+               AND NOT stop
+               AND (r <> REGION_HIGH)
+               AND (ABS(e) <= eps);
+
+HoldTimer(IN := InTolerance, PT := t_h);
+settled := HoldTimer.Q;
+
+IF (StateIndex = 1) AND (settled OR (r = REGION_HIGH)) THEN
+    StateIndex := 0;
+END_IF;
+
+FillDemand := 0;
+DischargeDemand := 0;
+fill_valve := FALSE;
+discharge_valve := FALSE;
+
+CASE StateIndex OF
+    0:
+        IntegralTerm := 0.0;
+        PreviousError := e;
+        FirstControlScan := TRUE;
+
+    1:
+        (* PID output units are percent opening; error units are volts. *)
+        ProportionalTerm := Kp * e;
+        DerivativeTerm := 0.0;
+
+        IF NOT FirstControlScan AND (CycleSeconds > 0.0) THEN
+            DerivativeTerm := Kp * Td * (e - PreviousError)
+                              / CycleSeconds;
+        END_IF;
+
+        RawOutput := ProportionalTerm + IntegralTerm + DerivativeTerm;
+
+        (* Freeze integration whenever the current output is clamped.
+           Also reject an integral update that would cause clamping. *)
+        IF (RawOutput >= 0.0) AND (RawOutput <= 100.0)
+           AND (Ti > 0.0) AND (CycleSeconds > 0.0) THEN
+            IntegralCandidate := IntegralTerm
+                                 + Kp * e * CycleSeconds / Ti;
+            CandidateOutput := ProportionalTerm
+                               + IntegralCandidate + DerivativeTerm;
+
+            IF (CandidateOutput >= 0.0)
+               AND (CandidateOutput <= 100.0) THEN
+                IntegralTerm := IntegralCandidate;
+                RawOutput := CandidateOutput;
+            END_IF;
+        END_IF;
+
+        IF RawOutput < 0.0 THEN
+            LimitedOutput := 0.0;
+        ELSIF RawOutput > 100.0 THEN
+            LimitedOutput := 100.0;
+        ELSE
+            LimitedOutput := RawOutput;
+        END_IF;
+
+        fill_valve := TRUE;
+        discharge_valve := TRUE;
+
+        FillDemand := REAL_TO_INT(
+            LimitedOutput * INT_TO_REAL(ScaleValue) / 100.0);
+        DischargeDemand := REAL_TO_INT(
+            0.4 * INT_TO_REAL(ScaleValue));
+
+        PreviousError := e;
+        FirstControlScan := FALSE;
+
+ELSE
+    StateIndex := 0;
+    IntegralTerm := 0.0;
+    FirstControlScan := TRUE;
+END_CASE;
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+
+VAR
+    Controller : LevelControl;
+    (* Kp: percent/volt; Ti and Td: seconds. Tune for the plant. *)
+    Kp : REAL := 25.0;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    ScaleValue := FULL_SCALE,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleSeconds := 0.02
+);
+
+FillValve := Controller.FillDemand;
+DischargeValve := Controller.DischargeDemand;
+
+start := Controller.start;
+stop := Controller.stop;
+settled := Controller.settled;
+r := Controller.r;
+fill_valve := Controller.fill_valve;
+discharge_valve := Controller.discharge_valve;
+END_PROGRAM
+
+
+CONFIGURATION Config0
+RESOURCE Res0 ON PLC
+    TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+    PROGRAM MainInstance WITH ControlTask : Main;
+END_RESOURCE
+END_CONFIGURATION

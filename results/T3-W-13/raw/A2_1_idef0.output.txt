@@ -1,0 +1,32 @@
+The model below treats the **PLC control application** as the system boundary, rather than the physical tank. Command and sensor information are inputs; timing parameters and operating rules are controls; valve commands are outputs; and the PLC, timers, and communications interface are mechanisms.
+
+### IDEF0 functional model
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSH**; **LSHH** | **TON_Duration**; **TOF_Duration**; initial-step rule; filling/pause sequence rules; normal-level termination rule; high-high-level prohibition; stop-priority rule; discharge-valve inhibition | **fill_valve**; **discharge_valve** | OpenPLC Runtime; PLC control program; TON and TOF function blocks; Modbus TCP interface; Factory I/O digital tank and mapped I/O |
+| **A1** | **Determine the active operating step** | **start**; **stop**; **LSH**; **ton_q**; **tof_q**; retained operating-step state | Initial state: step 0; start transition rule; filling-to-pause rule; pause-to-filling rule; level-termination rule; stop-priority rule; mutually exclusive step rule | Updated operating-step state; filling-step activity | PLC sequence logic; step-state memory; OpenPLC scan execution |
+| **A2** | **Time the filling phase** | Filling-step activity | **TON_Duration**; TON operating semantics | **ton_q** | TON function block; PLC time base |
+| **A3** | **Time the filling pause** | Filling-step activity | **TOF_Duration**; TOF operating semantics | **tof_q** | TOF function block; PLC time base |
+| **A4** | **Generate valve commands** | Filling-step activity; **stop** | Fill-valve activation rule; initial-step and pause-step output inhibition; stop-priority rule; discharge-valve inhibition | **fill_valve**; **discharge_valve** | PLC Boolean output logic; output image; Modbus TCP output mapping |
+| **A5** | **Check high-high-level compliance** | **LSHH** | High-high-level prohibition: the 2.7 m level must never be reached | High-high-level compliance status | PLC observation logic or simulation test monitor; Factory I/O level-switch indication |
+
+**Boundary-output qualification:** A5 makes the “LSHH must never be reached” requirement explicit as a verification function. If its compliance status is exposed outside the control application, **High-high-level compliance status** is also an A0 output. It is a diagnostic result, not an additional actuator command.
+
+### Meaning of the functional arrows and rules
+
+- **start** is the one-scan event associated with pressing `StartCommand`, not the continuously held button value. Its production requires edge detection on `%IX100.0`.
+- **stop**, **LSH**, and **LSHH** correspond to `%IX100.1`, `%IX100.2`, and `%IX100.3`, respectively.
+- **fill_valve** and **discharge_valve** correspond to `%QX100.0` and `%QX100.1`, respectively.
+- **Retained operating-step state** is internal feedback from A1. The states are **step 0**, **filling step**, and **pause step**.
+- A1 applies these sequence rules:
+  - Initially, step 0 is active.
+  - **start** initiates filling from step 0.
+  - In the filling step, **ton_q** with no **LSH** detection selects the pause step.
+  - In the pause step, **tof_q = FALSE** permits filling to resume.
+  - **LSH** terminates the active filling cycle and returns the sequence to step 0.
+  - **stop** has priority and selects step 0.
+- A2 uses `TON.IN := filling-step activity`. A3 uses `TOF.IN := filling-step activity`; consequently, **tof_q** remains TRUE during filling and for **TOF_Duration** after filling ends.
+- A4 commands **fill_valve** only during filling and never while **stop** is TRUE. **discharge_valve** is always FALSE.
+
+**Safety limitation:** The task specifies no separate **LSHH**-triggered transition or shutdown action, so none is invented here. Closing the fill valve at **LSH = 2.4 m** is the specified preventive action. Whether the liquid can nevertheless reach **LSHH = 2.7 m** depends on scan time, communications delay, valve response, and residual inflow; that prohibition therefore also requires plant-level verification.

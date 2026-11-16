@@ -1,0 +1,17 @@
+The model below treats the task as **controller behavior**: command and sensor signals enter the controller, and valve-command signals leave it. The A0 context function is decomposed into A1–A3. Signal values are modeled as inputs; operating rules and the time parameter are controls.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSHH** | **TimerDuration**; initial-step rule; start-triggered filling rule; elapsed-time or high-high termination rule; stop-priority rule; discharge-valve inhibition rule | **fill_valve**; **discharge_valve** | OpenPLC Runtime; PLC program and execution cycle; Modbus TCP connection; Factory I/O scene interface |
+| **A1** | **Manage the filling step** | **start**; **stop**; **LSHH**; **timer_done** from A2 | Initial step 0; transition from step 0 to the filling step on **start**; return to step 0 on **timer_done** or **LSHH**; overriding return to step 0 while **stop** is TRUE | **Filling-step status** to A2 and A3 | PLC sequence logic; step-state memory; OpenPLC Runtime |
+| **A2** | **Measure the filling interval** | **Filling-step status** from A1 | **TimerDuration**; timer initiation on entry to the filling step; timer reset outside the filling step | **timer_done** to A1 | PLC timer instance; runtime time base |
+| **A3** | **Generate valve commands** | **Filling-step status** from A1; **stop** | Fill-valve activation only during the filling step; all-output inhibition while **stop** is TRUE; discharge-valve inhibition in every step | **fill_valve**; **discharge_valve** | PLC output logic; mapped output image; Modbus TCP driver |
+
+### Interpretation and boundary notes
+
+- **start** is the supplied one-scan press event, not a continuously held start level. **stop** is level-sensitive and has priority over starting or continuing filling.
+- **timer_done** is an internal arrow between A2 and A1, not an external input to A0.
+- **Filling-step status** is an internal noun-phrase arrow indicating whether the controller is in step 0 or the filling step. Step 0 yields **fill_valve = FALSE** and **discharge_valve = FALSE**.
+- **LSH** is available at the interface but has **no functional role in the stated requirements**. In particular, detecting the 2.4 m target level does not terminate this timer-based filling task. It is therefore not connected to a function in this model.
+- The output mappings are **fill_valve → %QX100.0** and **discharge_valve → %QX100.1**. The latter remains FALSE throughout the task.
+- The tank and capacitive switches belong to the controlled environment; the model’s outputs are valve commands, not physical liquid flow or tank level.

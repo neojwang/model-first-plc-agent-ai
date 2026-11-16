@@ -1,0 +1,206 @@
+FUNCTION_BLOCK LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    ScaleValue : INT;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+END_VAR
+
+VAR_OUTPUT
+    FillDemand : INT;
+    DischargeDemand : INT;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+VAR CONSTANT
+    LOW : INT := 0;
+    HIGH : INT := 2;
+    h_span : REAL := 10.0;
+    h_target : REAL := 8.0;
+    h_sp : REAL := 8.0;
+    h_max : REAL := 9.0;
+    eps : REAL := 0.2;
+    t_h : TIME := T#10s;
+    SampleSeconds : REAL := 0.02;
+END_VAR
+
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    StateNumber : INT := 0;
+    h : REAL;
+    e : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralTerm : REAL := 0.0;
+    CandidateIntegral : REAL;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    CandidateOutput : REAL;
+    ControllerOutput : REAL;
+    ScaleReal : REAL;
+END_VAR
+
+(* This block is executed by the 20 ms task declared below.
+   PID output and integral state use percent-opening units.
+   Kp is percent/volt; Ti and Td are in seconds. *)
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+ScaleReal := INT_TO_REAL(ScaleValue);
+IF ScaleReal > 0.0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / ScaleReal;
+ELSE
+    h := 0.0;
+END_IF;
+
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := LOW;
+ELSIF h < h_max THEN
+    r := 1; (* MID region; MID is a standard function name. *)
+ELSE
+    r := HIGH;
+END_IF;
+
+FillDemand := 0;
+DischargeDemand := 0;
+fill_valve := FALSE;
+discharge_valve := FALSE;
+
+IF stop THEN
+    StateNumber := 0;
+    IntegralTerm := 0.0;
+    PreviousError := e;
+END_IF;
+
+(* Calling the timer before the state transition ensures that
+   every idle scan resets it, including a new start scan. *)
+HoldTimer(
+    IN := (StateNumber = 1) AND NOT stop AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+IF NOT stop THEN
+    CASE StateNumber OF
+        0:
+            IntegralTerm := 0.0;
+            PreviousError := e;
+            IF start THEN
+                StateNumber := 1;
+            END_IF;
+
+        1:
+            IF settled OR (r = HIGH) THEN
+                StateNumber := 0;
+                IntegralTerm := 0.0;
+                PreviousError := e;
+            ELSE
+                fill_valve := TRUE;
+                discharge_valve := TRUE;
+
+                ProportionalTerm := Kp * e;
+
+                DerivativeTerm := 0.0;
+                IF Td > 0.0 THEN
+                    DerivativeTerm :=
+                        Kp * Td * (e - PreviousError) / SampleSeconds;
+                END_IF;
+
+                CandidateIntegral := IntegralTerm;
+                IF Ti > 0.0 THEN
+                    CandidateIntegral :=
+                        IntegralTerm + Kp * e * SampleSeconds / Ti;
+                ELSE
+                    IntegralTerm := 0.0;
+                    CandidateIntegral := 0.0;
+                END_IF;
+
+                CandidateOutput :=
+                    ProportionalTerm + CandidateIntegral + DerivativeTerm;
+
+                (* Suspend integration whenever the proposed output
+                   would require clamping. *)
+                IF (CandidateOutput >= 0.0) AND
+                   (CandidateOutput <= 100.0) THEN
+                    IntegralTerm := CandidateIntegral;
+                END_IF;
+
+                ControllerOutput :=
+                    ProportionalTerm + IntegralTerm + DerivativeTerm;
+
+                IF ControllerOutput > 100.0 THEN
+                    ControllerOutput := 100.0;
+                ELSIF ControllerOutput < 0.0 THEN
+                    ControllerOutput := 0.0;
+                END_IF;
+
+                IF ScaleValue > 0 THEN
+                    FillDemand :=
+                        REAL_TO_INT(ControllerOutput * ScaleReal / 100.0);
+                    DischargeDemand := REAL_TO_INT(0.4 * ScaleReal);
+                END_IF;
+
+                PreviousError := e;
+            END_IF;
+
+    ELSE
+        StateNumber := 0;
+        IntegralTerm := 0.0;
+        PreviousError := e;
+    END_CASE;
+END_IF;
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+
+VAR
+    Controller : LevelControl;
+    Kp : REAL := 20.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+END_VAR
+
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    ScaleValue := FULL_SCALE,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td
+);
+
+FillValve := Controller.FillDemand;
+DischargeValve := Controller.DischargeDemand;
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

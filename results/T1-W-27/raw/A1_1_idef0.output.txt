@@ -1,0 +1,59 @@
+## Scope and control policy
+
+The model covers **generation of the conveyor command**, not the conveyor’s physical transport dynamics.
+
+- `sensor_a` and `sensor_b` are Boolean receptivities.
+- `conveyor` is the Boolean output command.
+- A bistable block retains the command after the box leaves sensor A.
+- **Priority assumption:** if both sensors are TRUE, stopping takes priority. A reset-dominant IEC 61131-3 **RS** block therefore satisfies the requirement that the box remain at sensor B.
+- **Initialization assumption:** the retained conveyor command is FALSE at startup.
+
+In IDEF0 notation, the context diagram is **A-0**, containing function **A0**. Its decomposition is diagram **A0**, containing **A1–A3**.
+
+## A-0 context: A0
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control conveyor transport from A to B | `sensor_a`; `sensor_b` | Start rule; Stop rule; Stop-priority policy; Startup-state policy; IEC 61131-3 bistable requirement; I/O mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O scene |
+
+### Context arrow definitions
+
+| Arrow | Meaning |
+|---|---|
+| `sensor_a` | Box-presence indication at sensor A; BOOL at `%IX100.0` |
+| `sensor_b` | Box-presence indication at sensor B; BOOL at `%IX100.1` |
+| `conveyor` | Conveyor run command; BOOL at `%QX100.0` |
+| Start rule | Conveyor start upon detection at sensor A |
+| Stop rule | Conveyor stop upon detection at sensor B |
+| Stop-priority policy | Stop precedence during simultaneous sensor detection |
+| Startup-state policy | Initial stopped state |
+| IEC 61131-3 bistable requirement | Command retention by an SR or RS function block; RS selected for reset dominance |
+| I/O mapping | Association of scene tags with the specified OpenPLC addresses |
+
+## A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Determine start request | `sensor_a` | Start rule; I/O mapping | Start request | OpenPLC Runtime; Modbus TCP input interface; Factory I/O sensor A |
+| A2 | Determine stop request | `sensor_b` | Stop rule; I/O mapping | Stop request | OpenPLC Runtime; Modbus TCP input interface; Factory I/O sensor B |
+| A3 | Retain and issue conveyor command | Start request; Stop request | Stop-priority policy; Startup-state policy; IEC 61131-3 bistable requirement; I/O mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP output interface; Factory I/O conveyor drive |
+
+### Internal arrow definitions and connections
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| Start request | A1 | A3 input | Set demand while `sensor_a` is TRUE |
+| Stop request | A2 | A3 input | Reset demand while `sensor_b` is TRUE |
+
+The boundary arrows `sensor_a` and `sensor_b` enter A1 and A2 respectively. A3 produces the boundary output `conveyor`. The RS block’s retained state is internal to the A3 mechanism, rather than an additional external signal.
+
+## Behavioral interpretation
+
+| Start request | Stop request | Resulting `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous command retained |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE |
+
+Thus, detection at A starts transport, loss of detection at A does not stop it, and detection at B resets the command and stops transport. No additional receptivity or physical output identifiers are introduced.

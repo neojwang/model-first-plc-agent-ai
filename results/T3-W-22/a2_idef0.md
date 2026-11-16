@@ -1,0 +1,17 @@
+The model below covers the **controller**, not the physical transfer of liquid. Accordingly, its boundary inputs are command and sensor signals, and its outputs are valve commands. **A0** is the context function; **A1–A4** are its child functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSH; LSHH | TON_Duration; TOF_Duration; initial-step requirement; filling/pause sequence rules; stop priority; LSH termination rule; LSHH avoidance requirement; discharge-valve prohibition | fill_valve; discharge_valve | OpenPLC Runtime; cyclic PLC program; Modbus TCP connection; Factory I/O digital tank, level switches, and valves |
+| **A1** | **Manage operating steps** | start; stop; LSH; LSHH; ton_q; tof_q | Initial state: step 0; start initiates filling from step 0; ton_q AND NOT LSH causes filling-to-pause transition; NOT tof_q causes pause-to-filling transition; LSH terminates the active cycle and returns it to step 0; stop forces step 0 from every step; LSHH avoidance requirement | Step-0 activity; filling-step activity; pause-step activity | PLC sequence logic; step-state memory |
+| **A2** | **Time filling activity** | Filling-step activity | TON_Duration; TON semantics: IN equals filling-step activity, Q becomes TRUE after continuous activity for the preset duration, and resets when activity becomes FALSE | ton_q | TON timer instance; PLC time base |
+| **A3** | **Time filling interruption** | Filling-step activity | TOF_Duration; TOF semantics: IN equals filling-step activity, Q is TRUE while activity is TRUE and remains TRUE for the preset duration after activity becomes FALSE | tof_q | TOF timer instance; PLC time base |
+| **A4** | **Generate valve commands** | Step-0 activity; filling-step activity; pause-step activity | stop override; fill_valve TRUE only during filling; fill_valve FALSE in step 0 and pause; discharge_valve always FALSE | fill_valve; discharge_valve | PLC output logic; output image; Modbus output mapping |
+
+**Interface and interpretation notes**
+
+- **start** is the one-scan rising-edge event derived from `StartCommand` at `%IX100.0`, not its maintained level. **stop**, **LSH**, and **LSHH** correspond to `%IX100.1`, `%IX100.2`, and `%IX100.3`.
+- **fill_valve** maps to `%QX100.0`; **discharge_valve** maps to `%QX100.1`.
+- The filling-step activity is the shared internal arrow from **A1** to **A2**, **A3**, and **A4**. The timer feedback arrows **ton_q** and **tof_q** return to **A1**.
+- **stop has overriding priority**: it forces step 0 and both valve commands FALSE.
+- **LSHH must never be reached** is a safety constraint, not a specified transition receptivity. The task specifies normal termination at **LSH** but does not prescribe an additional **LSHH** trip action. Thus, this model does not invent one; actual avoidance of LSHH also depends on plant dynamics and valve-closing response.

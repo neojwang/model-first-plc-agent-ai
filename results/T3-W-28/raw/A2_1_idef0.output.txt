@@ -1,0 +1,35 @@
+The model below takes the **PLC control application** as its boundary. Thus, its inputs are command and feedback signals, and its outputs are valve-command signals—not physical liquid flows. **A0** is the context function; **A1–A3** are its child functions.
+
+Signal identifiers use the required vocabulary. The other arrow names are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TON_Duration`; `TOF_Duration`; initial-step requirement; filling-and-pause sequence rules; stop-priority requirement; high-high-level avoidance requirement; discharge-valve prohibition; I/O address mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC control program; TON and TOF function blocks; Modbus TCP connection; Factory I/O tank scene |
+| **A1** | **Determine the active sequence step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step requirement; sequence-transition rules; stop-priority requirement; high-high-level avoidance requirement | Sequence state; filling-step activity | PLC sequence logic; sequence-state memory; OpenPLC scan execution |
+| **A2** | **Generate filling and pause timing signals** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON timing semantics; TOF timing semantics | `ton_q`; `tof_q` | TON function block; TOF function block; PLC time base; timer-instance memory |
+| **A3** | **Issue valve commands** | Sequence state; `stop` | Filling-step output rule; initial-step and pause-step output rules; stop-priority requirement; discharge-valve prohibition; I/O address mapping | `fill_valve`; `discharge_valve` | PLC output logic; OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+### Meaning of the principal controls
+
+- **Sequence-transition rules — A1**
+  - The initial sequence state is **step 0**.
+  - In step 0, `start` selects the **filling step**. Here, `start` is the specified one-scan press event, not a continuously held button level.
+  - During filling, `LSH` returns the sequence to step 0.
+  - During filling, `ton_q` together with **NOT `LSH`** selects the **pause step**.
+  - During the pause, **NOT `tof_q`** resumes filling, provided the level-completion condition does not require step 0.
+  - `stop` overrides normal operation and returns the sequence to step 0.
+
+- **Timer semantics — A2**
+  - Both timers receive **filling-step activity** as their `IN`.
+  - TON asserts `ton_q` after continuous filling-step activity for `TON_Duration`; leaving filling resets TON.
+  - TOF asserts `tof_q` while filling is active and retains it for `TOF_Duration` after filling ends.
+
+- **Output rules — A3**
+  - `fill_valve` is TRUE only in the filling step, with `stop` FALSE.
+  - Step 0 and the pause step command `fill_valve` FALSE.
+  - `discharge_valve` is always FALSE.
+  - `stop` forces both outputs FALSE.
+
+**IDEF0 interpretation:** A1’s sequence state feeds A3, while its filling-step activity feeds A2. A2 returns `ton_q` and `tof_q` to A1. These arrows express functional dependencies, not a prescribed PLC execution order.
+
+**Safety limitation:** The task requires that `LSHH` never be reached, but specifies no separate `LSHH` transition or emergency response. Accordingly, this model retains `LSHH` as boundary feedback and high-high-level avoidance as a control constraint; it does not invent an additional shutdown rule. Whether closure at `LSH` prevents reaching `LSHH` requires validation against the plant dynamics and scan/communication delays.

@@ -1,0 +1,113 @@
+FUNCTION_BLOCK TankRuntime
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TON_Duration : TIME;
+    TOF_Duration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    state_id : INT := 0;
+    filling_active : BOOL;
+    ton_q : BOOL;
+    tof_q : BOOL;
+    fill_timer : TON;
+    pause_timer : TOF;
+END_VAR
+
+(* Stop and either upper level switch have priority over filling. *)
+IF stop OR LSH OR LSHH THEN
+    state_id := 0;
+ELSE
+    CASE state_id OF
+        0:
+            IF start THEN
+                state_id := 1;
+            END_IF;
+
+        1:
+            (* Filling ends when the on-delay timer has elapsed. *)
+            IF ton_q THEN
+                state_id := 2;
+            END_IF;
+
+        2:
+            (* Resume after the off-delay timer has expired. *)
+            IF NOT tof_q THEN
+                state_id := 1;
+            END_IF;
+
+    ELSE
+        state_id := 0;
+    END_CASE;
+END_IF;
+
+filling_active := (state_id = 1);
+
+fill_timer(
+    IN := filling_active,
+    PT := TON_Duration
+);
+ton_q := fill_timer.Q;
+
+pause_timer(
+    IN := filling_active,
+    PT := TOF_Duration
+);
+tof_q := pause_timer.Q;
+
+fill_valve := filling_active AND NOT stop AND NOT LSH AND NOT LSHH;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Adjustable duration parameters; initial defaults are five seconds. *)
+    TON_Duration : TIME := T#5s;
+    TOF_Duration : TIME := T#5s;
+
+    start : BOOL;
+    stop : BOOL;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+
+    start_edge : R_TRIG;
+    tank_control : TankRuntime;
+END_VAR
+
+start_edge(CLK := StartCommand);
+start := start_edge.Q;
+stop := StopCommand;
+
+tank_control(
+    start := start,
+    stop := stop,
+    LSH := LSH,
+    LSHH := LSHH,
+    TON_Duration := TON_Duration,
+    TOF_Duration := TOF_Duration
+);
+
+fill_valve := tank_control.fill_valve;
+discharge_valve := tank_control.discharge_valve;
+
+FillValve := fill_valve;
+DischargeValve := discharge_valve;
+
+END_PROGRAM

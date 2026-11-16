@@ -1,0 +1,33 @@
+The model below treats the controller as the system boundary; the simulated tank is the external plant. **A0** denotes the context function as requested, and **A1–A4** its child functions. In strict FIPS 183 diagram notation, the context diagram is **A-0**, containing function box **A0**.
+
+The required identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve` are preserved. The last two are Boolean action indicators, distinct from the analog valve commands.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | Start-command signal (`StartCommand`, `%IX100.0`); stop-command signal (`StopCommand`, `%IX100.1`); level-meter reading (`LevelMeter`, `%IW100`) | Initial-step and operating-sequence rules; stop priority; set point \(h_{sp}=h_{target}=0.8h_{span}\); overfill limit \(h_{max}=0.9h_{span}\); tolerance \(\varepsilon=0.02h_{span}\); hold time \(t_h=10\,s\); PID gains \(K_p,T_i,T_d\); PID saturation and integration-suspension rules; discharge opening of 40%; analog scaling (`FULL_SCALE = 1000`, driver Scale = 100) | Fill-valve command (`FillValve`, `%QW100`); discharge-valve command (`DischargeValve`, `%QW101`); action indicators `fill_valve` and `discharge_valve` | OpenPLC Runtime; PLC program and scan execution; Modbus TCP interface; Factory I/O tag mapping |
+| **A1** | **Interpret commands and assess level** | Start-command signal; stop-command signal; level-meter reading | Analog scaling and measuring span; \(h_{target}\), \(h_{max}\), \(\varepsilon\), \(t_h\); start-event definition; level-region definitions; regulation-state feedback for qualification timing | `start`; `stop`; measured level \(h\); level error \(e=h_{sp}-h\); `r`; `settled` | Input acquisition and scaling logic; rising-edge detector; comparison logic; continuous-duration timer; PLC scan clock |
+| **A2** | **Select operating state** | `start`; `stop`; `settled`; `r` | Initial state = step 0; step-0 start rule; regulation-completion rule; overfill-termination rule; overriding stop rule | Operating state: step 0 or regulation | State-transition logic; state memory; OpenPLC Runtime |
+| **A3** | **Compute bounded PID demand** | Level error \(e\) | Operating state; PID gains \(K_p,T_i,T_d\); output limits of 0–100%; integration suspension while the output is clamped; controller execution interval | Bounded fill-opening demand | PID calculation logic; integral and derivative state memory; saturation and integration-inhibit logic; PLC execution timing |
+| **A4** | **Issue valve commands** | Bounded fill-opening demand | Operating state; `stop` override; discharge opening of 40%; analog scaling; zero-output rule for step 0 | `fill_valve`; `discharge_valve`; fill-valve command (`FillValve`, `%QW100`); discharge-valve command (`DischargeValve`, `%QW101`) | Output-selection and scaling logic; output registers; Modbus TCP interface; Factory I/O tag mapping |
+
+### Arrow meanings and functional relationships
+
+- **A1 → A2:**  
+  `start` is TRUE only for the scan detecting a press of `StartCommand`; `stop` follows `StopCommand`.
+  \[
+  r=
+  \begin{cases}
+  \text{LOW}, & h<h_{target}\\
+  \text{MID}, & h_{target}\le h<h_{max}\\
+  \text{HIGH}, & h\ge h_{max}
+  \end{cases}
+  \]
+  `settled` becomes TRUE when \(|e|\le\varepsilon\) has remained continuously true for \(10\,s\) during regulation. A break in that condition restarts the qualification period; step 0 does not accumulate qualifying time.
+
+- **A2 → A1, A3, A4:** The operating state provides timing qualification, PID enablement, and valve-action selection. Step 0 is initial. A `start` event initiates regulation unless `stop` is TRUE. During regulation, `settled` or `r = HIGH` ends regulation. `stop` takes priority over all other conditions and selects step 0.
+
+- **A3 → A4:** The bounded fill-opening demand is the PID result limited to \(0\)–\(100\%\), with integration suspended while clamped.
+
+- **A4 → external plant:** During regulation, `fill_valve = TRUE` and `discharge_valve = TRUE`; the analog commands are the scaled PID demand and **400**, respectively. In step 0, or whenever `stop` is TRUE, both indicators are FALSE and both analog commands are **0**. Thus “step 0 drives no output” means no active valve action, not retention of previous output values.
+
+With register-unit level scaling, the set point, overfill limit, and tolerance are **800**, **900**, and **20**, respectively.

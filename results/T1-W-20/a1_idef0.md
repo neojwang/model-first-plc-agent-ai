@@ -1,0 +1,68 @@
+## IDEF0 model
+
+### Modeling decisions
+
+- **Scope:** Model the PLC control function, not the physical movement of the box. The conveyor and box are the controlled plant.
+- **Bistable selection:** Use an IEC 61131-3 **RS bistable**, with reset dominance. Thus, if `sensor_a` and `sensor_b` are both TRUE, `conveyor` is FALSE. This resolves the unspecified simultaneous-detection case in favor of stopping at B.
+- **Retention:** When both sensors are FALSE, the bistable retains its previous state. This keeps the conveyor running while the box travels between sensors.
+- **Initialization assumption:** The retained command is initially FALSE. This is an assumption to confirm before implementation; restart and retentive-memory behavior are not specified by the task.
+
+All function names below are verb phrases. Arrow names are noun phrases; the required signal identifiers are preserved exactly.
+
+## A0 context function
+
+**A0 — Control box transport from A to B**
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control box transport from A to B | `sensor_a`; `sensor_b` | Start-on-A requirement; Stop-at-B requirement; IEC 61131-3 bistable requirement; Reset-priority policy; Initial-off assumption; I/O address mapping | `conveyor` | OpenPLC Runtime; Modbus TCP interface; Factory I/O scene interface |
+
+The A0 boundary receives the two detection signals and produces the conveyor command. Control requirements and configuration constrain that transformation; runtime and communication facilities enable it.
+
+## A0 decomposition
+
+**Functional flow:**
+
+`A1 — Acquire sensor states` → `A2 — Maintain conveyor command` → `A3 — Publish conveyor command`
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Acquire sensor states | `sensor_a`; `sensor_b` | Input address mapping; Cyclic input-sampling convention | `sensor_a`; `sensor_b` | OpenPLC input process image; Modbus TCP interface; Factory I/O sensor interface |
+| A2 | Maintain conveyor command | `sensor_a`; `sensor_b` | Start-on-A requirement; Stop-at-B requirement; State-hold requirement; IEC 61131-3 bistable requirement; Reset-priority policy; Initial-off assumption | `conveyor` | IEC 61131-3 RS bistable instance; Bistable state memory; OpenPLC cyclic execution |
+| A3 | Publish conveyor command | `conveyor` | Output address mapping; Cyclic output-update convention | `conveyor` | OpenPLC output process image; Modbus TCP interface; Factory I/O conveyor interface |
+
+**Signal representation:** At A1, the identically named input and output arrows represent external sensor values and their sampled PLC values, respectively. At A3, they represent the internal command and its published actuator value. These are representation changes, not additional signal identifiers.
+
+### Arrow connections and boundary balance
+
+| Arrow name | Source | Destination | IDEF0 role at destination |
+|---|---|---|---|
+| `sensor_a` | A0 input boundary | A1 | Input |
+| `sensor_b` | A0 input boundary | A1 | Input |
+| `sensor_a` | A1 | A2 | Input |
+| `sensor_b` | A1 | A2 | Input |
+| `conveyor` | A2 | A3 | Input |
+| `conveyor` | A3 | A0 output boundary | Output |
+
+The parent controls and mechanisms are allocated to the relevant child functions in the ICOM table. The bistable’s retained state is internal to A2; it is not an additional A0 boundary signal.
+
+### I/O address mapping control
+
+| Arrow name | Scene tag | OpenPLC address | Meaning |
+|---|---|---|---|
+| `sensor_a` | SensorA | `%IX100.0` | TRUE while a box is detected at A |
+| `sensor_b` | SensorB | `%IX100.1` | TRUE while a box is detected at B |
+| `conveyor` | Conveyor | `%QX100.0` | TRUE runs the conveyor |
+
+Factory I/O is the **Modbus TCP slave**; OpenPLC exchanges the mapped I/O values through its Modbus TCP interface.
+
+### Behavioral constraint on A2
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` |
+|---|---|---|
+| FALSE | FALSE | Previous state |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE |
+
+This defines the required set/reset behavior without prescribing PLC code.

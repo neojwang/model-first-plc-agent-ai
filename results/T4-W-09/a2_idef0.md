@@ -1,0 +1,38 @@
+**Scope:** A0 represents the OpenPLC control application, with the Factory I/O tank outside its boundary. Raw command signals and the level measurement enter the application; analog valve commands leave it. The logical outputs `fill_valve` and `discharge_valve` are internal activity indications, distinct from the physical analog outputs `FillValve` and `DischargeValve`.
+
+In the table, **inputs** are transformed data, **controls** govern execution, **outputs** are produced results, and **mechanisms** are the resources performing the functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control the tank level** | StartCommand signal, `%IX100.0`; StopCommand signal, `%IX100.1`; LevelMeter reading, `%IW100` | I/O mapping; `FULL_SCALE = 1000`; measuring span `h_span`; `h_sp = h_target = 0.8 h_span`; `h_max = 0.9 h_span`; `eps = 0.02 h_span`; `t_h = 10 s`; PID gains `Kp`, `Ti`, `Td`; initial-step, sequencing, stop-priority, saturation, and integration-suspension rules | FillValve command, `%QW100`; DischargeValve command, `%QW101` | OpenPLC Runtime; PLC application and scan execution; Modbus TCP connection; Factory I/O driver |
+| **A1** | **Interpret commands and measure level** | StartCommand signal; StopCommand signal; LevelMeter reading | I/O mapping; `FULL_SCALE`; `h_span`; rising-edge definition of `start`; level-region thresholds `h_target` and `h_max` | `start`; `stop`; measured level `h`; level region `r` | PLC input image; rising-edge detector and previous-scan memory; scaling and comparison logic |
+| **A2** | **Evaluate the level error and settling condition** | Measured level `h` | Set point `h_sp`; tolerance `eps`; hold time `t_h`; `fill_valve` as the regulation-active indication; continuous-hold and timer-reset rules | Level error `e`; `settled` | PLC arithmetic; absolute-value comparison; elapsed-time timer |
+| **A3** | **Sequence level regulation** | — | `start`; `stop`; `settled`; `r`; initial step 0; transition rules and stop priority | `fill_valve`; `discharge_valve` | PLC sequence logic; retained sequence-state memory |
+| **A4** | **Calculate the constrained PID command** | Level error `e` | `fill_valve`; `Kp`, `Ti`, `Td`; scan time; output limits of 0–100%; rule suspending integration while the output is clamped | Clamped PID opening command | PLC PID implementation; integral and derivative state memory; saturation and integration-inhibition logic |
+| **A5** | **Apply analog valve commands** | Clamped PID opening command | `fill_valve`; `discharge_valve`; `stop`; `FULL_SCALE`; fixed discharge opening of 40%; zero-output rule outside regulation; output-address mapping | FillValve command, `%QW100`; DischargeValve command, `%QW101` | PLC scaling and output-selection logic; PLC output image; Modbus TCP connection; Factory I/O driver |
+
+### Functional definitions and interface rules
+
+- **A1 — Command and measurement interpretation**
+  - `start` is TRUE only for the scan detecting a rising edge of StartCommand.
+  - `stop` follows StopCommand.
+  - The measurement conversion is  
+    `h = LevelMeter × h_span / FULL_SCALE`.
+  - `r = LOW` for `h < h_target`; `r = MID` for `h_target <= h < h_max`; `r = HIGH` for `h >= h_max`.
+
+- **A2 — Settling evaluation**
+  - `e = h_sp - h`.
+  - `settled` becomes TRUE when `|e| <= eps` has remained continuously true for `t_h` during regulation.
+  - The hold timer resets when the error leaves the tolerance band or regulation is inactive.
+
+- **A3 — Sequence control**
+  - Initially, step 0 is active, with `fill_valve = FALSE` and `discharge_valve = FALSE`.
+  - `start` initiates regulation from step 0, subject to the stop and termination conditions.
+  - During regulation, both logical outputs are TRUE.
+  - `settled` or `r = HIGH` ends regulation and returns the sequence to step 0.
+  - `stop` has priority in every step and forces step 0. A new `start` does not override a simultaneous stop or termination condition.
+
+- **A4–A5 — Valve control**
+  - While `fill_valve` is TRUE, the PID command is clamped to 0–100%, with integration suspended while clamped; the resulting command is scaled to `0…1000` for FillValve.
+  - While `discharge_valve` is TRUE, DischargeValve is `400`, corresponding to 40% opening.
+  - Otherwise, and whenever `stop` is TRUE, both analog commands are `0`. Thus step 0 drives no valve opening.

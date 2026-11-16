@@ -1,0 +1,95 @@
+## A0 context model — Control timed tank filling
+
+**Boundary:** The model covers PLC sequencing, TON/TOF timing, and valve commands. The tank, liquid flow, and level-switch locations belong to the controlled plant.
+
+**Modeling conventions**
+- Function names are verb phrases; arrow names are noun phrases, including the required signal identifiers.
+- `start` is the one-scan rising-edge event derived from StartCommand; `stop` is the current StopCommand value.
+- **Step-0 activity**, **filling-step activity**, and **pause-step activity** are internal state arrows. Exactly one is active.
+- TON_Duration and TOF_Duration are configuration controls, not process inputs.
+- As a conservative interpretation of “LSHH must never be reached,” an active `LSHH` inhibits filling and forces step 0. This protective behavior is an explicit modeling assumption; it does not establish that physical overshoot is impossible.
+
+### Context and decomposition ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | Initial-step requirement; sequence-transition rules; stop priority; level-limit requirements; TON_Duration; TOF_Duration; discharge-valve prohibition; I/O mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; input-edge detection memory; TON and TOF instances; Modbus TCP connection; Factory I/O tank, switches, and valves |
+| **A1** | **Determine operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step requirement; sequence-transition rules; stop priority; level-limit requirements | Step-0 activity; filling-step activity; pause-step activity | PLC sequence logic; operating-step memory; PLC scan execution |
+| **A2** | **Measure filling duration** | Filling-step activity | TON_Duration; TON behavior rules | `ton_q` | TON instance; PLC time base |
+| **A3** | **Measure filling interruption** | Filling-step activity | TOF_Duration; TOF behavior rules | `tof_q` | TOF instance; PLC time base |
+| **A4** | **Command tank valves** | Filling-step activity; `stop`; `LSH`; `LSHH` | Valve-command rules; stop priority; level-limit requirements; discharge-valve prohibition; output mapping | `fill_valve`; `discharge_valve` | PLC output logic; OpenPLC output image; Modbus TCP connection; Factory I/O valve interfaces |
+
+### Parent–child arrow connections
+
+These connections balance the A0 boundary and identify the internal arrows.
+
+| Arrow | Source | Destination |
+|---|---|---|
+| `start` | A0 input boundary | A1 |
+| `stop` | A0 input boundary | A1, A4 |
+| `LSH` | A0 input boundary | A1, A4 |
+| `LSHH` | A0 input boundary | A1, A4 |
+| Step-0 activity | A1 | Internal operating-step memory |
+| Filling-step activity | A1 | A2, A3, A4; internal operating-step memory |
+| Pause-step activity | A1 | Internal operating-step memory |
+| `ton_q` | A2 | A1 |
+| `tof_q` | A3 | A1 |
+| `fill_valve` | A4 | A0 output boundary |
+| `discharge_valve` | A4 | A0 output boundary |
+| TON_Duration | A0 control boundary | A2 |
+| TOF_Duration | A0 control boundary | A3 |
+
+The other controls and mechanisms listed for A0 are allocated to the relevant children as shown in the ICOM table. Timer feedback arrows represent cyclic PLC data dependencies, not a requirement to execute each function only once in table order.
+
+## Behavioral controls
+
+### A1 — Determine operating step
+
+The following rules define the sequence, in descending priority.
+
+| Priority | Applicable state | Condition | Result |
+|---|---|---|---|
+| 1 | Any state | `stop` | Step-0 activity |
+| 2 | Any state | `LSHH` | Step-0 activity; protective interpretation |
+| 3 | Any state | `LSH` | Step-0 activity |
+| 4 | Step 0 | `start` and not `stop` and not `LSH` and not `LSHH` | Filling-step activity |
+| 5 | Filling step | `ton_q` and not `LSH` | Pause-step activity |
+| 6 | Pause step | Not `tof_q` | Filling-step activity |
+| 7 | Any state | No applicable transition | Existing step activity |
+
+At initialization, step-0 activity is established. A `start` event outside step 0 does not change the sequence. Returning to step 0 requires a new `start` event before filling can restart.
+
+### A2 — Measure filling duration
+
+- TON input: **filling-step activity**.
+- TON preset: **TON_Duration**.
+- `ton_q` becomes TRUE after uninterrupted filling-step activity for TON_Duration.
+- Leaving the filling step resets TON, so each filling phase receives a fresh time limit.
+
+### A3 — Measure filling interruption
+
+- TOF input: **filling-step activity**.
+- TOF preset: **TOF_Duration**.
+- `tof_q` is TRUE while the filling step is active.
+- On leaving the filling step, `tof_q` remains TRUE for TOF_Duration, then becomes FALSE.
+- Only the pause step uses `tof_q` becoming FALSE to resume filling. TOF expiration cannot restart filling from step 0.
+
+### A4 — Command tank valves
+
+- `fill_valve` is TRUE only during filling-step activity, with `stop`, `LSH`, and `LSHH` all FALSE.
+- `fill_valve` is FALSE during step 0 and the pause step.
+- `discharge_valve` is always FALSE.
+- The output inhibits provide immediate command closure independently of the state-transition update.
+
+## Physical I/O allocation
+
+| Model arrow | Scene / runtime identifier | Address |
+|---|---|---|
+| `start` | Rising-edge event of StartCommand | `%IX100.0` |
+| `stop` | StopCommand | `%IX100.1` |
+| `LSH` | LSH, at 2.4 m | `%IX100.2` |
+| `LSHH` | LSHH, at 2.7 m | `%IX100.3` |
+| `fill_valve` | FillValve | `%QX100.0` |
+| `discharge_valve` | DischargeValve | `%QX100.1` |
+
+**Engineering constraint:** Preventing the liquid from physically reaching 2.7 m requires validation of the 0.3 m margin against flow rate, scan and communication delays, valve-closing time, and residual inflow. An `LSHH` trip closes the command after detection; it cannot by itself guarantee that LSHH is never reached.

@@ -1,0 +1,31 @@
+== baseline (st_code) ==
+file: T4-B-27/b_code.st  sha256: 638d213b9f2f274801da52845aa93b89e395f345581e8bb965ff4e099a8c08de
+task: T4; scene model v1 (2026-11-13); OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+preparation: configuration appended for PROGRAM Main
+   T4 (a): set Kp (line 9, REAL): (none) -> 5.0
+   T4 (a): set Kp (line 216, REAL): 20.0 -> 5.0
+   T4 (a): set Ti (line 10, REAL): (none) -> 40.0
+   T4 (a): set Ti (line 217, REAL): 5.0 -> 40.0
+   T4 (a): set Td (line 11, REAL): (none) -> 0.0
+   T4 (a): set Td (line 218, REAL): 0.0 -> 0.0
+T4 (a): FAIL - did not end within 900 s; highest level 0.246
+   T4 (b): set Kp (line 9, REAL): (none) -> 5.0
+   T4 (b): set Kp (line 216, REAL): 20.0 -> 5.0
+   T4 (b): set Ti (line 10, REAL): (none) -> 40.0
+   T4 (b): set Ti (line 217, REAL): 5.0 -> 40.0
+   T4 (b): set Td (line 11, REAL): (none) -> 0.0
+   T4 (b): set Td (line 218, REAL): 0.0 -> 0.0
+T4 (b): pass - both outputs 0 0 scan(s) after StopCommand; restart ok
+   T4 (c): set Kp (line 9, REAL): (none) -> 5.0
+   T4 (c): set Kp (line 216, REAL): 20.0 -> 5.0
+   T4 (c): set Ti (line 10, REAL): (none) -> 40.0
+   T4 (c): set Ti (line 217, REAL): 5.0 -> 40.0
+   T4 (c): set Td (line 11, REAL): (none) -> 0.0
+   T4 (c): set Td (line 218, REAL): 0.0 -> 0.0
+T4 (c): pass - valves closed within 1 s and kept closed
+sensitivity, inflow x0.8: 2/3 situations pass
+sensitivity, outflow independent of level: 2/3 situations pass
+sensitivity, registers truncated: 2/3 situations pass
+sensitivity, valve lag 2 s: 2/3 situations pass
+task interval of the configuration: 20 ms
+verdict: 0

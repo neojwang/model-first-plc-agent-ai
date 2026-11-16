@@ -1,0 +1,143 @@
+## A0 context and decomposition
+
+**A0 — Control tank level**
+
+Transform the operator commands and measured tank level into valve commands that regulate the level, detect completion or overfill, and stop safely.
+
+The model below uses **A0** as the context function and **A1–A5** as its children, as requested. In strict FIPS 183 diagram numbering, the single-box context diagram is **A-0**, containing function **A0**; its decomposition is diagram **A0**, containing **A1–A5**.
+
+### Arrow definitions
+
+The required identifiers are retained exactly. The logical outputs `fill_valve` and `discharge_valve` are operating permissions, not the analog valve registers.
+
+| Arrow noun phrase | Meaning |
+|---|---|
+| `StartCommand` | Raw start-button input at `%IX100.0`. |
+| `StopCommand` | Raw stop-button input at `%IX100.1`. |
+| `LevelMeter` | Raw level input at `%IW100`. |
+| `start` | Start-button rising-edge event, TRUE for one scan only. |
+| `stop` | Stop condition, equal to the current `StopCommand` value. |
+| Measured level `h` | Level expressed on the same scale as `h_span`. |
+| Level error `e` | Difference `h_sp − h`. |
+| `r` | Level region: `LOW`, `MID`, or `HIGH`, with the specified boundaries. |
+| `settled` | Completion condition indicating continuous residence within the tolerance band for `t_h`. |
+| Operating step | Current step: step 0, idle; or step 1, regulation. |
+| `fill_valve` | Logical output, TRUE while PID operation of the fill valve is enabled. |
+| `discharge_valve` | Logical output, TRUE while the discharge valve is held at 40%. |
+| Limited PID demand | Fill-valve demand constrained to 0–100%. |
+| `FillValve` | Analog fill-valve command at `%QW100`. |
+| `DischargeValve` | Analog discharge-valve command at `%QW101`. |
+
+## ICOM model
+
+Inputs are transformed by a function; controls govern its execution; outputs are its results; mechanisms are the resources that perform it.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | `StartCommand`; `StopCommand`; `LevelMeter` | I/O mapping and scale specification; `FULL_SCALE`; `h_span`; `h_sp = h_target`; `h_max`; `eps`; `t_h`; PID gains `Kp`, `Ti`, `Td`; scan timing specification; operating-step rules; stop-priority rule; valve-command limits | `FillValve`; `DischargeValve` | OpenPLC Runtime; Modbus TCP connection; Factory I/O analog Level Control scene; PLC scan scheduler and state storage |
+| **A1** | **Interpret commands and level** | `StartCommand`; `StopCommand`; `LevelMeter` | I/O mapping and scale specification; `FULL_SCALE`; `h_span`; `h_sp = h_target`; `h_max`; rising-edge detection rule | `start`; `stop`; measured level `h`; level error `e`; `r` | OpenPLC input image; Modbus TCP connection; edge-detection memory; arithmetic and comparison facilities |
+| **A2** | **Verify sustained level tolerance** | Level error `e` | `eps`; `t_h`; operating step; scan timing specification; timer-reset rule | `settled` | OpenPLC elapsed-time timer; timer state storage; PLC scan scheduler |
+| **A3** | **Select operating step** | — | `start`; `stop`; `settled`; `r`; initial-step rule; transition-priority rules | Operating step; `fill_valve`; `discharge_valve` | OpenPLC sequence logic; operating-step memory |
+| **A4** | **Calculate limited PID demand** | Level error `e` | `fill_valve`; PID gains `Kp`, `Ti`, `Td`; scan timing specification; 0–100% demand limits; integration-suspension rule; PID initialization policy | Limited PID demand | OpenPLC PID calculation facilities; integral and derivative state storage; PLC scan scheduler |
+| **A5** | **Issue analog valve commands** | Limited PID demand | `fill_valve`; `discharge_valve`; `FULL_SCALE`; 40% discharge-opening specification; I/O mapping and scale specification; zero-output rule; integer-conversion rule | `FillValve`; `DischargeValve` | OpenPLC output image; Modbus TCP connection; Factory I/O analog valve interfaces |
+
+The **PID initialization policy** and **integer-conversion rule** are implementation controls to be specified before coding; the task does not prescribe their exact forms.
+
+## Child-function connections
+
+These internal arrows connect the child functions; they are not additional external interfaces.
+
+| Source | Arrow noun phrase | Destination and ICOM role |
+|---|---|---|
+| A1 | `start`; `stop`; `r` | A3 controls |
+| A1 | Level error `e` | A2 input; A4 input |
+| A2 | `settled` | A3 control |
+| A3 | Operating step | A2 control |
+| A3 | `fill_valve` | A4 control; A5 control |
+| A3 | `discharge_valve` | A5 control |
+| A4 | Limited PID demand | A5 input |
+| A5 | `FillValve`; `DischargeValve` | A0 boundary outputs |
+
+Measured level `h` is an internal result of A1 used to derive `e` and `r`. Step, edge-detector, timer, and PID histories are retained internal state, not additional plant inputs.
+
+## Behavioral controls attached to the model
+
+### 1. Scaling and classification
+
+A1 applies:
+
+\[
+h=\frac{\text{LevelMeter}}{\text{FULL\_SCALE}}h_{\text{span}},
+\qquad e=h_{\text{sp}}-h
+\]
+
+With `FULL_SCALE = 1000`, the equivalent register-domain values are:
+
+- Target level: **800**
+- Overfill threshold: **900**
+- Tolerance: **±20**
+
+The required classification is:
+
+- `r = LOW` when \(h < h_{\text{target}}\)
+- `r = MID` when \(h_{\text{target}} \le h < h_{\max}\)
+- `r = HIGH` when \(h \ge h_{\max}\)
+
+### 2. Operating-step selection
+
+A3 applies the following priorities:
+
+1. **Stop priority:** whenever `stop` is TRUE, select step 0 and make both logical outputs FALSE.
+2. **Regulation termination:** during step 1, `settled` or `r = HIGH` selects step 0.
+3. **Start acceptance:** in step 0, `start` selects step 1 only when `stop` is FALSE and `r` is not `HIGH`.
+4. Otherwise, retain the operating step.
+
+The initial step is **step 0**.
+
+| Operating step | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| Step 0 — idle | FALSE | FALSE |
+| Step 1 — regulation | TRUE | TRUE |
+
+A start event at an already excessive level therefore produces no valve-opening command. A held start button cannot restart regulation after completion; a new `start` event is required.
+
+### 3. Tolerance timing
+
+A2 asserts `settled` only after:
+
+\[
+|e|\le eps
+\]
+
+has remained continuously true for **10 s during regulation**.
+
+The timer resets whenever the level leaves the tolerance band or the operating step is step 0. Thus, idle time does not count toward completion of a later regulation cycle.
+
+### 4. PID limiting
+
+While `fill_valve` is TRUE, A4 calculates the PID demand from `e`, limits it to **0–100%**, and **suspends integral accumulation while the output is clamped**.
+
+The final demand is evaluated with the current scan’s error before A5 issues the valve commands.
+
+### 5. Valve-command enforcement
+
+A5 enforces:
+
+\[
+\text{FillValve}=
+\begin{cases}
+\operatorname{INT}\!\left(\dfrac{\text{Limited PID demand}}{100}\,
+\text{FULL\_SCALE}\right), & \text{if fill\_valve}\\
+0, & \text{otherwise}
+\end{cases}
+\]
+
+\[
+\text{DischargeValve}=
+\begin{cases}
+0.4\,\text{FULL\_SCALE}=400, & \text{if discharge\_valve}\\
+0, & \text{otherwise}
+\end{cases}
+\]
+
+Step 0 has no active valve action; A5 explicitly writes both analog commands to zero rather than leaving previous commands latched. Stop and termination decisions must therefore take effect before the current scan’s output commands are committed.

@@ -1,0 +1,87 @@
+## A0 context — Control timed tank filling
+
+**Scope:** Control the customized Factory I/O tank using OpenPLC. Open the fill valve on a start event, terminate filling on elapsed time or high-high level, and give stop unconditional priority. Keep the discharge valve closed.
+
+The names `start`, `stop`, `LSH`, `LSHH`, `timer_done`, `fill_valve`, and `discharge_valve` are used exactly as specified. Internal arrows use descriptive noun phrases.
+
+### ICOM model
+
+In IDEF0, **inputs** are information transformed by a function; **controls** constrain its behavior; **outputs** are its results; and **mechanisms** are the resources that perform it. A dash means no separate arrow is needed.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start` | `stop`; `LSHH`; `TimerDuration`; Step-transition rules; Output-assignment rules | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O tank scene; Modbus TCP interface; PLC time base |
+| **A1** | **Determine the active step** | `start`; Previous-step status | `stop`; `LSHH`; `timer_done`; Step-transition rules | Active-step status | OpenPLC Runtime; Step-state memory |
+| **A2** | **Measure the filling interval** | Active-step status | `TimerDuration`; Timer-operation rules | `timer_done` | OpenPLC Runtime; PLC time base; Timer instance |
+| **A3** | **Assign the valve commands** | Active-step status | `stop`; Output-assignment rules | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Modbus TCP interface; Factory I/O valve actuators |
+
+**State feedback:** The **Active-step status** output of A1 is retained in **Step-state memory** and returns to A1 on the next scan as **Previous-step status**.
+
+**Unused interface signal:** `LSH` is available at the plant interface but has no role in the specified timer-based control. It therefore has no functional arrow in this decomposition. In particular, detection at 2.4 m does **not** terminate filling.
+
+## Child-function definitions
+
+### A1 — Determine the active step
+
+The **Step-transition rules** control arrow contains:
+
+| Priority | Condition | Resulting active step |
+|---|---|---|
+| Initialization | Controller initialization | Step 0 |
+| Highest | `stop` is TRUE | Step 0 |
+| Next | `LSHH` is TRUE | Step 0 |
+| Next | Filling step is active and `timer_done` is TRUE | Step 0 |
+| Next | Step 0 is active and `start` is TRUE | Filling step |
+| Otherwise | No applicable transition | Retain the current step |
+
+- `start` is the one-scan event associated with pressing StartCommand, not its continuously held level.
+- A start event occurring while filling is active does not restart the timer.
+- A start event coincident with `stop` or `LSHH` does not initiate filling.
+- After termination, another start event is required to initiate a new filling interval.
+
+### A2 — Measure the filling interval
+
+The **Timer-operation rules** control arrow contains:
+
+- Timing begins when the filling step becomes active.
+- The elapsed interval is compared with `TimerDuration`.
+- `timer_done` becomes TRUE when the filling interval has elapsed.
+- The timer is disabled and reset outside the filling step, so a later filling cycle receives a fresh interval.
+
+`timer_done` feeds back to A1 as a **control arrow**, not as an external plant input.
+
+### A3 — Assign the valve commands
+
+The **Output-assignment rules** control arrow contains:
+
+| Condition | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| `stop` is TRUE | FALSE | FALSE |
+| Step 0 is active | FALSE | FALSE |
+| Filling step is active and `stop` is FALSE | TRUE | FALSE |
+
+Thus, Step 0 drives no output, and `discharge_valve` remains FALSE throughout the task.
+
+## Arrow connections and interface mapping
+
+### Internal arrows
+
+| Arrow | Source | Destination |
+|---|---|---|
+| Active-step status | A1 output | A2 input; A3 input; Step-state memory |
+| Previous-step status | Step-state memory | A1 input |
+| `timer_done` | A2 output | A1 control |
+
+### Physical interface correspondence
+
+| Model name | Plant correspondence | Role |
+|---|---|---|
+| `start` | One-scan press event derived from StartCommand at `%IX100.0` | Filling request |
+| `stop` | StopCommand at `%IX100.1` | Unconditional stop control |
+| `LSH` | Level switch at `%IX100.2`, TRUE at liquid detection at 2.4 m | Available but unused |
+| `LSHH` | Level switch at `%IX100.3`, TRUE at liquid detection at 2.7 m | Overfill termination control |
+| `timer_done` | Internal completion indication from A2 | Timed termination control |
+| `fill_valve` | FillValve at `%QX100.0` | Fill-valve command |
+| `discharge_valve` | DischargeValve at `%QX100.1` | Permanently FALSE command |
+
+This is a functional decomposition, not an execution-order diagram. The implementation must preserve the stated priority so that stop, high-high detection, or timer completion closes the fill valve without an unintended extra filling scan.

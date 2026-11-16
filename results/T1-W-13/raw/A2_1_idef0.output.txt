@@ -1,0 +1,12 @@
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0 (context)** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-and-hold-at-B requirement; IEC 61131-3 bistable requirement; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 SR or RS function block; Modbus TCP connection; Factory I/O scene |
+| **A1** | **Acquire box detection states** | `sensor_a`; `sensor_b` | Input mapping: `sensor_a` at `%IX100.0`, `sensor_b` at `%IX100.1`; TRUE-as-detection convention | Sensor-state snapshot | OpenPLC input image; Modbus TCP connection; Factory I/O sensors |
+| **A2** | **Maintain conveyor run state** | Sensor-state snapshot | Set-on-`sensor_a` rule; reset-on-`sensor_b` rule; state-retention rule when neither sensor is active; selected bistable priority | Latched run state | IEC 61131-3 SR or RS function block; OpenPLC Runtime |
+| **A3** | **Apply conveyor command** | Latched run state | Output mapping: `conveyor` at `%QX100.0`; TRUE-as-run convention | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O conveyor actuator |
+
+**Model notes**
+
+- The child-function flow is **A1 → A2 → A3**. The bistable retains the run state after the box leaves A and resets it when the box reaches B.
+- The task does not explicitly specify priority when both sensors are TRUE. An **RS (reset-dominant)** block is the natural choice if stopping at B must take precedence; an SR block instead gives setting priority.
+- The box is not a material input to this *controller* model: box movement belongs to the plant, while the controller receives detection signals and produces `conveyor`.

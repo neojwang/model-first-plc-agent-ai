@@ -1,0 +1,22 @@
+**Scope:** the model describes the **controller’s timed-filling function**, not the physical movement of liquid. In IDEF0 terminology, the context diagram is **A-0**, containing function **A0**; its decomposition contains **A1–A3**.
+
+Arrow names below are noun phrases or the exact signal identifiers specified in the task.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial-step requirement; stop-priority requirement; timer-or-high-high termination requirement; discharge-inhibition requirement | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC control program; Modbus TCP interface and Factory I/O tag mapping |
+| **A1** | **Manage the filling sequence** | `start`; `stop`; `LSHH`; `timer_done` | Initial-step requirement; stop-priority requirement; filling-entry rule; filling-termination rule | Filling-step state | OpenPLC Runtime; sequence-state logic |
+| **A2** | **Measure the filling duration** | Filling-step state | `TimerDuration`; timer-start and reset rules | `timer_done` | OpenPLC Runtime; filling-step timer |
+| **A3** | **Generate valve commands** | Filling-step state; `stop` | Fill-valve actuation rule; stop-priority requirement; discharge-inhibition requirement | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Boolean output logic; Modbus TCP output mapping |
+
+### Meaning of the internal arrows and controls
+
+- **Filling-step state** identifies either **step 0**, initially selected, or the **filling step**.
+- **Filling-entry rule:** `start` requests entry into the filling step from step 0. It is the specified one-scan button-press event, not the maintained value of `StartCommand`.
+- **Stop-priority requirement:** `stop = TRUE` forces step 0 and both outputs FALSE, regardless of other conditions.
+- **Filling-termination rule:** `timer_done = TRUE` or `LSHH = TRUE` forces step 0. A termination condition must not be overridden by a simultaneous start request.
+- **Timer-start and reset rules:** entry into the filling step starts timing; leaving that step resets the timer for the next filling cycle.
+- **Fill-valve actuation rule:** `fill_valve` is TRUE only while the filling step is active and `stop` is FALSE.
+- **Discharge-inhibition requirement:** `discharge_valve` is always FALSE.
+
+**Signal coverage:** `LSH` is available at the target level but has **no specified role in this task’s control behavior**. It is therefore not modeled as a functional input arrow. In particular, it does not terminate filling; termination uses `timer_done` or `LSHH`. The external identifiers correspond to the supplied addresses: `start` derives from `StartCommand`, `stop` from `StopCommand`, and the two output identifiers map to `FillValve` and `DischargeValve`, respectively.

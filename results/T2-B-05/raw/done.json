@@ -1,0 +1,23 @@
+{
+ "run_id": "T2-B-05",
+ "condition": "baseline",
+ "task_id": "T2",
+ "calls": [
+  {
+   "step": "B_st",
+   "time_utc_start": "2026-11-15T12:38:20Z",
+   "time_utc_end": "2026-11-15T12:38:53Z",
+   "model_returned": "gpt-6.1-sol",
+   "status": "completed",
+   "incomplete_reason": null,
+   "cost_usd": 0.0
+  }
+ ],
+ "settings_sha256": "e17e5be85a7c89164e6752f643248e2087c655f70dafb31fabaebf3759218193",
+ "route": "chatgpt",
+ "dry_run": false,
+ "first_call_utc": "2026-11-15T12:38:20Z",
+ "models_returned": [
+  "gpt-6.1-sol"
+ ]
+}

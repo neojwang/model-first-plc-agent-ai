@@ -1,0 +1,42 @@
+FUNCTION_BLOCK TransferRuntime
+VAR_INPUT
+    sensor_a : BOOL;
+    sensor_b : BOOL;
+END_VAR
+VAR_OUTPUT
+    conveyor : BOOL := FALSE;
+END_VAR
+VAR
+    conveyor_latch : RS;
+END_VAR
+
+(* Q1 represents x1; NOT Q1 represents the initial step x0. *)
+conveyor_latch(
+    S := sensor_a AND NOT sensor_b,
+    R1 := sensor_b
+);
+
+conveyor := conveyor_latch.Q1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    SensorA AT %IX100.0 : BOOL;
+    SensorB AT %IX100.1 : BOOL;
+    Conveyor AT %QX100.0 : BOOL;
+END_VAR
+VAR
+    (* The RS instance initially has Q1 = FALSE, establishing x0. *)
+    runtime_logic : TransferRuntime;
+END_VAR
+
+runtime_logic(
+    sensor_a := SensorA,
+    sensor_b := SensorB
+);
+
+Conveyor := runtime_logic.conveyor;
+
+END_PROGRAM

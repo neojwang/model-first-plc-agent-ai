@@ -1,0 +1,52 @@
+## A0 context — Transport a box from A to B
+
+The function receives the detection states `sensor_a` and `sensor_b` and produces the conveyor command `conveyor`. A bistable block maintains the run command after the box leaves sensor A and resets it when the box reaches sensor B.
+
+**IDEF0 notation:** The context diagram is conventionally designated **A-0**, containing function **A0**. The **A0 decomposition** contains child functions **A1–A3** below. Inputs enter from the left, controls from above, outputs leave to the right, and mechanisms enter from below.
+
+**Priority decision:** Use a **reset-dominant RS block**. If both sensors are TRUE, stopping takes priority, consistent with keeping the box at sensor B. This resolves a simultaneous-input case not explicitly specified in the task.
+
+### ICOM model
+
+Every function name is a verb phrase; every listed arrow name is a noun phrase. The external signal identifiers are exactly `sensor_a`, `sensor_b`, and `conveyor`.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Transport a box from A to B** | `sensor_a`; `sensor_b` | Transport requirements; I/O address mapping; IEC 61131-3 bistable requirement; Reset-priority policy | `conveyor` | Factory I/O scene; Modbus TCP connection; OpenPLC Runtime; IEC 61131-3 RS instance |
+| **A1** | **Derive set and reset requests** | `sensor_a`; `sensor_b` | Transport requirements | Set request; Reset request | OpenPLC Runtime |
+| **A2** | **Maintain the conveyor command** | Set request; Reset request | IEC 61131-3 bistable requirement; Reset-priority policy | Latched conveyor command | OpenPLC Runtime; IEC 61131-3 RS instance |
+| **A3** | **Apply the conveyor command** | Latched conveyor command | I/O address mapping | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene |
+
+### Child-function connections
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| `sensor_a` | A0 input boundary | A1 input | Box detection at sensor A |
+| `sensor_b` | A0 input boundary | A1 input | Box detection at sensor B |
+| Set request | A1 output | A2 input | Set condition equal to `sensor_a` |
+| Reset request | A1 output | A2 input | Reset condition equal to `sensor_b` |
+| Latched conveyor command | A2 output | A3 input | Stored run/stop state |
+| `conveyor` | A3 output | A0 output boundary | Conveyor actuator command |
+
+The **Transport requirements** control is distributed to A1; the **IEC 61131-3 bistable requirement** and **Reset-priority policy** controls go to A2; the **I/O address mapping** control goes to A3 and governs the external signal bindings.
+
+### External signal bindings
+
+These are mapping annotations, not additional signal identifiers.
+
+| Model identifier | PLC address | Meaning |
+|---|---|---|
+| `sensor_a` | `%IX100.0` | TRUE while a box is detected at A |
+| `sensor_b` | `%IX100.1` | TRUE while a box is detected at B |
+| `conveyor` | `%QX100.0` | TRUE runs the conveyor |
+
+### Bistable behavior constraint
+
+| `sensor_a` | `sensor_b` | Resulting conveyor command |
+|---|---|---|
+| FALSE | FALSE | Previous command |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset priority |
+
+The RS instance supplies the state memory between PLC scans; no edge detection is required. Startup initialization and power-cycle retention are not specified by the task and remain implementation decisions.

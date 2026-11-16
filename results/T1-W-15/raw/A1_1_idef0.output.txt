@@ -1,0 +1,58 @@
+## IDEF0 model
+
+### A0 context function: **Control box transfer**
+
+**Boundary:** The PLC control logic receives the two sensor states and produces the conveyor command. The conveyor, sensors, and box are part of the external plant.
+
+**Priority decision:** Use a reset-dominant IEC 61131-3 **RS** bistable. If both sensors are TRUE, stopping takes precedence so that detection at sensor B prevents continued conveying. This resolves a simultaneous-input condition not explicitly specified in the task.
+
+All function names below are verb phrases; all arrow names are noun phrases.
+
+### ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer** | `sensor_a`; `sensor_b` | Start requirement; Stop requirement; Bistable requirement; Reset-priority policy; I/O mapping | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O slave device; IEC 61131-3 RS bistable |
+| **A1** | **Evaluate start demand** | `sensor_a` | Start requirement | Set request | OpenPLC Runtime |
+| **A2** | **Evaluate stop demand** | `sensor_b` | Stop requirement | Reset request | OpenPLC Runtime |
+| **A3** | **Maintain conveyor command** | Set request; Reset request | Bistable requirement; Reset-priority policy; I/O mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable; Modbus TCP connection; Factory I/O slave device |
+
+### Arrow definitions and connections
+
+| Arrow | Meaning | Source → destination |
+|---|---|---|
+| `sensor_a` | Box detection state at sensor A | A0 input boundary → A1 input |
+| `sensor_b` | Box detection state at sensor B | A0 input boundary → A2 input |
+| Set request | Start demand asserted while `sensor_a` is TRUE | A1 output → A3 input |
+| Reset request | Stop demand asserted while `sensor_b` is TRUE | A2 output → A3 input |
+| `conveyor` | Retained run command; TRUE runs the conveyor | A3 output → A0 output boundary |
+| Start requirement | Conveyor start on box detection at sensor A | A0 control boundary → A1 control |
+| Stop requirement | Conveyor stop on box detection at sensor B | A0 control boundary → A2 control |
+| Bistable requirement | Conveyor-command memory through an IEC 61131-3 bistable | A0 control boundary → A3 control |
+| Reset-priority policy | Stop precedence during simultaneous detection | A0 control boundary → A3 control |
+| I/O mapping | Association between logical signals and mapped process-image addresses | A0 control boundary → A3 control |
+
+The mechanisms listed for A0 are allocated to its children as shown in the ICOM table.
+
+### I/O mapping
+
+Use exactly these logical signal names when mapping the Factory I/O scene tags:
+
+| Signal | PLC address | Type | Meaning |
+|---|---|---|---|
+| `sensor_a` | `%IX100.0` | BOOL | TRUE while a box is detected at sensor A |
+| `sensor_b` | `%IX100.1` | BOOL | TRUE while a box is detected at sensor B |
+| `conveyor` | `%QX100.0` | BOOL | TRUE runs the conveyor |
+
+### Required state behavior
+
+| Set request | Reset request | Resulting `conveyor` state |
+|---|---|---|
+| FALSE | FALSE | Previous state |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset priority |
+
+This retained state keeps the conveyor running after the box leaves sensor A and keeps it stopped after detection at sensor B. The bistable’s previous state is **internal memory of A3**, not an additional external input.
+
+**Open implementation decision:** The task does not specify startup or restart initialization. Define that policy before coding; an initial `conveyor` state of FALSE is the recommended default. This initialization choice is separate from normal scan-to-scan bistable retention.

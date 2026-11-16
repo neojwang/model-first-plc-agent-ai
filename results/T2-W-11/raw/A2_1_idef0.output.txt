@@ -1,0 +1,22 @@
+The model below treats the **controller** as the system boundary. Accordingly, `fill_valve` and `discharge_valve` are command signals, not physical liquid flows. Consistent with IDEF0, signals that govern execution—such as `stop` and `LSHH`—are classified as **controls**, even though they are PLC input signals.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start` | `stop`; `LSHH`; `TimerDuration`; initial-step rule; filling-termination rule; valve-output rules | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; timer facility; Factory I/O Modbus TCP interface |
+| **A1** | **Manage the filling sequence** | `start` | `stop`; `LSHH`; `timer_done`; initial-step rule; transition rules | Filling-step state | OpenPLC Runtime; step-state memory |
+| **A2** | **Measure the filling interval** | Filling-step state | `TimerDuration`; timer activation and reset rules; elapsed-time reference | `timer_done` | OpenPLC timer facility |
+| **A3** | **Generate valve commands** | Filling-step state | `stop`; valve-output rules | `fill_valve`; `discharge_valve` | OpenPLC Boolean logic; output image; Factory I/O Modbus TCP interface |
+
+**Rules represented by the control arrows**
+
+- **Initial-step rule:** Initialize in step 0.
+- **Transition rules:**  
+  - `stop` has overriding priority and forces step 0.  
+  - In step 0, `start` requests the filling step. `start` is the specified one-scan press event, not a maintained button level.  
+  - In the filling step, `timer_done` or `LSHH` forces a return to step 0. An asserted `LSHH` must not permit a sustained filling command.
+- **Timer activation and reset rules:** Start timing on entry to the filling step; assert `timer_done` when `TimerDuration` has elapsed; reset the timer when the filling step is inactive.
+- **Valve-output rules:** `fill_valve` is TRUE only while the filling step is active and `stop` is FALSE. `discharge_valve` is always FALSE. Thus, step 0 drives neither output.
+
+**Child-function connections:** A1 supplies **Filling-step state** to A2 and A3; A2 returns `timer_done` to A1 as a control.
+
+**Unused scene signal:** `LSH` has no specified control role in this task. It is mapped in the scene but is not a functional arrow in this model; in particular, reaching the 2.4 m target does **not** terminate filling. The specified termination conditions are `timer_done`, `LSHH`, and the overriding `stop`.

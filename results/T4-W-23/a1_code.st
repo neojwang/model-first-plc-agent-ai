@@ -1,0 +1,208 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    StartSignal : BOOL;
+    StopSignal : BOOL;
+    LevelSample : INT;
+    FullScaleValue : INT;
+    h_span : REAL;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    CycleSeconds : REAL;
+    t_h : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    FillCommand : INT;
+    DischargeCommand : INT;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+
+    h : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    e : REAL;
+
+    IntegralTerm : REAL := 0.0;
+    CandidateIntegral : REAL;
+    PreviousError : REAL := 0.0;
+    DerivativeTerm : REAL;
+    RawDemand : REAL;
+    BoundedDemand : REAL;
+    ErrorHistoryValid : BOOL := FALSE;
+END_VAR
+
+StartEdge(CLK := StartSignal);
+start := StartEdge.Q;
+stop := StopSignal;
+
+h := INT_TO_REAL(LevelSample) * h_span
+     / INT_TO_REAL(FullScaleValue);
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+(* Qualification is enabled only in the regulation step.
+   At step activation the timer therefore remains reset. *)
+HoldTimer(
+    IN := x1 AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+(* Evaluate transitions from the current situation. *)
+IF x0 THEN
+    IF start AND NOT stop AND NOT (r = 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+ELSE
+    x0 := TRUE;
+    x1 := FALSE;
+END_IF;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+FillCommand := 0;
+DischargeCommand := 0;
+
+IF fill_valve THEN
+    (* PID output is expressed as a fraction of full valve opening.
+       Ti, Td and CycleSeconds are expressed in seconds. *)
+    DerivativeTerm := 0.0;
+    IF ErrorHistoryValid AND (CycleSeconds > 0.0) THEN
+        DerivativeTerm :=
+            Kp * Td * (e - PreviousError) / CycleSeconds;
+    END_IF;
+
+    CandidateIntegral := IntegralTerm;
+    IF (Ti > 0.0) AND (CycleSeconds > 0.0) THEN
+        CandidateIntegral :=
+            IntegralTerm + Kp * e * CycleSeconds / Ti;
+    END_IF;
+
+    RawDemand := Kp * e + CandidateIntegral + DerivativeTerm;
+
+    (* Suspend integral accumulation whenever the output is clamped. *)
+    IF RawDemand > 1.0 THEN
+        BoundedDemand := 1.0;
+    ELSIF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSE
+        BoundedDemand := RawDemand;
+        IntegralTerm := CandidateIntegral;
+    END_IF;
+
+    PreviousError := e;
+    ErrorHistoryValid := TRUE;
+
+    FillCommand :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(FullScaleValue));
+
+    IF FillCommand < 0 THEN
+        FillCommand := 0;
+    ELSIF FillCommand > FullScaleValue THEN
+        FillCommand := FullScaleValue;
+    END_IF;
+ELSE
+    IntegralTerm := 0.0;
+    PreviousError := e;
+    ErrorHistoryValid := FALSE;
+    BoundedDemand := 0.0;
+
+    (* Clear qualification immediately when regulation ends. *)
+    HoldTimer(IN := FALSE, PT := t_h);
+    settled := FALSE;
+END_IF;
+
+IF discharge_valve THEN
+    DischargeCommand :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(FullScaleValue));
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : LevelControlRuntime;
+
+    h_span : REAL := 10.0;
+    t_h : TIME := T#10s;
+
+    (* Commissioning defaults; tune for the simulated plant.
+       Kp uses valve-opening fraction per level unit. *)
+    Kp : REAL := 1.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+
+    (* Must match the configured task interval. *)
+    CycleSeconds : REAL := 0.02;
+END_VAR
+
+Controller(
+    StartSignal := StartCommand,
+    StopSignal := StopCommand,
+    LevelSample := LevelMeter,
+    FullScaleValue := FULL_SCALE,
+    h_span := h_span,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleSeconds := CycleSeconds,
+    t_h := t_h
+);
+
+FillValve := Controller.FillCommand;
+DischargeValve := Controller.DischargeCommand;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

@@ -1,0 +1,16 @@
+The model below describes the **PLC control function**, rather than the physical transfer of liquid. Command and sensor values are inputs to be evaluated; operating rules and the timer parameter are controls. **A0** is the context function, decomposed into **A1–A3**.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial-step rule; filling-transition rules; stop-priority rule; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC program and timer facility; Modbus TCP connection; Factory I/O digital tank scene and mapped I/O |
+| **A1** | **Determine the active step** | `start`; `stop`; `LSHH`; `timer_done`; previous active-step state | Initial state is step 0; `stop` forces step 0 from every state; `start` in step 0 selects the filling step; `timer_done` or `LSHH` in the filling step selects step 0; completion returns to step 0 rather than restarting immediately | Active-step state | PLC transition logic; step-state memory |
+| **A2** | **Measure the filling interval** | Active-step state | `TimerDuration`; timer starts on entry to the filling step; timer resets outside the filling step | `timer_done` | PLC timer facility |
+| **A3** | **Generate valve commands** | Active-step state; `stop` | `fill_valve` is TRUE only while the filling step is active and `stop` is FALSE; step 0 drives all outputs FALSE; `discharge_valve` remains FALSE | `fill_valve`; `discharge_valve` | PLC output logic; mapped output image; Modbus TCP output interface |
+
+**Arrow and execution notes**
+
+- `start` is the **one-scan press event**, not the sustained value of StartCommand. `stop` is the sustained stop condition.
+- `LSH` is intentionally **not a functional arrow** in this model: the task specifies the sensor but gives it no role in starting, timing, or stopping filling. It remains available as an unused mapped input.
+- The **active-step state** connects A1 to A2 and A3 and is retained as the **previous active-step state** for the next evaluation. `timer_done` connects A2 back to A1.
+- `stop` has highest priority. A1 evaluates the transitions before A3 generates the scan’s valve commands, so `stop`, `timer_done`, or `LSHH` closes `fill_valve` in the applicable scan.
+- The model introduces no additional `LSHH` start permissive or latched overfill alarm: the specified `LSHH` action is to terminate the filling step and return to step 0.

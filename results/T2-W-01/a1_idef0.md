@@ -1,0 +1,59 @@
+## A0 context: Control timed tank filling
+
+**Scope:** Control the digital tank’s fill valve using a start event, a filling timer, a stop signal, and the high-high level switch. Keep the discharge valve closed.
+
+The model uses two operating steps:
+
+- **Step 0 — Idle:** Both valve commands are FALSE; the filling timer is reset.
+- **Step 1 — Filling:** The fill valve is open and the filling timer is enabled, unless a termination condition applies.
+
+### ICOM model
+
+Each semicolon-separated item is an arrow name. Function names are verb phrases; arrow names are noun phrases or the required signal identifiers.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSHH | TimerDuration; Initial-step requirement; Stop-priority rule; Filling-termination rule; Discharge-inhibition rule | fill_valve; discharge_valve | OpenPLC Runtime; PLC task scheduler; Modbus TCP connection; Factory I/O tank scene |
+| **A1** | **Determine the operating step** | start; stop; LSHH; timer_done; Operating-step status | Initial-step requirement; Stop-priority rule; Filling-termination rule | Operating-step status | OpenPLC Runtime; Operating-step memory |
+| **A2** | **Measure the filling interval** | — | Operating-step status; TimerDuration; Timer-reset rule | timer_done | OpenPLC timer instance; PLC task time base |
+| **A3** | **Generate valve commands** | — | Operating-step status; Discharge-inhibition rule | fill_valve; discharge_valve | OpenPLC output logic; Modbus TCP output interface |
+
+**IDEF0 interpretation:** Inputs are evaluated to determine the operating step. The operating-step status constrains timer operation and valve-command generation, so it enters A2 and A3 as a **control**, not as a material input.
+
+## Child-function connections
+
+- **A1 → A1:** **Operating-step status** provides retained step feedback.
+- **A1 → A2:** **Operating-step status** enables or resets the timer.
+- **A2 → A1:** **timer_done** provides the filling-time termination condition.
+- **A1 → A3:** **Operating-step status** determines the valve commands.
+- **A3 → A0 boundary:** **fill_valve** and **discharge_valve** are the commanded outputs.
+
+The **Timer-reset rule** is a child-level refinement of the timed-filling behavior: the timer is reset whenever the operating step is Step 0.
+
+## Control rules
+
+1. **Initial-step requirement:** Initialize the operating-step status to Step 0.
+2. **Stop-priority rule:** Whenever **stop** is TRUE, select Step 0 regardless of any other condition.
+3. **Filling-termination rule:**
+   - In Step 0, **start** selects Step 1 only when **stop** and **LSHH** are FALSE.
+   - In Step 1, **timer_done** or **LSHH** selects Step 0, whichever occurs first.
+   - A **start** event during Step 1 does not restart the timer.
+4. **Timer-reset rule:** Enable timing only in Step 1; reset timing in Step 0.
+5. **Discharge-inhibition rule:** **discharge_valve** is always FALSE.
+6. **Valve-command rule:** **fill_valve** is TRUE only for Step 1. Apply termination decisions before generating the scan’s output commands.
+
+The LSHH start inhibition prevents a start event from briefly opening the valve while the overfill switch is already active.
+
+## Signal bindings and unused measurement
+
+| Model identifier | Plant binding or meaning |
+|---|---|
+| **start** | One-scan rising-edge event derived from StartCommand, `%IX100.0`; holding the button does not cause automatic restart |
+| **stop** | StopCommand, `%IX100.1` |
+| **LSH** | Target-level switch at 2.4 m, `%IX100.2`; available but **unused by this task’s control logic** |
+| **LSHH** | Overfill-limit switch at 2.7 m, `%IX100.3` |
+| **timer_done** | Internal indication that the filling timer has elapsed |
+| **fill_valve** | FillValve, `%QX100.0` |
+| **discharge_valve** | DischargeValve, `%QX100.1` |
+
+**LSH is intentionally not an A0 functional input arrow:** the specified stopping conditions are elapsed time, LSHH detection, and stop—not attainment of the 2.4 m target level.

@@ -1,0 +1,26 @@
+The model below uses **A0** for the context function and **A1–A3** for its decomposition. Inputs are information processed by a function; controls are conditions or rules governing that processing; mechanisms are the resources performing the function.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TON_Duration`; `TOF_Duration`; initial-step requirement; timed filling-and-pause rules; normal completion at `LSH`; prohibition on reaching `LSHH`; stop-priority requirement; discharge-valve closure requirement | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O digital-tank plant; Modbus TCP connection and I/O mapping; command buttons, level switches, and valve actuators |
+| **A1** | **Manage filling-cycle steps** | `start`; `stop`; `LSH` | `ton_q`; `tof_q`; `LSHH` safety constraint; initial step 0; filling-step and pause-step transition rules; stop priority | Filling-step activity; cycle-step state | OpenPLC cyclic execution; step-state memory |
+| **A2** | **Generate filling and pause timing signals** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON on-delay semantics; TOF off-delay semantics | `ton_q`; `tof_q` | TON timer instance; TOF timer instance; OpenPLC time base |
+| **A3** | **Set valve output commands** | Filling-step activity | `stop`; `LSH`; valve-command rules; initial-step output prohibition; discharge-valve closure requirement | `fill_valve`; `discharge_valve` | OpenPLC output logic; mapped digital outputs `%QX100.0` and `%QX100.1`; Modbus TCP output interface |
+
+### Interpretation of the internal arrows
+
+- **Filling-step activity** flows from A1 to A2 and A3. It is TRUE only while the filling step is active.
+- **`ton_q` and `tof_q`** flow from A2 to A1 as transition controls. Both timers have `IN :=` filling-step activity.
+- **Cycle-step state** is internal state feedback for A1, with the following behavior:
+  - Initial state: **step 0**, with no active outputs.
+  - Step 0 → filling step on `start`, provided `stop` is FALSE and `LSH` is FALSE.
+  - Filling step → pause step when `ton_q` is TRUE and `LSH` is FALSE.
+  - Pause step → filling step when `tof_q` is FALSE, provided neither stopping nor normal completion applies.
+  - An active cycle → step 0 when `LSH` is TRUE.
+  - Any step → step 0 whenever `stop` is TRUE.
+- A3 sets **`fill_valve`** TRUE only during permitted filling-step activity. It sets **`discharge_valve`** FALSE throughout.
+
+### Scope and safety notes
+
+- `start` means the **one-scan press event**, not the continuously held value of `StartCommand`. The other field inputs correspond to `stop`, `LSH`, and `LSHH`.
+- **`LSHH` must never be reached** is a safety constraint, not a specified extra transition. The task does not define a separate `LSHH` trip or recovery sequence, so none is invented here. Whether closing at `LSH` physically prevents reaching `LSHH` depends on plant response and any residual inflow.

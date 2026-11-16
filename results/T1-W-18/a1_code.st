@@ -1,0 +1,50 @@
+FUNCTION_BLOCK TransferRuntime
+VAR_INPUT
+    sensor_a : BOOL;
+    sensor_b : BOOL;
+END_VAR
+VAR_OUTPUT
+    conveyor : BOOL := FALSE;
+END_VAR
+VAR
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    t1 : BOOL := FALSE;
+    t2 : BOOL := FALSE;
+    command_latch : RS;
+END_VAR
+
+(* Evaluate transitions from the current GRAFCET situation. *)
+t1 := x0 AND sensor_a AND NOT sensor_b;
+t2 := x1 AND sensor_b;
+
+(* The reset-dominant bistable retains the active running step. *)
+command_latch(S := t1, R1 := t2);
+
+x1 := command_latch.Q1;
+x0 := NOT x1;
+
+conveyor := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    SensorA AT %IX100.0 : BOOL;
+    SensorB AT %IX100.1 : BOOL;
+    Conveyor AT %QX100.0 : BOOL;
+END_VAR
+VAR
+    runtime_logic : TransferRuntime;
+END_VAR
+
+(* Instance initialization establishes x0 active and conveyor stopped. *)
+runtime_logic(
+    sensor_a := SensorA,
+    sensor_b := SensorB
+);
+
+Conveyor := runtime_logic.conveyor;
+
+END_PROGRAM

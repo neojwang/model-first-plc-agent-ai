@@ -1,0 +1,124 @@
+## 1. Model scope and conventions
+
+The model describes the **PLC control function**, not the tank physics. The Factory I/O tank is the external plant.
+
+- **A0** is the context function, shown on the IDEF0 context diagram **A-0**.
+- **A1–A5** are its child functions.
+- Inputs are transformed data; controls constrain execution; outputs are produced results; mechanisms perform the work.
+- All function names below are verb phrases. Arrow names are noun phrases, including the required identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve`.
+
+The Boolean outputs `fill_valve` and `discharge_valve` are **internal valve-enable signals**, not the analog valve commands.
+
+## 2. A0 context function
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control the tank level | StartCommand (%IX100.0); StopCommand (%IX100.1); LevelMeter (%IW100) | Operating sequence requirements; Stop priority rule; FULL_SCALE = 1000; Level span h_span; Level target h_target = h_sp = 0.8 h_span; Overfill limit h_max = 0.9 h_span; Tolerance eps = 0.02 h_span; Hold time t_h = 10 s; PID gains Kp, Ti, Td; PID output limits of 0–100%; Integration suspension rule; Discharge opening of 40%; Factory I/O driver scale of 100 | FillValve (%QW100); DischargeValve (%QW101) | OpenPLC Runtime; PLC scan clock; Modbus TCP connection; Factory I/O Modbus TCP slave interface |
+
+**Context interpretation:** A0 transforms operator commands and the measured level into analog valve commands, subject to the operating rules and parameters.
+
+## 3. A0 decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Acquire and scale the plant signals | StartCommand; StopCommand; LevelMeter | I/O address map; FULL_SCALE; Level span h_span; Factory I/O driver scale | Sampled command values; Scaled level h | OpenPLC I/O image; Modbus TCP interface; Scaling arithmetic |
+| A2 | Derive the operating receptivities | Sampled command values; Scaled level h | Level target h_target; Set point h_sp; Overfill limit h_max; Tolerance eps; Hold time t_h; fill_valve; Scan interval | start; stop; settled; r; Level error e | Rising-edge memory; Continuous-dwell timer; Comparison and arithmetic operations |
+| A3 | Manage the regulation sequence | — | start; stop; settled; r; Initial-step rule; Transition-priority rules | fill_valve; discharge_valve | Two-step sequencer; Step-state memory |
+| A4 | Calculate the bounded PID demand | Level error e | fill_valve; PID gains Kp, Ti, Td; Scan interval; PID output limits of 0–100%; Integration suspension rule | Bounded fill demand | PID calculation; Integral-state memory; Derivative-state memory |
+| A5 | Issue the valve commands | Bounded fill demand | fill_valve; discharge_valve; stop; r; settled; FULL_SCALE; Discharge opening of 40%; Zero-output rule | FillValve (%QW100); DischargeValve (%QW101) | Output scaling and gating; OpenPLC output image; Modbus TCP interface |
+
+The valve-enable feedback from A3 to A2 and A4 is an internal control connection. It enables dwell timing and PID operation only during regulation.
+
+## 4. Internal arrow connections
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| Sampled command values | A1 | A2 input | Current sampled values of StartCommand and StopCommand |
+| Scaled level h | A1 | A2 input | Level expressed in units consistent with h_span |
+| start | A2 | A3 control | One-scan event corresponding to a rising edge of StartCommand |
+| stop | A2 | A3, A5 controls | Current Boolean value of StopCommand |
+| settled | A2 | A3, A5 controls | Continuous satisfaction of the tolerance condition for t_h during regulation |
+| r | A2 | A3, A5 controls | Level-region classification: LOW, MID, or HIGH |
+| Level error e | A2 | A4 input | Difference h_sp − h |
+| fill_valve | A3 | A2, A4, A5 controls | Regulation enable for the fill PID and its valve command |
+| discharge_valve | A3 | A5 control | Enable for the constant 40% discharge command |
+| Bounded fill demand | A4 | A5 input | PID valve-opening demand limited to 0–100% |
+
+All external input and output arrows connect to the corresponding A0 boundary arrows. Parameters and execution rules in the child tables are branches of the A0 control arrows; runtime and interface resources are branches of its mechanism arrows.
+
+## 5. Functional contracts
+
+### A1 — Acquire and scale the plant signals
+
+Use a consistent level scale:
+
+\[
+h=\frac{\text{LevelMeter}}{\text{FULL\_SCALE}}\,h_{\text{span}}
+\]
+
+For the stated scaling:
+
+- Target level: **800 register counts**
+- Overfill limit: **900 register counts**
+- Tolerance: **20 register counts**
+- Discharge command: **400 register counts**
+
+No additional sensor-fault response is specified by this task.
+
+### A2 — Derive the operating receptivities
+
+Use exactly these receptivity identifiers:
+
+| Identifier | Definition |
+|---|---|
+| `start` | TRUE only in the scan detecting a rising edge of StartCommand |
+| `stop` | TRUE whenever StopCommand is TRUE |
+| `settled` | TRUE after \(\lvert e\rvert \leq eps\) has remained continuously TRUE for t_h while regulation is enabled |
+| `r` | LOW when \(h<h_{\text{target}}\); MID when \(h_{\text{target}}\leq h<h_{\max}\); HIGH when \(h\geq h_{\max}\) |
+
+The dwell timer resets when the tolerance condition becomes FALSE or regulation is disabled. Thus, time accumulated before regulation or during a previous run cannot satisfy a new run’s hold requirement.
+
+### A3 — Manage the regulation sequence
+
+| Step | Function | `fill_valve` | `discharge_valve` |
+|---|---|---:|---:|
+| 0 — Initial/idle | Keep both valves closed | FALSE | FALSE |
+| 1 — Regulation | Enable PID filling and constant discharge | TRUE | TRUE |
+
+**Transition and priority rules:**
+
+1. `stop` has highest priority: select step 0.
+2. In step 1, `settled` or `r = HIGH` selects step 0.
+3. In step 0, `start` permits entry to step 1 only when `stop` is FALSE and `r` is not HIGH.
+4. Otherwise, retain the current step.
+
+The HIGH-region entry guard prevents a start event from briefly opening the valves when the overfill limit is already reached. A held StartCommand does not automatically restart regulation after completion; a new rising edge is required.
+
+### A4 — Calculate the bounded PID demand
+
+During regulation:
+
+- Use \(e=h_{\text{sp}}-h\).
+- Calculate the PID demand using Kp, Ti, and Td.
+- Clamp the demand to **0–100%**.
+- Suspend integration whenever the output is clamped.
+
+When regulation is disabled, suspend PID operation. The precise PID form, derivative filtering, and PID-state initialization policy remain implementation design choices; the task does not specify them.
+
+### A5 — Issue the valve commands
+
+During enabled regulation:
+
+\[
+\text{FillValve}
+=
+\text{integer conversion}\left(
+\frac{\text{Bounded fill demand}}{100}\,\text{FULL\_SCALE}
+\right)
+\]
+
+\[
+\text{DischargeValve}=0.4\,\text{FULL\_SCALE}=400
+\]
+
+In step 0, both analog outputs are **0**. A stop or termination condition must suppress both outputs in the same scan in which it is evaluated; no one-scan valve pulse or delayed closure is permitted.

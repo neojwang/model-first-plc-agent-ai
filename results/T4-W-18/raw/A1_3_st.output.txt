@@ -1,0 +1,211 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    start_command : BOOL;
+    stop_command : BOOL;
+    level_sample : INT;
+    full_scale_value : INT;
+    h_span : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    cycle_seconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    fill_command : INT;
+    discharge_command : INT;
+END_VAR
+VAR
+    start_edge : R_TRIG;
+    settling_timer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    previously_active : BOOL := FALSE;
+
+    h : REAL;
+    e : REAL;
+    previous_error : REAL := 0.0;
+    integral_term : REAL := 0.0;
+    derivative_term : REAL := 0.0;
+    unconstrained_demand : REAL := 0.0;
+    bounded_demand : REAL := 0.0;
+    scaled_command : REAL := 0.0;
+END_VAR
+
+start_edge(CLK := start_command);
+start := start_edge.Q;
+stop := stop_command;
+
+h := INT_TO_REAL(level_sample) * h_span
+     / INT_TO_REAL(full_scale_value);
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+(* The hold condition measures uninterrupted time in the tolerance
+   band while x1 is active, not merely the duration of x1. *)
+settling_timer(
+    IN := x1 AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := settling_timer.Q;
+
+(* Evaluate transitions from the current situation exactly once. *)
+IF x0 THEN
+    IF start AND NOT stop AND NOT (r = 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+END_IF;
+
+(* Continuous, non-stored GRAFCET actions. *)
+fill_valve := x1;
+discharge_valve := x1;
+
+fill_command := 0;
+discharge_command := 0;
+
+IF fill_valve THEN
+    IF NOT previously_active THEN
+        integral_term := 0.0;
+        previous_error := e;
+    END_IF;
+
+    derivative_term := 0.0;
+    IF (Td > 0.0) AND (cycle_seconds > 0.0) THEN
+        derivative_term :=
+            Kp * Td * (e - previous_error) / cycle_seconds;
+    END_IF;
+
+    (* Positional PID; demand units are percent valve opening.
+       The integral state is held whenever this demand is clamped. *)
+    unconstrained_demand :=
+        Kp * e + integral_term + derivative_term;
+
+    IF unconstrained_demand > 100.0 THEN
+        bounded_demand := 100.0;
+    ELSIF unconstrained_demand < 0.0 THEN
+        bounded_demand := 0.0;
+    ELSE
+        bounded_demand := unconstrained_demand;
+        IF (Ti > 0.0) AND (cycle_seconds > 0.0) THEN
+            integral_term :=
+                integral_term + Kp * e * cycle_seconds / Ti;
+        END_IF;
+    END_IF;
+
+    previous_error := e;
+
+    scaled_command :=
+        bounded_demand * INT_TO_REAL(full_scale_value) / 100.0;
+    fill_command := REAL_TO_INT(scaled_command);
+
+    IF fill_command < 0 THEN
+        fill_command := 0;
+    ELSIF fill_command > full_scale_value THEN
+        fill_command := full_scale_value;
+    END_IF;
+ELSE
+    integral_term := 0.0;
+    derivative_term := 0.0;
+    previous_error := e;
+    unconstrained_demand := 0.0;
+    bounded_demand := 0.0;
+END_IF;
+
+IF discharge_valve THEN
+    discharge_command :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(full_scale_value));
+END_IF;
+
+previously_active := x1;
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    cycle_seconds : REAL := 0.02;
+END_VAR
+VAR
+    controller : LevelControlRuntime;
+
+    h_span : REAL := 10.0;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME := T#10s;
+
+    (* Initial tuning values; commission for the simulated plant.
+       Kp: percent/volt; Ti and Td: seconds. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+END_VAR
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+controller(
+    start_command := StartCommand,
+    stop_command := StopCommand,
+    level_sample := LevelMeter,
+    full_scale_value := FULL_SCALE,
+    h_span := h_span,
+    h_sp := h_sp,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    cycle_seconds := cycle_seconds
+);
+
+FillValve := controller.fill_command;
+DischargeValve := controller.discharge_command;
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

@@ -1,0 +1,91 @@
+## A0 context model — Control timed tank filling
+
+**Boundary:** The model covers input acquisition, timer evaluation, step sequencing, and output generation in OpenPLC. The tank and its hydraulic behavior are external to the controller.
+
+Arrow labels below are noun phrases or the required signal identifiers. Function names are verb phrases.
+
+### ICOM decomposition
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | Raw input image | Initial-step rule; start-event rule; stop-priority rule; timed-filling rules; level-limit rules; output-mapping rules; TON_Duration; TOF_Duration | fill_valve; discharge_valve | OpenPLC Runtime; PLC scan cycle; Modbus TCP connection; Factory I/O digital tank, valves, and level switches |
+| **A1** | **Acquire inputs and detect the start event** | Raw input image | Input-mapping rules; rising-edge detection rule | start; stop; LSH; LSHH | OpenPLC input-image access; previous-command memory; Modbus TCP connection |
+| **A2** | **Evaluate filling and pause timers** | Filling-step activity | TON_Duration; TOF_Duration; TON semantics; TOF semantics; timer-initialization rules | ton_q; tof_q | TON function-block instance; TOF function-block instance; PLC time base |
+| **A3** | **Select the operating step** | Current-step state | start; stop; LSH; LSHH; ton_q; tof_q; initial-step rule; transition-priority rules; step-transition rules | Selected-step state; filling-step activity | PLC sequence logic; step-state memory |
+| **A4** | **Generate valve commands** | Selected-step state | stop; LSH; LSHH; valve-command rules; output-mapping rules | fill_valve; discharge_valve | OpenPLC output-image access; Modbus TCP connection; Factory I/O valve actuators |
+
+**State feedback:** The selected-step state becomes the current-step state for the next sequence evaluation. This feedback is internal to A0.
+
+### Parent–child arrow connections
+
+| Arrow | Source | Destination |
+|---|---|---|
+| Raw input image | A0 boundary | A1 input |
+| start | A1 | A3 control |
+| stop | A1 | A3 and A4 controls |
+| LSH | A1 | A3 and A4 controls |
+| LSHH | A1 | A3 and A4 controls |
+| Filling-step activity | A3 | A2 input |
+| ton_q | A2 | A3 control |
+| tof_q | A2 | A3 control |
+| Selected-step state | A3 | A4 input; step-state feedback |
+| fill_valve | A4 | A0 boundary |
+| discharge_valve | A4 | A0 boundary |
+| TON_Duration | A0 boundary | A2 control |
+| TOF_Duration | A0 boundary | A2 control |
+
+The timer/sequence feedback must be evaluated consistently within the PLC scan so that a completed transition produces the corresponding valve command without an unintended extra filling scan.
+
+## Controls defining the model
+
+### Input and output mapping rules
+
+| Model signal or image field | OpenPLC address | Meaning |
+|---|---|---|
+| StartCommand field of raw input image | `%IX100.0` | Source for rising-edge detection producing **start** |
+| StopCommand field of raw input image | `%IX100.1` | Source for **stop** |
+| LSH field of raw input image | `%IX100.2` | Source for **LSH**, at 2.4 m |
+| LSHH field of raw input image | `%IX100.3` | Source for **LSHH**, at 2.7 m |
+| fill_valve | `%QX100.0` | Fill-valve command |
+| discharge_valve | `%QX100.1` | Discharge-valve command; always FALSE |
+
+**start** is TRUE for one scan on a rising edge of StartCommand. Holding StartCommand TRUE does not repeatedly request a start.
+
+### Step-transition rules
+
+The step names below describe internal states, not additional receptivity or output identifiers.
+
+| Current step | Receptivity | Selected step |
+|---|---|---|
+| Any step | stop | Step 0 |
+| Any step | LSHH | Step 0 — protective abort described below |
+| Filling or pause step | LSH | Step 0 |
+| Step 0 | start AND NOT stop AND NOT LSH AND NOT LSHH | Filling step |
+| Filling step | ton_q AND NOT LSH | Pause step |
+| Pause step | NOT tof_q AND NOT LSH | Filling step |
+| Any step | No applicable receptivity | Current step |
+
+**Priority:** stop first, then the LSHH protective abort, then LSH completion, then ordinary start and timer transitions.
+
+### Timer rules
+
+- Both timer inputs are the **filling-step activity**, not the valve command.
+- During the filling step, TON measures the filling interval. Its output is **ton_q**.
+- Leaving the filling step makes TON’s input FALSE, resetting its elapsed time and **ton_q**.
+- TOF’s output, **tof_q**, is TRUE during filling and remains TRUE for TOF_Duration after filling-step activity becomes FALSE.
+- The pause ends when **tof_q** becomes FALSE.
+- Timer instances begin in their standard non-retentive initial conditions. A TOF tail after a stop cannot energize either valve because step selection and output inhibition take precedence.
+
+### Valve-command rules
+
+- Step 0 drives both outputs FALSE.
+- The filling step requests **fill_valve** TRUE.
+- The pause step drives **fill_valve** FALSE.
+- **stop**, **LSH**, or **LSHH** inhibits **fill_valve**, regardless of step state.
+- **discharge_valve** remains FALSE in every step.
+
+## Safety assumption requiring confirmation
+
+“**LSHH must never be reached**” is a plant-level constraint, not something this digital logic alone can guarantee. This model adds an **LSHH protective abort** as a conservative design choice; it is not a normal transition in the requested filling cycle.
+
+Preventing the level from reaching 2.7 m requires confirmation that the 0.3 m margin above LSH accommodates scan time, communication delay, valve closure time, and residual inflow. An LSHH trip detects an already-reached high-high level; it does not prove that the limit was never reached.

@@ -1,0 +1,17 @@
+OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+iec2c: matiec version 0.1 changeset id:
+g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+
+== baseline (st_code) ==
+file: T4-B-12/b_code.st
+sha256: c16b31f9302e1163ce759de998a710a70c2833e00dacb024182d5c7422b33168
+preparation: configuration present in the file; compiled as is
+step 1: iec2c -f -l -p -r -R -a -I <OpenPLC_v3>/webserver/lib -T <tmp> <tmp>/program.st
+exit 1
+<tmp>/program.st:39-5..39-5: error: Variable not declared in this scope.
+<tmp>/program.st:41-5..41-5: error: Variable not declared in this scope.
+<tmp>/program.st:43-5..43-5: error: Variable not declared in this scope.
+<tmp>/program.st:67-28..67-28: error: Variable not declared in this scope.
+<tmp>/program.st:76-29..76-29: error: Variable not declared in this scope.
+5 error(s) found. Bailing out!
+verdict: 0

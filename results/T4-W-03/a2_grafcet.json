@@ -1,0 +1,34 @@
+{
+  "graphs": [
+    {
+      "name": "G1",
+      "steps": ["x0", "x1"],
+      "initial": ["x0"]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t1",
+      "from": ["x0"],
+      "to": ["x1"],
+      "guard": "start & !stop & !(r = HIGH)"
+    },
+    {
+      "id": "t2",
+      "from": ["x1"],
+      "to": ["x0"],
+      "guard": "stop | settled | (r = HIGH)"
+    }
+  ],
+  "outputs": {
+    "fill_valve": "x1",
+    "discharge_valve": "x1"
+  },
+  "owned": {
+    "settled": {
+      "step": "x1",
+      "neutral": false,
+      "preset": "t_h"
+    }
+  }
+}

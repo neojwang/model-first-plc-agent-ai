@@ -1,0 +1,45 @@
+**Scope:** the control application, from sampled plant inputs to valve commands. The tank and its instrumentation are external plant equipment; the OpenPLC runtime and Modbus TCP connection are implementation mechanisms.
+
+In FIPS 183 notation, the context diagram is **A-0**, containing function **A0**. The decomposition of A0 contains functions **A1–A5** below. Arrows between child functions are internal to A0.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | StartCommand sample; StopCommand sample; LevelMeter reading | I/O mapping and scaling; initial-step rule; start-event definition; stop-priority rule; level set point **h_sp = h_target = 0.8 h_span**; overfill limit **h_max = 0.9 h_span**; tolerance **eps = 0.02 h_span**; hold time **t_h = 10 s**; PID gains **Kp, Ti, Td**; PID saturation and integration-suspension rules; discharge opening **40%**; completion and valve-closure rules | FillValve command; DischargeValve command; **fill_valve**; **discharge_valve** | OpenPLC runtime; PLC program and scan clock; Modbus TCP interface to Factory I/O |
+| **A1** | **Acquire commands and scale level** | StartCommand sample at **%IX100.0**; StopCommand sample at **%IX100.1**; LevelMeter reading at **%IW100** | I/O mapping; **FULL_SCALE = 1000** corresponding to **10 V**; Factory I/O driver **Scale = 100**; measuring span **h_span**; rising-edge definition of **start** | **start**; **stop**; measured level **h** | OpenPLC input image; Modbus TCP interface; scaling logic; rising-edge detector and previous-sample memory |
+| **A2** | **Evaluate level conditions** | Measured level **h** | **h_sp**, **h_target**, **h_max**, **eps**, **t_h**; regulation-mode status; continuous in-band timing rule; level-region definitions | Level error **e**; **settled**; **r** | Arithmetic and comparison logic; on-delay timer; PLC scan clock |
+| **A3** | **Supervise regulation cycle** | **start**; **stop**; **settled**; **r** | Initial state **step 0**; transition from step 0 to regulation on **start**; unconditional priority of **stop**; termination on **settled** or **r = HIGH**; return-to-step-0 rule | Regulation-mode status; **fill_valve**; **discharge_valve** | Sequence/state-machine logic; state memory |
+| **A4** | **Calculate limited PID demand** | Level error **e** | Regulation-mode status; PID gains **Kp, Ti, Td**; output bounds **0–100%**; integration suspension while output is clamped; PLC scan interval | Limited fill-opening demand | PID algorithm; integrator and derivative state memory; saturation and anti-windup logic |
+| **A5** | **Issue valve commands** | Limited fill-opening demand; **fill_valve**; **discharge_valve** | **FULL_SCALE = 1000**; discharge opening **0.4 FULL_SCALE**; output-address mapping; zero-output requirement in step 0 and whenever **stop** is TRUE; **stop** | FillValve command at **%QW100**; DischargeValve command at **%QW101** | Output selection and scaling logic; OpenPLC output image; Modbus TCP interface |
+
+### Arrow definitions and operating rules
+
+- **start** is a one-scan rising-edge event, not the sustained StartCommand level. **stop** follows the StopCommand Boolean level.
+- A1 scales the meter reading consistently with the selected level units:
+  \[
+  h=\frac{\text{LevelMeter}}{\text{FULL\_SCALE}}h_{\text{span}}.
+  \]
+- A2 calculates \(e=h_{sp}-h\) and assigns **r** exactly as specified:
+  - **LOW:** \(h<h_{target}\)
+  - **MID:** \(h_{target}\le h<h_{max}\)
+  - **HIGH:** \(h\ge h_{max}\)
+- **settled** becomes TRUE only after \(|e|\le eps\) has remained continuously true for **10 s during regulation**. Leaving the band or leaving regulation clears the qualifying interval.
+- A3 asserts **fill_valve** and **discharge_valve** only during regulation. Both are FALSE in step 0. A simultaneous **stop** overrides starting or continued regulation.
+- A5 issues:
+  \[
+  \text{FillValve}=
+  \begin{cases}
+  \operatorname{INT}(u_{\text{limited}}\cdot1000),&
+  \text{if fill\_valve is TRUE and stop is FALSE}\\
+  0,&\text{otherwise}
+  \end{cases}
+  \]
+  where \(u_{\text{limited}}\in[0,1]\), and
+  \[
+  \text{DischargeValve}=
+  \begin{cases}
+  400,&\text{if discharge\_valve is TRUE and stop is FALSE}\\
+  0,&\text{otherwise}.
+  \end{cases}
+  \]
+
+Here **fill_valve** and **discharge_valve** are the required Boolean activity indicators; they are distinct from the integer analog output commands **FillValve** and **DischargeValve**.

@@ -1,0 +1,208 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    RegisterScale : INT;
+    h_span : REAL;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    SampleSeconds : REAL;
+    HoldTime : TIME;
+END_VAR
+VAR_OUTPUT
+    FillCommand : INT;
+    DischargeCommand : INT;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH.
+       MID is represented numerically because MID is a standard function. *)
+    r : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    StateNumber : INT := 0;
+    h : REAL;
+    h_target : REAL;
+    h_sp : REAL;
+    h_max : REAL;
+    eps : REAL;
+    ErrorValue : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralValue : REAL := 0.0;
+    TrialIntegral : REAL;
+    DerivativeValue : REAL;
+    RawOutput : REAL;
+    LimitedOutput : REAL;
+    FirstPidScan : BOOL := TRUE;
+    TimerEnable : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h_target := 0.8 * h_span;
+h_sp := h_target;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+IF RegisterScale > 0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(RegisterScale);
+ELSE
+    h := 0.0;
+END_IF;
+
+ErrorValue := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;                         (* LOW *)
+ELSIF h < h_max THEN
+    r := 1;                         (* MID *)
+ELSE
+    r := 2;                         (* HIGH *)
+END_IF;
+
+FillCommand := 0;
+DischargeCommand := 0;
+fill_valve := FALSE;
+discharge_valve := FALSE;
+
+IF stop THEN
+    StateNumber := 0;
+ELSIF (StateNumber = 0) AND start THEN
+    StateNumber := 1;
+    IntegralValue := 0.0;
+    PreviousError := ErrorValue;
+    FirstPidScan := TRUE;
+END_IF;
+
+TimerEnable := (StateNumber = 1)
+               AND NOT stop
+               AND (r <> 2)
+               AND (ABS(ErrorValue) <= eps);
+
+HoldTimer(IN := TimerEnable, PT := HoldTime);
+settled := HoldTimer.Q;
+
+CASE StateNumber OF
+    0:
+        IntegralValue := 0.0;
+        PreviousError := ErrorValue;
+        FirstPidScan := TRUE;
+
+    1:
+        IF stop OR settled OR (r = 2) THEN
+            StateNumber := 0;
+            IntegralValue := 0.0;
+            FirstPidScan := TRUE;
+        ELSE
+            DerivativeValue := 0.0;
+
+            IF NOT FirstPidScan AND (SampleSeconds > 0.0) THEN
+                DerivativeValue :=
+                    (ErrorValue - PreviousError) / SampleSeconds;
+            END_IF;
+
+            TrialIntegral := IntegralValue;
+
+            IF (Ti > 0.0) AND (SampleSeconds > 0.0) THEN
+                TrialIntegral := IntegralValue
+                                 + Kp * ErrorValue * SampleSeconds / Ti;
+            END_IF;
+
+            RawOutput := Kp * ErrorValue
+                         + TrialIntegral
+                         + Kp * Td * DerivativeValue;
+
+            (* Conditional integration: reject the integral increment
+               whenever the proposed PID output requires clamping.
+               Output units are fractions of full valve opening. *)
+            IF RawOutput > 1.0 THEN
+                LimitedOutput := 1.0;
+            ELSIF RawOutput < 0.0 THEN
+                LimitedOutput := 0.0;
+            ELSE
+                LimitedOutput := RawOutput;
+                IntegralValue := TrialIntegral;
+            END_IF;
+
+            PreviousError := ErrorValue;
+            FirstPidScan := FALSE;
+
+            fill_valve := TRUE;
+            discharge_valve := TRUE;
+
+            IF RegisterScale > 0 THEN
+                FillCommand :=
+                    REAL_TO_INT(LimitedOutput * INT_TO_REAL(RegisterScale));
+                DischargeCommand :=
+                    REAL_TO_INT(0.4 * INT_TO_REAL(RegisterScale));
+            END_IF;
+        END_IF;
+
+ELSE
+    StateNumber := 0;
+    IntegralValue := 0.0;
+    FirstPidScan := TRUE;
+END_CASE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : FB_LevelControl;
+
+    (* Level is expressed in volts; PID output is normalized to 0..1.
+       These initial tuning values should be commissioned on the plant. *)
+    h_span : REAL := 10.0;
+    Kp : REAL := 0.5;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+    t_h : TIME := T#10s;
+
+    (* Must match the task interval configured below. *)
+    SampleSeconds : REAL := 0.02;
+END_VAR
+
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    RegisterScale := FULL_SCALE,
+    h_span := h_span,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    SampleSeconds := SampleSeconds,
+    HoldTime := t_h
+);
+
+FillValve := Controller.FillCommand;
+DischargeValve := Controller.DischargeCommand;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

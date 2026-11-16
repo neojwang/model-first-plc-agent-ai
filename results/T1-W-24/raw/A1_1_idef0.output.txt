@@ -1,0 +1,56 @@
+## IDEF0 model
+
+**Scope:** Control the conveyor command for Factory I/O Scene 2, “From A to B (Set and Reset).” The physical transport of the box is performed by the plant, outside the controller’s functional boundary.
+
+The context function is labeled **A0** as requested; its decomposition contains **A1–A3**. In standard IDEF0 diagram numbering, the context diagram is **A-0**, and its decomposition diagram is **A0**.
+
+### Modeling decisions
+
+- Use an IEC 61131-3 **RS bistable**, with **reset dominance**. If both sensors are TRUE, stopping takes priority so the box stays at sensor B.
+- When neither sensor is TRUE, retain the previous conveyor command.
+- The initial conveyor command and restart/retention policy are not specified by the task and must be defined before implementation.
+- **Start request** and **Stop request** below are conceptual internal arrow names, not additional PLC I/O identifiers.
+
+## ICOM table
+
+Each semicolon-separated item represents a named arrow. Function names are verb phrases; arrow names are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | A-detection start requirement; B-detection stop requirement; Command-hold requirement; IEC 61131-3 bistable requirement; Reset-priority policy; Scene I/O mapping | `conveyor` | OpenPLC Runtime; Factory I/O Modbus TCP slave interface; IEC 61131-3 RS bistable |
+| **A1** | **Determine start request** | `sensor_a` | A-detection start requirement; Scene I/O mapping | Start request | OpenPLC Runtime; Factory I/O Modbus TCP slave interface |
+| **A2** | **Determine stop request** | `sensor_b` | B-detection stop requirement; Scene I/O mapping | Stop request | OpenPLC Runtime; Factory I/O Modbus TCP slave interface |
+| **A3** | **Latch conveyor command** | Start request; Stop request | Command-hold requirement; IEC 61131-3 bistable requirement; Reset-priority policy; Scene I/O mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable; Factory I/O Modbus TCP slave interface |
+
+## Arrow connections
+
+| Arrow name | Source | Destination | Meaning |
+|---|---|---|---|
+| `sensor_a` | A0 input boundary | A1 input | Box detection at sensor A |
+| `sensor_b` | A0 input boundary | A2 input | Box detection at sensor B |
+| Start request | A1 output | A3 input | Set request while `sensor_a` is TRUE |
+| Stop request | A2 output | A3 input | Reset request while `sensor_b` is TRUE |
+| `conveyor` | A3 output | A0 output boundary | Conveyor run command |
+
+All A1–A3 control and mechanism arrows are inherited from the corresponding A0 boundary arrows.
+
+## Scene I/O mapping
+
+The required logical identifiers remain exactly `sensor_a`, `sensor_b`, and `conveyor`.
+
+| Arrow name | OpenPLC address | Meaning |
+|---|---|---|
+| `sensor_a` | `%IX100.0` | TRUE while a box is detected at sensor A |
+| `sensor_b` | `%IX100.1` | TRUE while a box is detected at sensor B |
+| `conveyor` | `%QX100.0` | TRUE runs the conveyor |
+
+## Required behavior of A3
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` command |
+|---|---|---|
+| FALSE | FALSE | Previous command |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset priority |
+
+Thus, detection at A starts the conveyor, the bistable retains the run command after the box leaves A, and detection at B resets the command to stop the conveyor.

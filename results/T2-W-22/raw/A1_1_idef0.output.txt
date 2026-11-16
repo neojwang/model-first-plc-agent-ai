@@ -1,0 +1,61 @@
+## Model scope and notation
+
+**A0 — Control timed tank filling** is the context function. Its decomposition contains **A1–A4** below. In FIPS 183 diagram notation, the single-box context diagram is **A-0**, and its decomposition diagram is **A0**.
+
+The model uses two operating steps:
+
+- **Step 0 — Idle:** initial step; both outputs are FALSE.
+- **Step 1 — Filling:** filling is active and its timer is running.
+
+All function names are verb phrases. All arrow labels are noun phrases; the required identifiers are retained exactly.
+
+## ICOM model
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TimerDuration`; initial-step rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule; I/O address mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan cycle; timer facility; Modbus TCP connection; Factory I/O tank scene |
+| **A1** | **Capture operating inputs** | `start`; `stop`; `LSH`; `LSHH` | Input-sampling rule; I/O address mapping | Input snapshot | OpenPLC input image; command-event interface; Modbus TCP connection |
+| **A2** | **Manage filling sequence** | Input snapshot; `timer_done` | Initial-step rule; start-admission rule; stop-priority rule; timer-or-high-high termination rule | Step status | OpenPLC Runtime; retained sequence-state memory |
+| **A3** | **Measure filling interval** | Step status | `TimerDuration`; filling-entry timing rule; idle-reset rule | `timer_done` | OpenPLC timer facility; PLC time base |
+| **A4** | **Drive valve outputs** | Step status; input snapshot; `timer_done` | Idle-output rule; stop-priority rule; timer-or-high-high termination rule; discharge-inhibition rule; I/O address mapping | `fill_valve`; `discharge_valve` | OpenPLC output image; Modbus TCP connection; Factory I/O valve interface |
+
+### Internal arrow definitions
+
+| Arrow | Meaning and connections |
+|---|---|
+| **Input snapshot** | Scan-consistent values of `start`, `stop`, `LSH`, and `LSHH`; **A1 → A2, A4**. `LSH` is retained as an available indication but does not influence control decisions. |
+| **Step status** | Current operating step and filling-active status; **A2 → A3, A4**. |
+| **`timer_done`** | Elapsed-time indication for the current filling interval; **A3 → A2, A4**. |
+
+These internal arrows remain inside A0. The external inputs, controls, outputs, and mechanisms are those listed on the A0 row.
+
+## Controls and sequencing semantics
+
+| Control | Required meaning |
+|---|---|
+| **Initial-step rule** | Initialize the sequence in step 0. |
+| **Start-admission rule** | Accept `start` only in step 0, with `stop = FALSE` and `LSHH = FALSE`. Enter step 1 and begin timing together. A `start` event during filling does not restart the timer. |
+| **Stop-priority rule** | Whenever `stop = TRUE`, select step 0 and force both outputs FALSE, regardless of other conditions. |
+| **Timer-or-high-high termination rule** | During filling, either `timer_done = TRUE` or `LSHH = TRUE` terminates filling and returns the sequence to step 0. An active `LSHH` also prevents a start from opening the valve. |
+| **Filling-entry timing rule** | Start a new timing interval on entry to step 1. Assert `timer_done` when the elapsed filling time reaches `TimerDuration`. |
+| **Idle-reset rule** | Reset the elapsed time and `timer_done` in step 0 so the next accepted start receives a fresh timing interval. |
+| **Idle-output rule** | Step 0 drives no output: `fill_valve = FALSE` and `discharge_valve = FALSE`. |
+| **Discharge-inhibition rule** | Keep `discharge_valve = FALSE` in every step. |
+| **Input-sampling rule** | Use a consistent input snapshot for each scan. `start` is a one-scan press event, not the maintained button level. |
+| **I/O address mapping** | Apply the mappings below between model identifiers and scene tags. |
+
+**Scan-level behavior:** timer expiration, high-high detection, and stop detection must affect valve commands in the same scan in which they are recognized. The internal A2–A3 feedback represents state and timer interaction, not a requirement to delay termination by one additional scan.
+
+## Boundary I/O mapping
+
+| Model identifier | Scene tag / address | Interpretation |
+|---|---|---|
+| `start` | `StartCommand AT %IX100.0` | One-scan event derived from a FALSE-to-TRUE button transition |
+| `stop` | `StopCommand AT %IX100.1` | Maintained stop condition |
+| `LSH` | `LSH AT %IX100.2` | Liquid detection at 2.4 m; informational only for this task |
+| `LSHH` | `LSHH AT %IX100.3` | Liquid detection at 2.7 m; filling termination condition |
+| `timer_done` | Internal timer indication | TRUE when the filling-step timer has elapsed |
+| `fill_valve` | `FillValve AT %QX100.0` | TRUE opens the fill valve |
+| `discharge_valve` | `DischargeValve AT %QX100.1` | Always FALSE |
+
+**Important distinction:** although `LSH` identifies the target level, the stated task does **not** use it to stop filling. Filling ends on elapsed time, `LSHH`, or `stop`.

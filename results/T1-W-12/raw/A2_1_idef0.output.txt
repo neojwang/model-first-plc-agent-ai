@@ -1,0 +1,12 @@
+The model below treats the **PLC control logic** as the system boundary: its inputs are the sensor indications, and its output is the conveyor command. A0 is decomposed into A1–A3; **Start request** and **Stop request** are internal arrows.
+
+An IEC 61131-3 **RS** block is selected so that stopping has priority if both sensors are TRUE. This resolves a simultaneous-input case that the task does not explicitly specify.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor movement from A to B** | **sensor_a**; **sensor_b** | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable-block requirement; stop-priority convention; I/O address mapping | **conveyor** | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection to Factory I/O |
+| **A1** | **Generate start request** | **sensor_a** | Start-on-A requirement; input mapping: SensorA at `%IX100.0` | **Start request** | OpenPLC Boolean logic; Modbus TCP input interface |
+| **A2** | **Generate stop request** | **sensor_b** | Stop-at-B requirement; input mapping: SensorB at `%IX100.1` | **Stop request** | OpenPLC Boolean logic; Modbus TCP input interface |
+| **A3** | **Retain and issue conveyor command** | **Start request**; **Stop request** | IEC 61131-3 bistable-block requirement; stop-priority convention; output mapping: Conveyor at `%QX100.0` | **conveyor** | OpenPLC Runtime; IEC 61131-3 RS function-block instance; Modbus TCP output interface |
+
+**Functional interpretation:** A1 passes the A-detection condition to the RS set input, and A2 passes the B-detection condition to its reset input. A3 retains the command when neither request is active and supplies the retained output as **conveyor**. Thus, detection at A starts movement, loss of A detection does not stop movement, and detection at B resets the command to stop the conveyor. The retained command is internal state of A3, not an additional external input.

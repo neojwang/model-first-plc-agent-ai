@@ -1,0 +1,18 @@
+The model below treats the **PLC tank-control function** as the system boundary. Signal values are inputs; timing parameters and operating rules are controls; the PLC, timer blocks, and communication infrastructure are mechanisms. The child functions are a **functional decomposition, not sequential SFC steps**.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSH; LSHH | TON_Duration; TOF_Duration; initial-step requirement; filling/pause sequence rules; LSH termination requirement; LSHH exclusion requirement; stop-priority requirement; discharge-valve inhibition requirement | fill_valve; discharge_valve | OpenPLC Runtime; PLC control program; TON and TOF function blocks; Modbus TCP connection; Factory I/O tank scene and mapped I/O |
+| **A1** | **Determine the operating step** | start; stop; LSH; LSHH; ton_q; tof_q | Initial step 0; stop priority; start-triggered filling rule; filling-to-pause rule; pause-to-filling rule; LSH termination rule; LSHH exclusion requirement | Operating-step state; Filling-step activity | OpenPLC Runtime; step-state logic and memory |
+| **A2** | **Time each filling phase** | Filling-step activity | TON_Duration; TON semantics: IN equals Filling-step activity, Q becomes TRUE after the continuous active interval reaches the preset, and resets when IN becomes FALSE | ton_q | TON function block; PLC scan execution and time base |
+| **A3** | **Time each filling pause** | Filling-step activity | TOF_Duration; TOF semantics: IN equals Filling-step activity, Q is TRUE while IN is TRUE and remains TRUE for the preset interval after IN becomes FALSE | tof_q | TOF function block; PLC scan execution and time base |
+| **A4** | **Issue valve commands** | Operating-step state; stop | Fill-valve activation only in the filling step; no-output requirement for step 0; closed-fill-valve requirement for the pause step; stop-priority requirement; discharge-valve inhibition requirement | fill_valve; discharge_valve | PLC output logic; OpenPLC output image; Modbus TCP output mapping; Factory I/O valve interfaces |
+
+**Interpretation of the controls and internal arrows**
+
+- **A1 step selection:** initialize in step 0. On start, enter filling. While filling, return to step 0 when LSH is TRUE; otherwise, enter pause when ton_q is TRUE. While paused, resume filling when tof_q is FALSE, provided LSH is FALSE. LSH terminates the active cycle, including a pause. stop overrides every other condition and returns the controller to step 0.
+- **A4 commands:** fill_valve is TRUE only in the filling step with stop FALSE. discharge_valve is always FALSE.
+- **Internal connections:** A1 supplies Filling-step activity to A2 and A3 and Operating-step state to A4. A2 and A3 return ton_q and tof_q to A1.
+- **Signal interpretation:** start is the one-scan button-press event, not the sustained StartCommand level. stop, LSH, and LSHH are the corresponding Boolean feedback values. fill_valve and discharge_valve map to `%QX100.0` and `%QX100.1`.
+
+**Safety qualification:** LSHH is a forbidden-condition indication, not a specified normal transition guard. The task does not prescribe a separate LSHH trip or recovery sequence, so none is invented here. Preventing the level from reaching LSHH depends on successful termination at LSH and adequate physical margin between 2.4 m and 2.7 m, including sensing, scan, communication, and valve-closing delays.

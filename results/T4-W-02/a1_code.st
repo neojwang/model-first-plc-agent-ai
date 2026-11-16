@@ -1,0 +1,216 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartSignal : BOOL;
+    StopSignal : BOOL;
+    LevelValue : INT;
+    ScaleValue : INT;
+    h_span : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    CycleSeconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    FillCommand : INT;
+    DischargeCommand : INT;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+
+    (* Region codes: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+
+    h : REAL;
+    ErrorValue : REAL;
+    InBand : BOOL;
+
+    IntegralValue : REAL := 0.0;
+    IntegralCandidate : REAL;
+    IntegralIncrement : REAL;
+    PreviousError : REAL := 0.0;
+    DerivativeValue : REAL;
+    ProportionalValue : REAL;
+    RawDemand : REAL;
+    CandidateDemand : REAL;
+    BoundedDemand : REAL;
+    PidWasActive : BOOL := FALSE;
+END_VAR
+
+StartEdge(CLK := StartSignal);
+start := StartEdge.Q;
+stop := StopSignal;
+
+h := INT_TO_REAL(LevelValue) * h_span / INT_TO_REAL(ScaleValue);
+ErrorValue := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+InBand := ABS(ErrorValue) <= eps;
+
+(* Continuous in-band timing applies only while x1 is active.
+   An inactive step or an out-of-band measurement resets the timer. *)
+HoldTimer(IN := x1 AND InBand AND NOT stop, PT := t_h);
+settled := HoldTimer.Q;
+
+(* Evaluate transitions against the situation at scan entry. *)
+IF x0 THEN
+    IF start AND NOT stop AND (r <> 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+END_IF;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+FillCommand := 0;
+DischargeCommand := 0;
+
+IF x1 THEN
+    (* Initialize PID history on entry, without a derivative kick. *)
+    IF NOT PidWasActive THEN
+        IntegralValue := 0.0;
+        PreviousError := ErrorValue;
+    END_IF;
+
+    ProportionalValue := Kp * ErrorValue;
+    DerivativeValue := 0.0;
+    IntegralIncrement := 0.0;
+
+    IF CycleSeconds > 0.0 THEN
+        DerivativeValue :=
+            Kp * Td * (ErrorValue - PreviousError) / CycleSeconds;
+
+        IF Ti > 0.0 THEN
+            IntegralIncrement :=
+                Kp * ErrorValue * CycleSeconds / Ti;
+        END_IF;
+    END_IF;
+
+    RawDemand := ProportionalValue
+                 + IntegralValue
+                 + DerivativeValue;
+
+    (* Suspend integration whenever the current output is clamped.
+       Also reject an increment that would introduce saturation. *)
+    IF (RawDemand >= 0.0) AND (RawDemand <= 100.0) THEN
+        IntegralCandidate := IntegralValue + IntegralIncrement;
+        CandidateDemand := ProportionalValue
+                           + IntegralCandidate
+                           + DerivativeValue;
+
+        IF (CandidateDemand >= 0.0)
+           AND (CandidateDemand <= 100.0) THEN
+            IntegralValue := IntegralCandidate;
+            RawDemand := CandidateDemand;
+        END_IF;
+    END_IF;
+
+    IF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSIF RawDemand > 100.0 THEN
+        BoundedDemand := 100.0;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    FillCommand :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(ScaleValue) / 100.0);
+    DischargeCommand :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(ScaleValue));
+
+    PreviousError := ErrorValue;
+ELSE
+    IntegralValue := 0.0;
+    PreviousError := ErrorValue;
+    BoundedDemand := 0.0;
+END_IF;
+
+PidWasActive := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : FB_LevelControl;
+
+    h_span : REAL := 10.0;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME := T#10s;
+
+    (* Commissioning defaults; tune these gains for the tank.
+       Kp uses percent opening per volt; Ti and Td use seconds. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+
+    (* Configure the OpenPLC cyclic task for this 20 ms interval. *)
+    CycleSeconds : REAL := 0.02;
+END_VAR
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+Controller(
+    StartSignal := StartCommand,
+    StopSignal := StopCommand,
+    LevelValue := LevelMeter,
+    ScaleValue := FULL_SCALE,
+    h_span := h_span,
+    h_sp := h_sp,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleSeconds := CycleSeconds
+);
+
+FillValve := Controller.FillCommand;
+DischargeValve := Controller.DischargeCommand;
+
+END_PROGRAM

@@ -1,0 +1,203 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    h_span : REAL;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    t_h : TIME;
+    CycleSeconds : REAL;
+END_VAR
+VAR_OUTPUT
+    FillCommand : INT;
+    DischargeCommand : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    t1 : BOOL;
+    t2 : BOOL;
+    WasRegulating : BOOL;
+
+    h : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    e : REAL;
+
+    IntegralTerm : REAL := 0.0;
+    PreviousError : REAL := 0.0;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    RawDemand : REAL;
+    BoundedDemand : REAL;
+    IsClamped : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+(* Settling requires continuous residence inside the tolerance band
+   while the regulation step is active. *)
+HoldTimer(
+    IN := x1 AND NOT stop AND (r <> 2) AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+(* Evaluate both receptivities using the preceding situation. *)
+WasRegulating := x1;
+t1 := x0 AND start AND NOT stop AND (r <> 2);
+t2 := x1 AND (stop OR settled OR (r = 2));
+
+(* Simultaneous GRAFCET situation update. *)
+x0 := (x0 AND NOT t1) OR t2;
+x1 := (x1 AND NOT t2) OR t1;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+(* Default commands explicitly close both valves. *)
+FillCommand := 0;
+DischargeCommand := 0;
+
+IF x1 THEN
+    (* Initialize PID memory on activation, without derivative kick. *)
+    IF NOT WasRegulating THEN
+        IntegralTerm := 0.0;
+        PreviousError := e;
+    END_IF;
+
+    ProportionalTerm := Kp * e;
+    DerivativeTerm := 0.0;
+
+    IF CycleSeconds > 0.0 THEN
+        DerivativeTerm :=
+            Kp * Td * (e - PreviousError) / CycleSeconds;
+    END_IF;
+
+    RawDemand := ProportionalTerm + IntegralTerm + DerivativeTerm;
+    IsClamped := FALSE;
+
+    IF RawDemand > 100.0 THEN
+        BoundedDemand := 100.0;
+        IsClamped := TRUE;
+    ELSIF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+        IsClamped := TRUE;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    (* Store the integral contribution for the next execution.
+       Integral accumulation is suspended while the output is clamped. *)
+    IF NOT IsClamped AND (Ti > 0.0) AND (CycleSeconds > 0.0) THEN
+        IntegralTerm :=
+            IntegralTerm + Kp * e * CycleSeconds / Ti;
+    END_IF;
+
+    PreviousError := e;
+
+    FillCommand :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(FULL_SCALE) / 100.0);
+    DischargeCommand := REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+ELSE
+    IntegralTerm := 0.0;
+    PreviousError := e;
+    ProportionalTerm := 0.0;
+    DerivativeTerm := 0.0;
+    RawDemand := 0.0;
+    BoundedDemand := 0.0;
+    IsClamped := FALSE;
+    settled := FALSE;
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR
+    LevelController : FB_LevelControl;
+
+    h_span : REAL := 10.0;
+    (* Example tuning: Kp in percent opening per volt;
+       Ti and Td in seconds. Commission these values for the plant. *)
+    Kp : REAL := 20.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    t_h : TIME := T#10s;
+
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+END_VAR
+VAR CONSTANT
+    (* Must match the configured periodic task interval. *)
+    CycleSeconds : REAL := 0.02;
+END_VAR
+
+LevelController(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    h_span := h_span,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    t_h := t_h,
+    CycleSeconds := CycleSeconds
+);
+
+fill_valve := LevelController.fill_valve;
+discharge_valve := LevelController.discharge_valve;
+FillValve := LevelController.FillCommand;
+DischargeValve := LevelController.DischargeCommand;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

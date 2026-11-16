@@ -1,0 +1,16 @@
+The model treats the function boundary as the **conveyor controller**: `sensor_a` and `sensor_b` are its external inputs, and `conveyor` is its external output. Internal arrows represent information passed between child functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable requirement; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 bistable function block; Modbus TCP connection to Factory I/O |
+| A1 | Determine start and stop requests | `sensor_a`; `sensor_b` | Start-on-A rule; stop-at-B rule; input mapping (`sensor_a` → `%IX100.0`, `sensor_b` → `%IX100.1`) | Start request; stop request | OpenPLC input image; Boolean logic |
+| A2 | Maintain the conveyor command state | Start request; stop request | Bistable state-transition rules; reset priority | Latched conveyor command | IEC 61131-3 **RS** function-block instance in OpenPLC |
+| A3 | Apply the conveyor command | Latched conveyor command | Output mapping (`conveyor` → `%QX100.0`) | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+**Functional interpretation**
+
+- **A1:** The start request follows `sensor_a`; the stop request follows `sensor_b`.
+- **A2:** The start request sets the stored command; the stop request resets it. With neither request active, the command retains its previous state.
+- **A3:** The stored command determines `conveyor`: `TRUE` runs the conveyor; `FALSE` stops it.
+
+A **reset-dominant RS** block is selected so that, if both sensors are active simultaneously, the conveyor stops. The task does not explicitly specify simultaneous-input priority or the initial command state; reset priority is the modeling choice used here to preserve the stop-at-B behavior.

@@ -1,0 +1,229 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    FullScaleValue : INT;
+    h_span : REAL;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    CycleTime : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    pid_percent : REAL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    SettlingTimer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    WasActive : BOOL := FALSE;
+
+    h : REAL;
+    e : REAL;
+    CycleSeconds : REAL;
+
+    IntegralTerm : REAL := 0.0;
+    IntegralCandidate : REAL;
+    PreviousError : REAL := 0.0;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    UnboundedDemand : REAL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FullScaleValue);
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := 0;
+ELSIF h < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+CycleSeconds := TIME_TO_REAL(CycleTime) / 1000.0;
+
+(* The non-retentive timer measures continuous time in tolerance
+   while x1 is active, not merely the age of x1. *)
+SettlingTimer(
+    IN := x1 AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := SettlingTimer.Q;
+
+WasActive := x1;
+
+(* Evaluate transitions from the situation at the start of this scan.
+   At most one transition is fired per scan. *)
+IF x0 THEN
+    IF start AND NOT stop AND NOT (r = 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+END_IF;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+IF x1 THEN
+    (* Initialize controller history on entry to regulation. *)
+    IF NOT WasActive THEN
+        IntegralTerm := 0.0;
+        PreviousError := e;
+    END_IF;
+
+    ProportionalTerm := Kp * e;
+    DerivativeTerm := 0.0;
+
+    IF (CycleSeconds > 0.0) AND (Td > 0.0) THEN
+        DerivativeTerm :=
+            Kp * Td * (e - PreviousError) / CycleSeconds;
+    END_IF;
+
+    (* Positional PID, with output expressed in percent.
+       First test the demand using the existing integral state. *)
+    UnboundedDemand :=
+        ProportionalTerm + IntegralTerm + DerivativeTerm;
+
+    IF (UnboundedDemand >= 0.0)
+        AND (UnboundedDemand <= 100.0)
+        AND (Ti > 0.0)
+        AND (CycleSeconds > 0.0) THEN
+
+        IntegralCandidate :=
+            IntegralTerm + Kp * e * CycleSeconds / Ti;
+
+        UnboundedDemand :=
+            ProportionalTerm + IntegralCandidate + DerivativeTerm;
+
+        (* Commit integration only if the resulting output is not
+           clamped. Otherwise retain the previous integral state. *)
+        IF (UnboundedDemand >= 0.0)
+            AND (UnboundedDemand <= 100.0) THEN
+            IntegralTerm := IntegralCandidate;
+        END_IF;
+    END_IF;
+
+    IF UnboundedDemand < 0.0 THEN
+        pid_percent := 0.0;
+    ELSIF UnboundedDemand > 100.0 THEN
+        pid_percent := 100.0;
+    ELSE
+        pid_percent := UnboundedDemand;
+    END_IF;
+
+    PreviousError := e;
+ELSE
+    pid_percent := 0.0;
+    IntegralTerm := 0.0;
+    PreviousError := e;
+
+    (* Clear the owned condition immediately on leaving x1. *)
+    SettlingTimer(IN := FALSE, PT := t_h);
+    settled := FALSE;
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : LevelControlRuntime;
+
+    h_span : REAL := 10.0;
+    h_sp : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME := T#10s;
+
+    (* Initial tuning values; commission for the actual plant.
+       Kp units: percent per level unit; Ti and Td units: seconds. *)
+    Kp : REAL := 10.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+
+    CycleTime : TIME := T#20ms;
+END_VAR
+
+h_sp := 0.8 * h_span;
+h_target := h_sp;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    FullScaleValue := FULL_SCALE,
+    h_span := h_span,
+    h_sp := h_sp,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleTime := CycleTime
+);
+
+IF Controller.fill_valve THEN
+    FillValve := REAL_TO_INT(
+        Controller.pid_percent * INT_TO_REAL(FULL_SCALE) / 100.0
+    );
+ELSE
+    FillValve := 0;
+END_IF;
+
+IF Controller.discharge_valve THEN
+    DischargeValve := REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+ELSE
+    DischargeValve := 0;
+END_IF;
+
+END_PROGRAM
+
+
+CONFIGURATION Config
+    RESOURCE PLCResource ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

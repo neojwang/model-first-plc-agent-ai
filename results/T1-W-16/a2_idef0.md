@@ -1,0 +1,18 @@
+The model below treats the **controller** as the system boundary: it receives `sensor_a` and `sensor_b` and produces `conveyor`. The physical box and conveyor are part of the controlled plant, not material inputs and outputs of this controller model.
+
+**Reset priority** is used: if both sensors are TRUE, `conveyor` is FALSE. This ensures that detection at sensor B stops the conveyor.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start requirement at A; stop-and-hold requirement at B; IEC 61131-3 bistable requirement; reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; Factory I/O Modbus TCP interface; IEC 61131-3 RS function block |
+| A1 | Read sensor states | `sensor_a`; `sensor_b` | Input address mapping: `sensor_a` → `%IX100.0`, `sensor_b` → `%IX100.1`; Boolean detection semantics | `sensor_a`; `sensor_b` — sampled values for A2 | OpenPLC input process image; Modbus TCP connection; Factory I/O sensor tags |
+| A2 | Update retained conveyor command | `sensor_a`; `sensor_b`; retained command state from the preceding evaluation | Set condition: `sensor_a`; reset condition: `sensor_b`; reset priority; state retention when neither sensor is TRUE | Conveyor command state; retained command state for the next evaluation | IEC 61131-3 RS function-block instance; OpenPLC execution and instance memory |
+| A3 | Write conveyor output | Conveyor command state | Output address mapping: `conveyor` → `%QX100.0`; TRUE/run and FALSE/stop semantics | `conveyor` | OpenPLC output process image; Modbus TCP connection; Factory I/O conveyor tag |
+
+**Decomposition and state semantics:** A1 supplies the sensor values to A2; A2 supplies the conveyor command state to A3. A2 retains its state between evaluations. Its reset-dominant behavior is:
+
+- `sensor_b = TRUE` → command FALSE.
+- Otherwise, `sensor_a = TRUE` → command TRUE.
+- Otherwise → previous command retained.
+
+In strict IDEF0 diagram numbering, the context diagram is **A-0**, containing the **A0** function; its decomposition diagram is **A0**, containing **A1–A3**.

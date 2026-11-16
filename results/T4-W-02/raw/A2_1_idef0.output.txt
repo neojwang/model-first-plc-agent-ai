@@ -1,0 +1,29 @@
+The model below treats **A0 as the PLC level-control function**, with the Factory I/O tank as the controlled environment. Raw I/O tags retain their specified names; the derived receptivities and logical output indicators use exactly `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve`.
+
+In IDEF0, **inputs** are information transformed by a function, **controls** govern its execution, **outputs** are its results, and **mechanisms** are the resources that perform it.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | `StartCommand` (%IX100.0); `StopCommand` (%IX100.1); `LevelMeter` (%IW100) | Set point \(h_{sp}=h_{target}=0.8h_{span}\); overfill limit \(h_{max}=0.9h_{span}\); tolerance \(\varepsilon=0.02h_{span}\); hold time \(t_h=10\,s\); PID gains \(K_p,T_i,T_d\); `FULL_SCALE = 1000`; discharge opening of 40%; initial-step, termination, stop-priority, saturation, and integration-suspension rules | `FillValve` command (%QW100); `DischargeValve` command (%QW101) | OpenPLC Runtime; PLC control program and scan clock; Modbus TCP connection; Factory I/O driver and mapped I/O interface |
+| **A1** | **Acquire and interpret input signals** | `StartCommand`; `StopCommand`; `LevelMeter` | I/O mapping; `FULL_SCALE`; measuring span \(h_{span}\); rising-edge rule for `start` | `start` — one-scan StartCommand press event; `stop` — StopCommand truth value; measured level \(h\) | PLC input image; signal-scaling logic; rising-edge detector and previous-button-state storage |
+| **A2** | **Evaluate level and settling conditions** | Measured level \(h\) | \(h_{sp}=h_{target}\); \(h_{max}\); \(\varepsilon\); \(t_h\); `fill_valve` as the regulation-active condition; continuous-hold and timer-reset rules | Level error \(e=h_{sp}-h\); `r` — LOW, MID, or HIGH; `settled` — completion of the continuous in-band hold | Arithmetic and comparison logic; elapsed-time timer; PLC scan clock |
+| **A3** | **Manage regulation sequence** | Step-state feedback | `start`; `stop`; `settled`; `r`; initial step 0; Start acceptance only in step 0; termination on `settled` or `r = HIGH`; overriding Stop rule | Updated step state; `fill_valve` — TRUE during PID regulation; `discharge_valve` — TRUE during constant-40% discharge operation | Sequence/state-machine logic; step-state storage; PLC execution engine |
+| **A4** | **Compute bounded PID demand** | Level error \(e\) | `fill_valve`; PID gains \(K_p,T_i,T_d\); execution interval; output limits of 0–100%; integration-suspension rule while output is clamped | Bounded fill-opening demand | PID algorithm; integral and derivative state storage; PLC arithmetic and timing resources |
+| **A5** | **Generate valve output commands** | Bounded fill-opening demand | `fill_valve`; `discharge_valve`; `stop`; `FULL_SCALE`; fixed discharge opening of 40%; zero-output rule outside regulation | `FillValve` command (%QW100), from 0 to 1000 during regulation and 0 otherwise; `DischargeValve` command (%QW101), equal to 400 during regulation and 0 otherwise | Output-selection and scaling logic; PLC output image; Modbus TCP output interface |
+
+### Interpretation and consistency notes
+
+- **Signal scaling:**  
+  \[
+  h=\frac{\texttt{LevelMeter}}{1000}\,h_{span}
+  \]
+  Thus, the target, overfill limit, and tolerance correspond respectively to **800**, **900**, and **20** register units.
+
+- **Level classification:**  
+  `r = LOW` for \(h<h_{target}\); `r = MID` for \(h_{target}\le h<h_{max}\); and `r = HIGH` for \(h\ge h_{max}\).
+
+- **Settling:** `settled` becomes TRUE only after \(|e|\le\varepsilon\) has remained continuously true for 10 seconds during regulation. The hold timer resets when the error leaves the band or regulation ends.
+
+- **Sequence and safety:** Step 0 is the initial, non-actuating state. An accepted `start` enables both logical outputs. `settled` or `r = HIGH` ends regulation and returns to step 0. `stop` overrides other conditions and forces both analog commands to zero.
+
+- **Logical versus analog outputs:** `fill_valve` and `discharge_valve` are internal Boolean enable arrows between child functions, not replacements for the analog `FillValve` and `DischargeValve` commands at the A0 boundary. “Step 0 drives no output” is interpreted as no valve actuation, with both analog commands maintained at zero.

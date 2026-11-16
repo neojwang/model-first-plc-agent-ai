@@ -1,0 +1,43 @@
+The model below uses **A0** for the context function and **A1–A5** for its child functions. Inputs are transformed by a function; controls determine when or how it operates; mechanisms perform the function. Arrows between child functions are internal to A0.
+
+The required identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve` are retained exactly. In particular, `fill_valve` and `discharge_valve` are Boolean activity indicators—not the analog output register values.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control the tank level** | StartCommand signal (%IX100.0); StopCommand signal (%IX100.1); LevelMeter reading (%IW100) | I/O mapping and analog scaling specification; FULL_SCALE = 1000; measuring span h_span; target and set point h_target = h_sp = 0.8 h_span; overfill limit h_max = 0.9 h_span; tolerance eps = 0.02 h_span; hold time t_h = 10 s; PID gains Kp, Ti, Td; operating sequence; output-clamping and integration-suspension rules; 40% discharge-opening requirement; stop-priority rule | FillValve command (%QW100); DischargeValve command (%QW101) | OpenPLC Runtime and control program; Modbus TCP connection and Factory I/O driver; Factory I/O tank, level meter, and valve models |
+| **A1** | **Interpret commands and assess the level** | StartCommand signal; StopCommand signal; LevelMeter reading | Input-address mapping; analog scaling specification; FULL_SCALE; h_span; h_sp; h_target; h_max; rising-edge detection rule; level-region definitions | `start`; `stop`; measured level h; level error e; `r` | Input-processing logic; rising-edge detector and previous-button-state memory; comparison and arithmetic logic |
+| **A2** | **Qualify sustained level settling** | Level error e | Regulation-state indication from A3; tolerance eps; hold time t_h; continuous-in-band timing rule; timer-reset rule | `settled` | Absolute-value comparison logic; resettable on-delay timer; PLC time base |
+| **A3** | **Manage the regulation sequence** | — | `start`; `stop`; `settled`; `r`; initial-step rule; start-transition rule; completion and overfill termination rules; stop-priority rule | Regulation-state indication; `fill_valve`; `discharge_valve` | Sequence logic; step-state memory; OpenPLC scan execution |
+| **A4** | **Calculate the bounded PID demand** | Level error e | `fill_valve`; PID gains Kp, Ti, Td; PID execution interval; output limits of 0–100%; integration-suspension rule during output clamping | Bounded fill-opening demand | PID algorithm; integral and derivative state memory; output limiter; integration-inhibition logic; PLC time base |
+| **A5** | **Generate the valve commands** | Bounded fill-opening demand | `fill_valve`; `discharge_valve`; `stop`; FULL_SCALE; 40% discharge-opening requirement; inactive-output zeroing rule; output-address mapping | FillValve command (%QW100); DischargeValve command (%QW101) | Output-selection and scaling logic; OpenPLC output image; Modbus TCP connection and Factory I/O driver |
+
+### Functional rules carried by the arrows
+
+- **A1 — Command and level interpretation**
+  - `start` is TRUE only for the scan detecting a rising edge of StartCommand.
+  - `stop` follows StopCommand.
+  - With levels expressed in measuring-span units:
+    \[
+    h=\frac{\text{LevelMeter}}{\text{FULL\_SCALE}}h_{\text{span}},
+    \qquad e=h_{sp}-h.
+    \]
+  - `r` is LOW for \(h<h_{target}\), MID for \(h_{target}\le h<h_{max}\), and HIGH for \(h\ge h_{max}\).
+
+- **A2 — Settling qualification**
+  - `settled` becomes TRUE after \(|e|\le eps\) has remained continuously true for 10 s during regulation.
+  - The qualification timer resets when regulation is inactive or the error leaves the tolerance band.
+
+- **A3 — Sequence management**
+  - Initially, step 0 is active and both `fill_valve` and `discharge_valve` are FALSE.
+  - `start` initiates regulation from step 0, subject to stop and overfill protection.
+  - During regulation, both activity indicators are TRUE.
+  - `settled` or `r = HIGH` ends regulation and returns the sequence to step 0.
+  - `stop` has overriding priority: it forces step 0 and both activity indicators FALSE.
+
+- **A4–A5 — PID and physical outputs**
+  - While `fill_valve` is TRUE, the PID demand is clamped to 0–100%, and integration is suspended while clamping is active.
+  - A5 scales the bounded demand to **0–1000** for FillValve.
+  - While `discharge_valve` is TRUE, DischargeValve is **400**.
+  - In step 0, on completion, on overfill termination, or whenever `stop` is TRUE, **both analog commands are zero**. Thus, step 0 drives no active output and does not leave stale nonzero commands.
+
+The task does not specify PID-state reset or retention between regulation runs; this model therefore does not impose either policy.

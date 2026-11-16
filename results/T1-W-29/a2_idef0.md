@@ -1,0 +1,16 @@
+The model below treats the **controller** as the system boundary: `sensor_a` and `sensor_b` are its inputs, and `conveyor` is its output. A0 is the context function; A1–A2 are its child functions.
+
+**Simultaneous-input convention:** The task does not explicitly define what happens when both sensors are TRUE. This model selects a reset-dominant **RS** block so that detection at sensor B takes precedence and the conveyor remains stopped.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start requirement at A; stop-and-hold requirement at B; IEC 61131-3 bistable requirement; reset-priority convention; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O scene |
+| **A1** | **Maintain the conveyor run state** | `sensor_a`; `sensor_b` | Set condition: `sensor_a` = TRUE; reset condition: `sensor_b` = TRUE; state-retention rule when both inputs are FALSE; reset priority when both inputs are TRUE | Latched run state | IEC 61131-3 RS function-block instance; OpenPLC execution and instance memory |
+| **A2** | **Issue the conveyor command** | Latched run state | Output assignment rule: `conveyor` equals the latched run state; output mapping to `%QX100.0` | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O driver |
+
+**Interface mappings**
+- `sensor_a` → `SensorA AT %IX100.0`
+- `sensor_b` → `SensorB AT %IX100.1`
+- `conveyor` → `Conveyor AT %QX100.0`
+
+**Child-function flow:** A1 supplies **Latched run state** to A2. The RS block sets that state at A, retains it while the box travels between sensors, and resets it at B. Thus, after sensor A becomes FALSE, the conveyor continues running until sensor B becomes TRUE.

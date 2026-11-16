@@ -1,0 +1,63 @@
+## IDEF0 scope and conventions
+
+The model covers the **PLC control function**, not the physical movement of the box. Sensor signals enter the model; the conveyor command leaves it.
+
+- **Inputs** are information transformed by a function.
+- **Controls** govern how the function operates.
+- **Outputs** are results produced by a function.
+- **Mechanisms** are resources used to perform the function.
+
+The external signal identifiers are exactly **`sensor_a`**, **`sensor_b`**, and **`conveyor`**. Other arrow names below are noun phrases describing internal information.
+
+**Priority decision:** Use a reset-dominant IEC 61131-3 **RS** bistable. If both sensors are TRUE, stopping takes priority so that the conveyor remains stopped at sensor B.
+
+## A0 context and child-function ICOM table
+
+A0 is the context function. A1–A3 form its first-level decomposition.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start requirement; Stop requirement; State-retention requirement; Reset-priority rule; I/O mapping specification | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene and driver; IEC 61131-3 RS bistable; PLC state memory |
+| **A1** | **Derive conveyor start and stop requests** | `sensor_a`; `sensor_b` | Start requirement; Stop requirement; I/O mapping specification | Start request; Stop request | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene and driver |
+| **A2** | **Retain the conveyor run command** | Start request; Stop request | State-retention requirement; Reset-priority rule | Retained conveyor command | OpenPLC Runtime; IEC 61131-3 RS bistable; PLC state memory |
+| **A3** | **Apply the conveyor run command** | Retained conveyor command | I/O mapping specification | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene and driver |
+
+## Arrow definitions
+
+| Arrow name | Meaning |
+|---|---|
+| `sensor_a` | Boolean detection signal from SensorA at `%IX100.0`; TRUE while a box is detected at A. |
+| `sensor_b` | Boolean detection signal from SensorB at `%IX100.1`; TRUE while a box is detected at B. |
+| `conveyor` | Boolean command to Conveyor at `%QX100.0`; TRUE runs the conveyor. |
+| Start requirement | Detection at A requests conveyor operation. |
+| Stop requirement | Detection at B requests conveyor stopping. |
+| State-retention requirement | The command remains set after detection at A clears, until a stop request resets it. |
+| Reset-priority rule | A stop request overrides a simultaneous start request. |
+| I/O mapping specification | Association of the scene tags with `%IX100.0`, `%IX100.1`, and `%QX100.0` through the Factory I/O Modbus TCP slave connection. |
+| Start request | Boolean request equal to the current `sensor_a` state. |
+| Stop request | Boolean request equal to the current `sensor_b` state. |
+| Retained conveyor command | Stored run state produced by the RS bistable. |
+
+## Child-function connections
+
+| Source | Arrow | Destination |
+|---|---|---|
+| A0 input boundary | `sensor_a` | A1 |
+| A0 input boundary | `sensor_b` | A1 |
+| A1 | Start request | A2 |
+| A1 | Stop request | A2 |
+| A2 | Retained conveyor command | A3 |
+| A3 | `conveyor` | A0 output boundary |
+
+The controls and mechanisms listed on A0 are distributed to its children as shown in the ICOM table, maintaining parent–child boundary consistency.
+
+## Behavioral interpretation
+
+| `sensor_a` | `sensor_b` | Resulting conveyor command |
+|---|---|---|
+| FALSE | FALSE | Retain the previous command. |
+| TRUE | FALSE | Set the command to TRUE. |
+| FALSE | TRUE | Reset the command to FALSE. |
+| TRUE | TRUE | Reset the command to FALSE under the reset-priority rule. |
+
+**Unspecified boundary conditions:** The task does not define startup initialization or power-cycle retention; those policies must be resolved before implementation. Stopping the command at B also assumes the scene’s conveyor dynamics allow the box to remain at B.

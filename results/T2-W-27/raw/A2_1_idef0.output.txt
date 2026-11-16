@@ -1,0 +1,19 @@
+The model below treats the **PLC control logic** as the system boundary. Its outputs are valve commands, not the physical liquid flow.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSHH** | **TimerDuration**; initial-step rule; stop-priority rule; timer-or-overfill termination rule; discharge-valve inhibition rule | **fill_valve**; **discharge_valve** | OpenPLC Runtime; Factory I/O digital tank scene; Modbus TCP interface |
+| **A1** | **Determine the active filling step** | **start**; **stop**; **LSHH**; **timer_done** | Initial state: step 0; start-triggered entry into the filling step; termination on **timer_done** or **LSHH**; unconditional priority of **stop** | Active-step state | OpenPLC state-transition logic; step-state memory |
+| **A2** | **Measure filling-step duration** | Active-step state | **TimerDuration**; timer activation on entry into the filling step; timer reset in step 0 | **timer_done** | OpenPLC timer instance; runtime time base |
+| **A3** | **Generate valve commands** | Active-step state | **stop**; step-0 output inhibition; filling-step valve rule; discharge-valve inhibition rule | **fill_valve**; **discharge_valve** | OpenPLC output logic; output image; Modbus TCP output mapping |
+
+### Interpretation and boundary details
+
+- **Active-step state** is either **step 0** or **the filling step**. A1 initializes it to step 0. A start event initiates filling; **stop** overrides filling and any simultaneous start event.
+- A2 starts timing when the filling step begins. **timer_done** feeds back to A1. A1 returns to step 0 when **timer_done** or **LSHH** is TRUE, whichever occurs first.
+- A3 makes **fill_valve** TRUE only during the filling step and while **stop** is FALSE. **discharge_valve** is always FALSE.
+- **LSH** is available instrumentation but has **no functional role in the stated requirements**. It therefore has no arrow in this functional model; in particular, reaching 2.4 m does not terminate filling.
+- **start** denotes the specified one-scan pressing event, rather than the sustained value of `StartCommand`. Its acquisition requires edge detection if the mapped button signal remains TRUE across multiple scans.
+- The I/O bindings are: **start** from `StartCommand` at `%IX100.0`; **stop** from `StopCommand` at `%IX100.1`; unused **LSH** at `%IX100.2`; **LSHH** at `%IX100.3`; **fill_valve** to `%QX100.0`; and **discharge_valve** to `%QX100.1`. **timer_done** is internal, not a mapped plant input.
+
+In IDEF0 terms, A1–A3 are the children of A0. **Active-step state** and **timer_done** are internal arrows and therefore do not appear on the A0 boundary.

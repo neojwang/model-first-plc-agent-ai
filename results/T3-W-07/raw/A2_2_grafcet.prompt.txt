@@ -1,0 +1,72 @@
+Continue as the independent reviewer. From the control task and your own IDEF0 model below, derive the behavioral model of the task as an IEC 60848 GRAFCET, written in the JSON schema at the end. Do not rely on any other solution.
+
+Control task:
+# Task T3 - Factory I/O Scene 3, Filling Tank (Timers), TON and TOF timers
+
+Plant: as in T2 (digital tank configuration, customized with level switches LSH at 2.4 m and LSHH at 2.7 m).
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: StartCommand AT %IX100.0 : BOOL; StopCommand AT %IX100.1 : BOOL; LSH AT %IX100.2 : BOOL; LSHH AT %IX100.3 : BOOL.
+- Outputs: FillValve AT %QX100.0 : BOOL; DischargeValve AT %QX100.1 : BOOL (keep FALSE in this task).
+- Parameters: TON_Duration : TIME; TOF_Duration : TIME.
+
+Requirements:
+1. Step 0 is the initial step; it drives no output.
+2. On StartCommand, fill: open the fill valve in a filling step. An on-delay timer TON with IN := activity of the filling step limits each filling phase to TON_Duration.
+3. When TON has elapsed and LSH does not detect the liquid, close the fill valve (pause step). An off-delay timer TOF with IN := activity of the filling step keeps its output TRUE for TOF_Duration after the filling step is left; when the TOF output is FALSE, resume filling.
+4. When LSH detects the liquid, end filling with the fill valve closed and return to step 0. LSHH must never be reached.
+5. Whenever StopCommand is TRUE, return to step 0 with all outputs FALSE.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: start (the event of pressing StartCommand: TRUE only in the scan in which the button is pressed), stop, LSH, LSHH, ton_q (output Q of TON), tof_q (output Q of TOF)
+- outputs: fill_valve, discharge_valve
+
+Your IDEF0 model:
+### IDEF0 functional model
+
+The context function is **A0 — Control timed tank filling**. Its children are **A1–A4** below. These are functions, not sequential steps; the initial, filling, and pause steps are represented by the internal **operating state**.
+
+Signal information is treated as **input data** because the controller evaluates it to determine state and outputs. Timing parameters, transition rules, and safety requirements are **controls**. Internal arrows connect child functions and do not appear at the A0 boundary.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSH; LSHH | TON_Duration; TOF_Duration; initial-state requirement; filling/pause transition rules; stop-priority requirement; high-level completion requirement; high-high-level avoidance requirement; discharge-valve inhibition requirement | fill_valve; discharge_valve | OpenPLC Runtime; PLC application; Factory I/O tank scene; Modbus TCP connection; command interface; level switches; valve actuators |
+| **A1** | **Determine operating state** | start; stop; LSH; LSHH; ton_q; tof_q; stored operating state | Initial-state requirement; stop-priority requirement; high-level completion requirement; filling/pause transition rules; high-high-level avoidance requirement | Operating state; filling-step activity; stored operating state | PLC state-transition logic; state memory; OpenPLC cyclic execution |
+| **A2** | **Time filling activity** | Filling-step activity | TON_Duration; TON behavior specification | ton_q | TON function-block instance; OpenPLC time base |
+| **A3** | **Time filling interruption** | Filling-step activity | TOF_Duration; TOF behavior specification | tof_q | TOF function-block instance; OpenPLC time base |
+| **A4** | **Generate valve commands** | Operating state; stop | Filling-step output rule; initial-step and pause-step output rules; stop-priority requirement; discharge-valve inhibition requirement | fill_valve; discharge_valve | PLC output logic; OpenPLC output image; Modbus TCP output mapping |
+
+### Meaning of the principal controls
+
+- **Initial-state requirement:** Initialize the operating state to step 0, with both outputs FALSE.
+- **Stop-priority requirement:** Whenever `stop` is TRUE, select step 0 and force both outputs FALSE, overriding other transitions.
+- **High-level completion requirement:** During an active filling cycle, `LSH` ends the cycle and returns the operating state to step 0. This takes precedence over entering or leaving the pause state.
+- **Filling/pause transition rules:**
+  - Step 0 → filling on `start`, provided `stop` is FALSE and `LSH` is not already detected.
+  - Filling → pause when `ton_q` is TRUE and `LSH` is FALSE.
+  - Pause → filling when `tof_q` is FALSE, provided neither stop nor high-level completion applies.
+- **Timer behavior:** Both timers receive **filling-step activity** as their IN value. TON measures continuous filling activity; TOF remains TRUE for `TOF_Duration` after that activity becomes FALSE.
+- **Output rules:** `fill_valve` is TRUE only in the filling state and while `stop` is FALSE. `discharge_valve` is always FALSE.
+
+### Boundary and safety qualifications
+
+- `start` is the specified one-scan press event, not the sustained value of StartCommand. Its derivation belongs to the command interface at this model boundary. `stop`, `LSH`, and `LSHH` retain their specified meanings. The output arrows `fill_valve` and `discharge_valve` map to the stated physical output addresses.
+- **LSHH avoidance is a constraint, not a specified transition.** The task does not define a separate response to `LSHH`; therefore, this model does not silently add a high-high trip. Closing at `LSH` is the specified means of avoiding `LSHH`. Whether the liquid can *never* reach 2.7 m also depends on plant dynamics, sensing, scan/communication delays, and valve closure behavior; the supplied requirements alone do not establish that physical guarantee.
+
+GRAFCET JSON schema (the tuple of Equation (1) of the paper):
+
+{
+  "graphs": [ {"name": "G1", "steps": ["x0", "x1"], "initial": ["x0"]} ],
+  "transitions": [ {"id": "t1", "from": ["x0"], "to": ["x1"], "guard": "start"} ],
+  "outputs": { "fill_valve": "x1" },
+  "forcing": [ {"by": "x11", "graph": "G1", "situation": ["x0"]} ],
+  "owned": { "timer_done": {"step": "x1", "neutral": false, "preset": "TimerDuration"} }
+}
+
+Rules:
+1. Step names start with the letter x followed by letters or digits (x0, x1, x21, xE1). The main graph is named G1, and x0 is its initial step.
+2. A transition lists its upstream steps ("from"), its downstream steps ("to"), and its receptivity ("guard"). Guards use only the input identifiers of the task card, step names, the operators ! (not), & (and), | (or), parentheses, TRUE and FALSE; the level region of task T4 is tested as r = LOW, r = MID or r = HIGH.
+3. "outputs" gives, for every output identifier of the task card, a Boolean expression over step names that is TRUE while the output is on.
+4. "forcing" is optional: a separate graph (for example G0 for stop handling) may contain a step whose forcing order holds the graph named in "graph" in the listed situation.
+5. "owned" lists every timer or hold condition used in a guard (timer_done, ton_q, tof_q, settled) with the step whose activity it measures, the value it has at the instant that step becomes active ("neutral"), and its preset, written as the parameter name of the task card ("preset"). Conditions that measure the duration of a step are FALSE at that instant; the off-delay output tof_q is measured by the pause step and is TRUE at that instant.
+6. Output only the JSON object, without comments or explanations.

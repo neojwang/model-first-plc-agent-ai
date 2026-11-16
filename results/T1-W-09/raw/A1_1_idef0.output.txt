@@ -1,0 +1,57 @@
+## IDEF0 model
+
+### Modeling decisions
+
+- Use an IEC 61131-3 **RS bistable function block** to retain the conveyor command after the box leaves sensor A.
+- Use **reset dominance**: if `sensor_a` and `sensor_b` are both TRUE, stop the conveyor. This resolves a case not explicitly prioritized in the requirements.
+- Assume an initial conveyor command of FALSE.
+- Treat sensor detection as **level-sensitive**, not edge-sensitive. No code is specified here.
+
+All function names below are verb phrases. Arrow names are noun phrases; the required identifiers `sensor_a`, `sensor_b`, and `conveyor` are preserved exactly.
+
+### A0 context and child-function ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Transport a box from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; Stop-at-B requirement; Reset-dominance rule; Initial-off policy; I/O address mapping; IEC 61131-3 bistable requirement | `conveyor` | OpenPLC Runtime; Factory I/O conveyor plant; Modbus TCP connection; IEC 61131-3 RS function block |
+| **A1** | **Determine the start request** | `sensor_a` | Start-on-A requirement | Start request | OpenPLC Runtime |
+| **A2** | **Determine the stop request** | `sensor_b` | Stop-at-B requirement | Stop request | OpenPLC Runtime |
+| **A3** | **Retain the conveyor command** | Start request; Stop request | Reset-dominance rule; Initial-off policy; IEC 61131-3 bistable requirement | Retained conveyor command | OpenPLC Runtime; IEC 61131-3 RS function block |
+| **A4** | **Apply the conveyor command** | Retained conveyor command | I/O address mapping | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O conveyor plant |
+
+### Child-diagram arrow connections
+
+These connections define the A0 decomposition and balance its external interfaces.
+
+| Arrow | Source | Destination | Meaning |
+|---|---|---|---|
+| `sensor_a` | A0 input boundary | A1 input | Box-presence indication at sensor A |
+| `sensor_b` | A0 input boundary | A2 input | Box-presence indication at sensor B |
+| Start request | A1 output | A3 input | Set request, TRUE while `sensor_a` is TRUE |
+| Stop request | A2 output | A3 input | Reset request, TRUE while `sensor_b` is TRUE |
+| Retained conveyor command | A3 output | A4 input | Stored run/stop command |
+| `conveyor` | A4 output | A0 output boundary | Conveyor actuator command |
+
+The A0 control arrows branch to the child functions listed in the ICOM table. Its mechanism arrows likewise support the indicated children.
+
+### Control-arrow definitions
+
+| Control arrow | Definition |
+|---|---|
+| Start-on-A requirement | Detection at sensor A requests conveyor operation. |
+| Stop-at-B requirement | Detection at sensor B requests conveyor stoppage so the box remains at B. |
+| Reset-dominance rule | A stop request overrides a simultaneous start request. |
+| Initial-off policy | The retained conveyor command initially equals FALSE. |
+| IEC 61131-3 bistable requirement | Conveyor-command retention uses an IEC 61131-3 SR or RS block; this model selects RS. |
+| I/O address mapping | `sensor_a` → `%IX100.0`; `sensor_b` → `%IX100.1`; `conveyor` → `%QX100.0`. Factory I/O scene tags use the corresponding Modbus driver mapping. |
+
+### Behavioral check for A3
+
+| Start request | Stop request | Retained conveyor command |
+|---|---|---|
+| FALSE | FALSE | Previous command |
+| TRUE | FALSE | TRUE |
+| FALSE | TRUE | FALSE |
+| TRUE | TRUE | FALSE — reset dominant |
+
+Thus, detection at A starts the conveyor, the retained command keeps it running between sensors, and detection at B stops it. With neither sensor active afterward, the stopped state remains retained until another start request occurs.

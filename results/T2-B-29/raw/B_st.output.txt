@@ -1,0 +1,101 @@
+FUNCTION_BLOCK FillingControl
+VAR_INPUT
+    start : BOOL;
+    stop : BOOL;
+    LSH : BOOL;
+    LSHH : BOOL;
+    TimerDuration : TIME;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+    timer_done : BOOL;
+END_VAR
+VAR
+    state_index : INT := 0;
+    filling_timer : TON;
+END_VAR
+
+(* Stop has priority over starting or continuing a fill. *)
+IF stop THEN
+    state_index := 0;
+ELSE
+    CASE state_index OF
+        0:
+            IF start AND NOT LSHH THEN
+                state_index := 1;
+            END_IF;
+
+        1:
+            IF LSHH THEN
+                state_index := 0;
+            END_IF;
+
+    ELSE
+        state_index := 0;
+    END_CASE;
+END_IF;
+
+filling_timer(
+    IN := (state_index = 1),
+    PT := TimerDuration
+);
+timer_done := filling_timer.Q;
+
+IF (state_index = 1) AND timer_done THEN
+    state_index := 0;
+
+    (* Reset immediately so a subsequent start gets a fresh interval. *)
+    filling_timer(IN := FALSE, PT := TimerDuration);
+END_IF;
+
+fill_valve := (state_index = 1) AND NOT stop AND NOT LSHH;
+discharge_valve := FALSE;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LSH AT %IX100.2 : BOOL;
+    LSHH AT %IX100.3 : BOOL;
+
+    FillValve AT %QX100.0 : BOOL;
+    DischargeValve AT %QX100.1 : BOOL;
+END_VAR
+VAR
+    (* Adjustable filling duration. *)
+    TimerDuration : TIME := T#5s;
+
+    start : BOOL := FALSE;
+    stop : BOOL := FALSE;
+    timer_done : BOOL := FALSE;
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+
+    start_trigger : R_TRIG;
+    controller : FillingControl;
+END_VAR
+
+start_trigger(CLK := StartCommand);
+start := start_trigger.Q;
+stop := StopCommand;
+
+controller(
+    start := start,
+    stop := stop,
+    LSH := LSH,
+    LSHH := LSHH,
+    TimerDuration := TimerDuration
+);
+
+timer_done := controller.timer_done;
+fill_valve := controller.fill_valve;
+discharge_valve := controller.discharge_valve;
+
+FillValve := fill_valve;
+DischargeValve := discharge_valve;
+
+END_PROGRAM

@@ -1,0 +1,208 @@
+{
+ "input_transformations": [],
+ "id": "resp_07c063389b9f9620016af9a73b2cc087d08a056681c1525a5b",
+ "object": "response",
+ "created_at": 1794746171,
+ "completed_at": 1794746187,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_07c063389b9f9620016af9a746633487d08942649372d4faeb",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-adGL3x9jcUyOOkT7hdWmNupoZch-Xbh8JfQJDp40SJryGqCcwW27KTeVnFFqblNWHAPzva5UdjkjfHLhLOAoeIVBZVHEs9ylcNaCb-5Qtl56PIbTUkZZ1IkI7W3rBLVowSqcUp6huz8_ZvHtrwo-_kqIrQP9ZQdcyN5dVPqc6Bp3z4z_aoJP5TvrfMRpYkHpyZnA0tBE5JzN1hb5zRwTsW-YH1ScyMpXutzUqa1ZsJFHrZzql6JvdCGIWi1RFa4p-n0OQZOT_HJaPlWEbGFzLLgra_F0Lie-pJxpswJB3hCAGmnjEry0WxWO8wmvz9mBHHwVillHXrdKucbXF8CiWz0CHBDxaNUUUP6lw8b6apssMcB24B5y6RVQHqv0dYWfb5ZHpXTSneq8DU0GDpUcib5sTRm5b7eqKnzP0elzN6jf8joBesOfrR7JgVwYGF3AAd0rmMBOpFyshuDPtkRKFTRznHfr4_gC6_7H9cwy6j_inpdilGuOgWvSkoGUlxSzfBA5YzFiraoZ8J_oplrXIj5nw7Kf9UH3NrUH3twxKBYc-sqEPeiskEMuOxwya9iGyjImT8jT9JCK9FBdXa9d7qB3Yv9xV1dxs9e2CQsLLmuGG79eo_RoWiUJPdX2B3IA86gJ1qLzCg-jEJsK7zC_sEaVnJvf102hOyf_GZDx7XpokQrQyvDvUHsnV46C7Zi4XowsXZraRTVSa92-07rg38Sx5GpXv7X0bwnjEmVtREsu9GP5Sllc7zYaZ8HAnXQcVxkHfAlJ7yqNvFqX--XPfN3WTI2Cex7-3xisu7PoAt3aNElcXroVo3RL-yN5Md10vk7wTANxz_WXKgln3JmYZKVpPcgHWQ5jyDEp2qG0FEIXqf1-rSs-tNnrHoCWUvcgiZ1J80ETP90jVJ2xvyL_Wde-kWs9JwuuCid5eP5oMaQunXHrLiqJODR0ze3lCgOodVNnIzZhX73fXneQjGmuz7KQ8wQeOqIoa34qz8IThBN9nER4jBjhp1qkd3qmdHB17T1d7V98QSVlNv8x8BPri_F3AtoyIwpF2_0oUN1LpQK3OjZEYdjwPWwSpJqFxTC6Zd_xdBY-V8GLXnoZGzi0yYi5QtDCNhm0hGsGzYCeNM_kyzPjeqC86DIjGwx7xE2TeaMK8SiiB95rOmkHsrTp0ulkc6ZrWcti9kNN4B88Qcniy9S4XmgbEiWhM3e6LJSKP_N55lJIIJzViApuQs7HQbvKJ0wkTDaZIldwNW6ZNjaYjFhGMAknXxwxET-LTuA9xldxw7-Gw4W29q4sUmENE2Hn-HA9BpO-hXPoj3vd4TcIRPkc2tUIUw1PASiEVn7JacmaEIA-DDQZ4tIYS9Nm56-7N0p__U-CX9acLCX4jNrGDD0C-D2WuELgE2bcKAyde7seqixOmDmXv2HEny90QKIPiheifxus0XSCbSLGSQqM0qub9x5nzlXoJTb6NY6ADQQfA2xI4rVImfsYsk6mD_LjgDLKggJrag7MH9a3zKX-RTdZltX2OK4UVx292Ch0qdNgh_spot5l3uvAhEjgvrSCec7HwBJNYBngZgQB9ZEyqkgdrreBAHdf4pjhMRbwi7FvcuDeZqyd27ZhMA3y7kfaNieIFfOdnSKCg-4sLcjgmvxpQ15mv5MfnQrSMJjtHtFCDS02q65mEQXWfjtkrkg_DHKdRwDuXUE00JtG6AJ3ZUfSfiY_sbBgsYAJS9Wur121hFgGRzQmjfrYmFjeUz-KC1l7jFDqCk1CFPkgEuzc1G6WJ-BfS4snRD7BLP8v0crykPoGUwgRix9ghtSkxVmd19XohfRUsZ2-EnMjGGafZjjN-rOmaFPW9I8u0DDn845Ojgm_9lZamL7g2NfAT0HuKRSHp2ZqKKHHqoJD9hpAMQQiExZaIqM2V4w3WdIWP9fw2o3ajY-q8xZW1L1QuuvM-kLy_l0FxMoqiXqJwvm4QwFxIO-xGeeejma6cqtiLA15ckXD8NCyx4XCvvyWfsXdqcuLEsMAgI2ztV5yF0bPSjx0ILy1h6L2L8qSmtby4Bi6YpcxgwTvDdPH79X2QmU3fMFxXDAY8SUZQ4eNhBhxQpkBW34kVpp0ytN-8E141DCmEMV6wjjuWLy8v5w63v79BXE7lGwkeWc4YHgXTufhR_YvT0XyKIPpwzl6N2YJx-wu-GZ_EPGCnBArhS60pzyhxIXCv9NDkIBis7cXFCjXXG27k-aTRArqd2TUEpJEtO_z5_xO6bBjVCL2ChGb06d3lhLcuGOpVcSYOCownZRoI3QUEV8ozH8fbPBBNYe2TAZVgVoE4K7-JxE1Ja0c8iGosostG-FTcSncqr8vVGfCkodhDC92-mZf7wQVuo5Z6aR8yU9ARfZJHtFOGzrArpn0GRREXihCkmRI9f-5odfleiWnXY-ZVw6YLVe6PY998yrgcwLkYSkwrDW-kwqJQvCbfiNU5hWtwM9UjzA-6kftZ0FCS_ItF0vtEgzP6bzxwEHIRYC9vavIR8HMvxkzver1h2I7RMG35YOFw6M22Wza4hegmmSD5Y3azph-jLLrMIhsv_iiunIe80Yk3vNbwKV7db97PB4pcR8Q2DX1ctK5gy8C-gasYSyqfbZtG2FDrhwlIrYFqU0dzOSNkgpl6jXvFMGVEfilI8BLZ9XjV1-kw_k2hjszAzM3Mpi5Z8iQn4NsF3wbX4i6FHPUg-w6oG-3EW_YPwDLHTCVYZ2KQrLgL-xcrIyHn7QFPjBgzqi3lgp_QudYx14qHAQ0c18tbZNpLq0q6teSqWlzJy4e7TzOVTe5HUCm_NJZaaed-M6AgjniULZn9JgzU0t8dAw0p7EC93uciqhOhcWB0y8pNE-mVRuOlmC-4QoSuohhNjd_60bpHgGS11k9j2SL6Um3A_ds5MKvYE-VYaFpuL4pu5bo0BUNQvYLe-40GvU0zCbDAjK8kvKSSfJaD5ukFpZOm-6vtOynTD61BZlui8KLW7q1t5TL3in_llGX1zRffdxgLvUdcdMF6BuR_B4qd2ge-2kjN0Kq2bttJhkLDUz4oNCvCpteCYE2BOArwhSnsSHYaEMDzgoxOxY11_1-i0P-stEqaAvFMbahhTVyl2gxLlU7u331QxOj9rE3CHhxWeB6-voejLmpCC59uWgrmE4zvzQQuwLVk_HFJms_J6xkIyOCgcGgMNV4xdZNpzV1epBzi7knjcYHJUXnpAmB5eV4s_YN98oso7Q2XvMDEQB1_jdQhVRvpscFeKjKmrDsWMU88nry0a9EhLXpE6RqY0eEq8oMFrkiHCi8n6RMTf8BdaAUnvv61sPl5NBZVCz15pQsS8cnDRWbdJJdpDeCIrDwPSzI16zjCLI_q0afu6qcaWLK18v3BoNVNkvu15tt-nEJiUNrz8O7V4hH7CxWupPqv2mJbwhoz7MsWkxZGsfabBkScDniRjJaHcnuzyGsnM2LnyReQBuFAOwUzj_NPz1YjQoRfQ_NMXtdY4AwjU33GFGDNqWC7yKmRwoJfVbkxhnIxx2PZiYOTw8KmY1Z-mNoUz8STcNmZRJXKLyQBR_uHfh1-Oh4eSbO6HG0DBvr9yQIHWcw6eED8ZCpFn_3ZCzo-IUDTZTAFvKIdSZ5LUoG1jv7Q0UjQ4Ct3QKjBXCPiZtk0cXfaLFUattDuh-nhvCbySpOGKFeb5h-zxxF1BHGYXcb0hbTWw0ncXrkVsN3qTIxsitXHNlVg8TBkdZDP4eszzidX5MB4JtzwFw6NXxxn212o1bY3vv--1r5oGjMAleiZgz0HEitfjxCEJQAWrsAbTfon_0ZYR93Q8RmYAYh_iCMI552q7RDAlG3L-CFkL7R2tCH60XAHT7OgYDbiyLi03JEDB1RnA3K0XwxgfoEnuK7FCzQNguREW_vSadfeETXGZ4feSSOLtepMzVVNOxFP44MyMzVQLebzEdzyKvyjgtSgBNsmuHrMBsWIEY68PGl3yPE97rlc7TdZHaLy6K4zE_FItWsHF0C6NPs5MrSALe9AkhbtbxX_GkJM-yEoVoTZ2e6aT-iamWE-UwBZcYuosz2K0X_STAjVs88HHIyXuhGCCN1p8u_x8h8POic6pXLkIBk1sHM0pTJo7t24bdItwDyLq46MOlcFEVoPK0KfQOsFw8ATxnrniFTaIXNRmI1t15"
+  },
+  {
+   "type": "message",
+   "id": "msg_07c063389b9f9620016af9a746633087d0812d7ab860a407d0",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "FUNCTION_BLOCK FB_TankFilling\nVAR_INPUT\n    StartCommand : BOOL;\n    StopCommand : BOOL;\n    LSH : BOOL;\n    LSHH : BOOL;\n    TimerDuration : TIME;\nEND_VAR\nVAR_OUTPUT\n    fill_valve : BOOL;\n    discharge_valve : BOOL;\nEND_VAR\nVAR\n    StateIndex : INT := 0;\n    StartEdge : R_TRIG;\n    FillingTimer : TON;\n    start : BOOL;\n    stop : BOOL;\n    timer_done : BOOL;\nEND_VAR\n\nStartEdge(CLK := StartCommand);\nstart := StartEdge.Q;\nstop := StopCommand;\n\nIF stop THEN\n    StateIndex := 0;\nELSE\n    CASE StateIndex OF\n        0:\n            IF start THEN\n                StateIndex := 1;\n            END_IF;\n        1:\n            StateIndex := 1;\n    ELSE\n        StateIndex := 0;\n    END_CASE;\nEND_IF;\n\nFillingTimer(IN := (StateIndex = 1), PT := TimerDuration);\ntimer_done := FillingTimer.Q;\n\nIF (StateIndex = 1) AND (stop OR timer_done OR LSHH) THEN\n    StateIndex := 0;\n    FillingTimer(IN := FALSE, PT := TimerDuration);\n    timer_done := FALSE;\nEND_IF;\n\nfill_valve := (StateIndex = 1) AND NOT stop;\ndischarge_valve := FALSE;\n\nEND_FUNCTION_BLOCK\n\n\nPROGRAM Main\nVAR\n    StartCommand AT %IX100.0 : BOOL;\n    StopCommand AT %IX100.1 : BOOL;\n    LSH AT %IX100.2 : BOOL;\n    LSHH AT %IX100.3 : BOOL;\n    FillValve AT %QX100.0 : BOOL;\n    DischargeValve AT %QX100.1 : BOOL;\nEND_VAR\nVAR\n    TimerDuration : TIME := T#10s;\n    TankController : FB_TankFilling;\nEND_VAR\n\nTankController(\n    StartCommand := StartCommand,\n    StopCommand := StopCommand,\n    LSH := LSH,\n    LSHH := LSHH,\n    TimerDuration := TimerDuration\n);\n\nFillValve := TankController.fill_valve;\nDischargeValve := TankController.discharge_valve;\n\nEND_PROGRAM",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "cdfac588-fe75-4246-b330-7ed26f31943f",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 3838,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 658,
+  "output_tokens_details": {
+   "reasoning_tokens": 184
+  },
+  "total_tokens": 4496,
+  "attribution": {
+   "items": {
+    "msg_07c063389b9f9620016af9a73b2db087d097c3a1278502ac25": {
+     "input_tokens": 473,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 473,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_07c063389b9f9620016af9a73b2db087d0ab1e804a7f92dcf9": {
+     "input_tokens": 770,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 770,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_07c063389b9f9620016af9a73b2db087d0ad0682283e6ee6d6": {
+     "input_tokens": 199,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 199,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_07c063389b9f9620016af9a73b2db087d0b89dc57b5e1a267e": {
+     "input_tokens": 1667,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 1667,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_07c063389b9f9620016af9a73b2db487d0b55d9c2ac4df3db0": {
+     "input_tokens": 727,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 727,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_07c063389b9f9620016af9a746633087d0812d7ab860a407d0": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 474,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 474
+      }
+     ]
+    },
+    "rs_07c063389b9f9620016af9a746633487d08942649372d4faeb": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 184
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 479,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

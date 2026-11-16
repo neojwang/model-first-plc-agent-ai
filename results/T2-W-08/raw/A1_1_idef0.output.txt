@@ -1,0 +1,58 @@
+## A0 context and decomposition
+
+**Scope:** Model the PLC control function for timed filling of the tank. The tank and its liquid are the controlled plant, outside the controller boundary.
+
+All function names below are verb phrases. Arrow names are noun phrases or the exact signal identifiers required by the task.
+
+### IDEF0 ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | Raw input image | TimerDuration; Initial-step rule; Start-event rule; Stop-priority rule; Filling-completion rule; Discharge-inhibition rule; I/O mapping | fill_valve; discharge_valve | OpenPLC Runtime; PLC program; Modbus TCP connection; Factory I/O driver |
+| **A1** | **Interpret operator and level signals** | Raw input image; Previous StartCommand sample | I/O mapping; Start-event rule | start; stop; LSH; LSHH; Updated StartCommand sample | PLC input processing; Rising-edge detector; Input-history memory |
+| **A2** | **Manage the filling sequence** | start; Current step | stop; LSHH; timer_done; Initial-step rule; Stop-priority rule; Filling-completion rule | Updated step; Filling-step status | PLC sequence logic; Step memory |
+| **A3** | **Measure the filling interval** | Filling-step status; Current timer state | TimerDuration; Timer-reset rule; PLC time base | timer_done; Updated timer state | Nonretentive on-delay timer; Timer-state memory |
+| **A4** | **Generate valve commands** | Filling-step status | stop; LSHH; timer_done; Initial-step rule; Discharge-inhibition rule; I/O mapping | fill_valve; discharge_valve | PLC output logic; PLC output image; Modbus TCP connection; Factory I/O driver |
+
+### Arrow definitions and physical mapping
+
+| Arrow | Definition / mapping |
+|---|---|
+| **Raw input image** | The sampled physical inputs: `StartCommand AT %IX100.0`, `StopCommand AT %IX100.1`, `LSH AT %IX100.2`, and `LSHH AT %IX100.3`. |
+| **start** | Rising-edge event from StartCommand; TRUE only during the scan in which the button is pressed. |
+| **stop** | Current StopCommand level. |
+| **LSH** | Target-level indication at **2.4 m**; TRUE when liquid is detected. It is available but does **not** terminate filling in this task. |
+| **LSHH** | Overfill-limit indication at **2.7 m**; TRUE when liquid is detected. |
+| **timer_done** | Indication that the active filling interval has reached TimerDuration. |
+| **Current step / Updated step** | Stored sequence state: step 0 or the filling step, designated step 1. |
+| **Filling-step status** | Indication that step 1 is active. It enables timing and requests filling. |
+| **Current timer state / Updated timer state** | Internal elapsed-time and timer-status information. |
+| **Previous StartCommand sample / Updated StartCommand sample** | Input-history information used to generate start. |
+| **fill_valve** | Fill-valve command mapped to `FillValve AT %QX100.0`; TRUE opens the valve. |
+| **discharge_valve** | Discharge-valve command mapped to `DischargeValve AT %QX100.1`; always FALSE in this task. |
+
+### Control definitions
+
+| Control | Meaning |
+|---|---|
+| **Initial-step rule** | Initialization selects step 0. Step 0 commands both outputs FALSE. |
+| **Start-event rule** | A new start event can initiate filling only from step 0; a held StartCommand does not repeatedly initiate cycles. |
+| **Stop-priority rule** | Whenever stop is TRUE, select step 0 and command both outputs FALSE, regardless of other conditions. |
+| **Filling-completion rule** | While filling, timer_done or LSHH ends filling and returns the sequence to step 0. LSHH also prevents an effective fill command if already TRUE when start occurs. |
+| **Timer-reset rule** | Start timing upon entry to the filling step; reset timing outside that step. Each accepted start therefore begins a new interval. |
+| **Discharge-inhibition rule** | discharge_valve remains FALSE in every state. |
+| **I/O mapping** | The physical input and output assignments listed above, using the Factory I/O Modbus TCP slave connection. |
+
+### Child-function connections
+
+- **A1 → A2:** start, stop, LSHH.
+- **A1 → A4:** stop, LSHH.
+- **A1 → input-history memory → A1:** Updated StartCommand sample → Previous StartCommand sample.
+- **A2 → step memory → A2:** Updated step → Current step.
+- **A2 → A3 and A4:** Filling-step status.
+- **A3 → A2 and A4:** timer_done.
+- **A3 → timer-state memory → A3:** Updated timer state → Current timer state.
+- **A4 → A0 boundary:** fill_valve, discharge_valve.
+- **LSH** has no downstream control use in this task.
+
+**Execution constraint:** The function numbering is an IDEF0 decomposition, not a PLC execution order. The eventual implementation must resolve timer completion and sequence transitions so that stop, LSHH, or timer_done suppresses fill_valve in the scan in which the condition is recognized. No automatic restart occurs after completion; another start event is required.

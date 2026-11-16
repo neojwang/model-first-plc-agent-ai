@@ -1,0 +1,16 @@
+In IDEF0 notation, **A0** is the overall function shown on the **A-0 context diagram**; **A1–A3** are its child functions. The decomposition below models the controller, rather than the physical movement of liquid.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSH**; **LSHH** | **TimerDuration**; initial-step rule; filling-sequence rules; stop-priority rule; discharge-valve inhibition rule | **fill_valve**; **discharge_valve** | OpenPLC Runtime; Factory I/O tank scene and capacitive level switches; Modbus TCP I/O connection |
+| **A1** | **Determine the filling step** | **start**; **stop**; **LSHH**; **timer_done** | Initial state: step 0; transition from step 0 to the filling step on **start**; return from the filling step to step 0 on **timer_done** or **LSHH**; return to step 0 whenever **stop** is TRUE, with stop taking priority | Filling-step state | OpenPLC Runtime; sequence-state logic |
+| **A2** | **Measure the filling duration** | Filling-step state | **TimerDuration**; timer activation on entry to the filling step; timer reset in step 0 | **timer_done** | OpenPLC Runtime; nonretentive on-delay timer |
+| **A3** | **Command the tank valves** | Filling-step state; **stop** | **fill_valve** TRUE only during the filling step; both outputs FALSE in step 0 or whenever **stop** is TRUE; **discharge_valve** always FALSE | **fill_valve**; **discharge_valve** | OpenPLC Runtime; output mapping to `%QX100.0` and `%QX100.1`; Modbus TCP I/O connection |
+
+**Interface and interpretation notes**
+
+- **start** is the one-scan rising-edge event derived from `StartCommand` at `%IX100.0`, not its maintained level. Holding the button therefore does not automatically start another filling cycle.
+- **stop**, **LSH**, and **LSHH** correspond respectively to `StopCommand` at `%IX100.1`, the 2.4 m switch at `%IX100.2`, and the 2.7 m switch at `%IX100.3`.
+- **LSH** is an available context input but has **no functional consumer** in this task: the requirements do not use the target-level switch to terminate filling.
+- **timer_done** is an internal feedback arrow from **A2** to **A1**, not an external context input. Filling-step state connects **A1** to **A2** and **A3**.
+- Timer expiration and **LSHH** are alternative termination conditions: either returns the sequence to step 0 and closes **fill_valve**. **stop** overrides filling and forces both valve outputs FALSE.

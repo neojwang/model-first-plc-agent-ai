@@ -1,0 +1,109 @@
+## A0 context and decomposition
+
+**A0 — Control timed tank filling**
+
+The model uses three child functions:
+
+- **A1 — Select the operating step**
+- **A2 — Generate the timing states**
+- **A3 — Command the tank valves**
+
+This is a **functional decomposition**, not an execution-order diagram. Feedback between A1 and A2 represents the relationship between step activity and timer states.
+
+### Modeling conventions
+
+- **Inputs** are signals or information transformed by a function.
+- **Controls** are requirements, parameters, and rules governing the transformation.
+- **Outputs** are resulting signals or information.
+- **Mechanisms** are the resources performing the function.
+- `start`, `stop`, `LSH`, `LSHH`, `ton_q`, `tof_q`, `fill_valve`, and `discharge_valve` use the required identifier vocabulary.
+- **Operating-step state** and **Filling-step activity** are internal information arrows, not additional physical I/O.
+- Timer durations are assumed to be valid, nonnegative `TIME` values.
+
+## ICOM table
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | Initial-step rule; Start-event rule; Stop-priority rule; Level-completion rule; Timed-filling rule; Timed-pause rule; High-high exclusion requirement; Discharge-inhibition rule; `TON_Duration`; `TOF_Duration` | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan cycle; Start-edge detection; TON timer instance; TOF timer instance; Modbus TCP connection; Factory I/O digital tank and valve actuators |
+| **A1** | **Select the operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step rule; Start-event rule; Stop-priority rule; Level-completion rule; Timed-filling rule; Timed-pause rule; High-high exclusion requirement | Operating-step state; Filling-step activity | OpenPLC Runtime; Retained step-state memory |
+| **A2** | **Generate the timing states** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON timing semantics; TOF timing semantics; Timer-initialization rule | `ton_q`; `tof_q` | TON timer instance; TOF timer instance; PLC time base; PLC scan cycle |
+| **A3** | **Command the tank valves** | Operating-step state; `stop`; `LSH` | Filling-output rule; Initial-step output rule; Pause-output rule; Stop-priority rule; Level-completion rule; Discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC output image; Modbus TCP connection; Factory I/O valve actuators |
+
+## Child-function behavior
+
+### A1 — Select the operating step
+
+The **Operating-step state** has three values:
+
+| State | Meaning |
+|---|---|
+| **Step 0** | Initial or stopped condition |
+| **Filling step** | Active filling phase |
+| **Pause step** | Timed interruption of filling |
+
+The governing controls are:
+
+| Control arrow | Governing rule |
+|---|---|
+| **Initial-step rule** | The initial state is Step 0. |
+| **Start-event rule** | In Step 0, `start` permits entry into the filling step only when `stop` is FALSE and `LSH` is FALSE. |
+| **Stop-priority rule** | From any state, `stop` forces Step 0. It has priority over starting, timer transitions, and resumption. |
+| **Level-completion rule** | `LSH` ends the filling operation and returns the sequence to Step 0, including when detection occurs during a pause. A new `start` event is required for another operation. |
+| **Timed-filling rule** | In the filling step, `ton_q` together with FALSE `LSH` causes entry into the pause step. |
+| **Timed-pause rule** | In the pause step, FALSE `tof_q` permits resumption of filling, provided neither `stop` nor `LSH` is TRUE. |
+| **High-high exclusion requirement** | `LSHH` must remain FALSE during normal operation. It is not the normal filling-completion threshold. |
+
+**Filling-step activity** is TRUE exactly while the operating-step state is the filling step.
+
+### A2 — Generate the timing states
+
+- The TON input is **Filling-step activity**, and its preset is `TON_Duration`.
+  - `ton_q` becomes TRUE after continuous filling-step activity for that duration.
+  - Leaving the filling step resets the TON timing state and `ton_q`.
+
+- The TOF input is also **Filling-step activity**, and its preset is `TOF_Duration`.
+  - `tof_q` is TRUE while the filling step is active.
+  - After the filling step is left, `tof_q` remains TRUE for `TOF_Duration`, then becomes FALSE.
+  - A return to the filling step makes `tof_q` TRUE again.
+
+- Timer instances start in their normal inactive, nonretentive condition. Neither timer can independently start filling from Step 0.
+
+### A3 — Command the tank valves
+
+| Condition | `fill_valve` | `discharge_valve` |
+|---|---:|---:|
+| `stop` TRUE | FALSE | FALSE |
+| `LSH` TRUE | FALSE | FALSE |
+| Step 0 | FALSE | FALSE |
+| Filling step, without an overriding condition | TRUE | FALSE |
+| Pause step | FALSE | FALSE |
+
+Thus, **Step 0 drives no output**, and the discharge valve remains closed throughout the task.
+
+## Internal arrow connections
+
+| Arrow | Source | Destination |
+|---|---|---|
+| Operating-step state | A1 | A3 |
+| Filling-step activity | A1 | A2 |
+| `ton_q` | A2 | A1 |
+| `tof_q` | A2 | A1 |
+
+The context inputs and controls connect to the child functions listed in the ICOM table. A3 supplies both context outputs.
+
+## Physical interface binding
+
+| Model arrow | Physical binding |
+|---|---|
+| `start` | Rising-edge event derived from `StartCommand AT %IX100.0`; TRUE for one scan only |
+| `stop` | `StopCommand AT %IX100.1` |
+| `LSH` | `LSH AT %IX100.2`; switch elevation 2.4 m |
+| `LSHH` | `LSHH AT %IX100.3`; switch elevation 2.7 m |
+| `fill_valve` | `FillValve AT %QX100.0` |
+| `discharge_valve` | `DischargeValve AT %QX100.1` |
+
+### Safety boundary requiring confirmation
+
+The requirement **“LSHH must never be reached”** is a plant-level constraint. Closing the fill valve at `LSH` satisfies it only if sensor response, communication delay, scan time, valve closing time, and residual inflow keep the level below 2.7 m.
+
+The task does **not** specify an `LSHH` fault-response or reset policy; this model does not silently invent one. Before implementation, confirm both the physical stopping margin and the required response to an unexpected `LSHH` indication.

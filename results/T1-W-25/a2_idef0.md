@@ -1,0 +1,12 @@
+The model below covers the **PLC control function**, rather than the physical movement of the box. Thus, `sensor_a` and `sensor_b` are information inputs, and `conveyor` is the command output. A0 is the context function; A1–A3 are its child functions.
+
+A **reset-dominant RS block** is selected from the permitted SR/RS alternatives. This makes the stop request dominant if both sensors are TRUE; the task does not otherwise specify simultaneous-sensor behavior.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control conveyor transport from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-on-B requirement; IEC 61131-3 bistable-block requirement; reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; Modbus TCP connection; Factory I/O scene and driver |
+| **A1** | **Generate the start request** | `sensor_a` | Start-on-A rule: a TRUE detection produces an active start request; input mapping `%IX100.0` | Start request | OpenPLC input image and cyclic program execution |
+| **A2** | **Generate the stop request** | `sensor_b` | Stop-on-B rule: a TRUE detection produces an active stop request; input mapping `%IX100.1` | Stop request | OpenPLC input image and cyclic program execution |
+| **A3** | **Latch the conveyor command** | Start request; Stop request | RS transition rules: stop request resets the command; otherwise start request sets the command; neither request preserves the previous command; output mapping `%QX100.0` | `conveyor` | IEC 61131-3 RS function-block instance and its stored state; OpenPLC cyclic execution and output image; Modbus TCP connection to Factory I/O |
+
+**Internal arrow connections:** A1’s **Start request** and A2’s **Stop request** feed A3. A3 supplies the A0 boundary output, `conveyor`. The bistable state keeps the conveyor running after the box leaves sensor A and keeps it stopped after detection at sensor B, until a subsequent start request occurs.

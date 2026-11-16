@@ -1,0 +1,41 @@
+## IDEF0 model
+
+### Modeling decisions
+
+- Use an IEC 61131-3 **RS bistable function block**: `sensor_a` sets the command and `sensor_b` resets it.
+- **Reset dominance is a design choice:** if both sensors are TRUE, the conveyor stops. This gives priority to retaining the box at sensor B.
+- With neither sensor TRUE, the bistable retains its previous state.
+- **Initialization assumption:** the conveyor command is FALSE at startup. Restart retention is not specified by the task.
+
+### A0 context function and decomposition
+
+All function names are verb phrases; all arrow names are noun phrases. The identifiers `sensor_a`, `sensor_b`, and `conveyor` are used exactly as requested.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Transport a box from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable requirement; reset-priority policy; startup initialization policy; I/O address map | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS function block; PLC state memory; Modbus TCP connection; Factory I/O conveyor plant |
+| **A1** | **Maintain the conveyor command** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-at-B requirement; IEC 61131-3 bistable requirement; reset-priority policy; startup initialization policy | Latched conveyor command | IEC 61131-3 RS function block; PLC state memory; OpenPLC cyclic execution |
+| **A2** | **Apply the conveyor command** | Latched conveyor command | I/O address map; output polarity convention | `conveyor` | OpenPLC output image; Modbus TCP connection; Factory I/O conveyor actuator |
+
+### Arrow connections
+
+- **A0 input → A1 input:** `sensor_a`
+- **A0 input → A1 input:** `sensor_b`
+- **A1 output → A2 input:** Latched conveyor command
+- **A2 output → A0 output:** `conveyor`
+
+The bistable’s retained state is internal to **A1**, supported by PLC state memory. It is not an additional external input.
+
+### Control-arrow definitions
+
+| Control arrow | Meaning |
+|---|---|
+| Start-on-A requirement | A TRUE `sensor_a` sets the conveyor command unless reset is active. |
+| Stop-at-B requirement | A TRUE `sensor_b` resets the conveyor command. |
+| IEC 61131-3 bistable requirement | The command is maintained by an SR or RS function block; this model selects RS. |
+| Reset-priority policy | Simultaneous TRUE sensor signals produce an OFF command. |
+| Startup initialization policy | The initial latched command is FALSE. |
+| I/O address map | `sensor_a` → `%IX100.0`; `sensor_b` → `%IX100.1`; `conveyor` → `%QX100.0`. |
+| Output polarity convention | TRUE runs the conveyor; FALSE stops it. |
+
+This model treats stopping the conveyor as sufficient to leave the box at sensor B, consistent with the stated Factory I/O task.

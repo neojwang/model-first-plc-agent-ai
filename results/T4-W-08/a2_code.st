@@ -1,0 +1,218 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    h_span : REAL;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    CycleSeconds : REAL;
+END_VAR
+VAR_OUTPUT
+    FillValve : INT;
+    DischargeValve : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+    REGION_LOW : INT := 0;
+    REGION_MIDDLE : INT := 1;
+    REGION_HIGH : INT := 2;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    SequenceState : INT := 0;
+    WasRegulating : BOOL := FALSE;
+    h : REAL;
+    h_sp : REAL;
+    e : REAL;
+    NormalizedError : REAL;
+    PreviousError : REAL := 0.0;
+    IntegralTerm : REAL := 0.0;
+    IntegralCandidate : REAL;
+    ProportionalTerm : REAL;
+    DerivativeTerm : REAL;
+    CandidateDemand : REAL;
+    RawDemand : REAL;
+    BoundedDemand : REAL;
+    ParametersValid : BOOL;
+END_VAR
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+h_sp := h_target;
+e := h_sp - h;
+
+IF h < h_target THEN
+    r := REGION_LOW;
+ELSIF h < h_max THEN
+    r := REGION_MIDDLE;
+ELSE
+    r := REGION_HIGH;
+END_IF;
+
+ParametersValid :=
+    (h_span > 0.0) AND
+    (CycleSeconds > 0.0) AND
+    (Ti >= 0.0) AND
+    (Td >= 0.0);
+
+(* The hold interval measures continuous time inside the tolerance band,
+   and is reset whenever regulation is inactive or the band is left. *)
+HoldTimer(
+    IN := x1 AND NOT stop AND ParametersValid AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+(* Stop has priority over every transition and action. *)
+IF stop OR NOT ParametersValid THEN
+    SequenceState := 0;
+ELSE
+    CASE SequenceState OF
+        0:
+            IF start AND (r <> REGION_HIGH) THEN
+                SequenceState := 1;
+            END_IF;
+        1:
+            IF settled OR (r = REGION_HIGH) THEN
+                SequenceState := 0;
+            END_IF;
+    ELSE
+        SequenceState := 0;
+    END_CASE;
+END_IF;
+
+x0 := SequenceState = 0;
+x1 := SequenceState = 1;
+fill_valve := x1;
+discharge_valve := x1;
+
+FillValve := 0;
+DischargeValve := 0;
+
+IF x1 THEN
+    NormalizedError := e / h_span;
+
+    IF NOT WasRegulating THEN
+        IntegralTerm := 0.0;
+        PreviousError := NormalizedError;
+    END_IF;
+
+    (* Parallel terms implement Kp * (e + integral(e)/Ti + Td*de/dt),
+       using error normalized to the measuring span. *)
+    ProportionalTerm := Kp * NormalizedError;
+    DerivativeTerm :=
+        Kp * Td * (NormalizedError - PreviousError) / CycleSeconds;
+
+    IF Ti > 0.0 THEN
+        IntegralCandidate :=
+            IntegralTerm + Kp * NormalizedError * CycleSeconds / Ti;
+    ELSE
+        (* Ti = 0 disables integral action. *)
+        IntegralTerm := 0.0;
+        IntegralCandidate := 0.0;
+    END_IF;
+
+    RawDemand := ProportionalTerm + IntegralTerm + DerivativeTerm;
+    CandidateDemand :=
+        ProportionalTerm + IntegralCandidate + DerivativeTerm;
+
+    (* Suspend integration when the existing or proposed demand is clamped. *)
+    IF (RawDemand >= 0.0) AND (RawDemand <= 1.0) AND
+       (CandidateDemand >= 0.0) AND (CandidateDemand <= 1.0) THEN
+        IntegralTerm := IntegralCandidate;
+    END_IF;
+
+    RawDemand := ProportionalTerm + IntegralTerm + DerivativeTerm;
+
+    IF RawDemand < 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSIF RawDemand > 1.0 THEN
+        BoundedDemand := 1.0;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    FillValve := REAL_TO_INT(BoundedDemand * INT_TO_REAL(FULL_SCALE));
+    DischargeValve := REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+    PreviousError := NormalizedError;
+ELSE
+    IntegralTerm := 0.0;
+    PreviousError := 0.0;
+    BoundedDemand := 0.0;
+END_IF;
+
+WasRegulating := x1;
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR
+    LevelController : FB_LevelControl;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+
+    h_span : REAL := 10.0;
+    h_target : REAL;
+    h_max : REAL;
+    eps : REAL;
+    t_h : TIME := T#10s;
+
+    (* Initial tuning values; adjust for the simulated plant. *)
+    Kp : REAL := 1.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+
+    (* Configure the OpenPLC task to execute Main every 20 ms,
+       or change this value to match its actual execution interval. *)
+    CycleSeconds : REAL := 0.02;
+END_VAR
+
+h_target := 0.8 * h_span;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+
+LevelController(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    h_span := h_span,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleSeconds := CycleSeconds
+);
+
+FillValve := LevelController.FillValve;
+DischargeValve := LevelController.DischargeValve;
+fill_valve := LevelController.fill_valve;
+discharge_valve := LevelController.discharge_valve;
+END_PROGRAM

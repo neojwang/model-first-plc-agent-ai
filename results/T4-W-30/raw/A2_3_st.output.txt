@@ -1,0 +1,213 @@
+FUNCTION_BLOCK FB_LevelControl
+VAR_INPUT
+    StartCommand : BOOL;
+    StopCommand : BOOL;
+    LevelMeter : INT;
+    FULL_SCALE : INT := 1000;
+    h_span : REAL := 10.0;
+    h_sp : REAL := 8.0;
+    h_target : REAL := 8.0;
+    h_max : REAL := 9.0;
+    eps : REAL := 0.2;
+    t_h : TIME := T#10s;
+    Kp : REAL := 0.5;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+    CycleTime : TIME := T#20ms;
+END_VAR
+VAR_OUTPUT
+    FillValve : INT;
+    DischargeValve : INT;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+VAR
+    StartEdge : R_TRIG;
+    HoldTimer : TON;
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+    r : INT;
+    StateNumber : INT := 0;
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    WasRegulating : BOOL := FALSE;
+    h : REAL;
+    e : REAL;
+    PreviousError : REAL := 0.0;
+    SampleSeconds : REAL;
+    IntegralTerm : REAL := 0.0;
+    DerivativeTerm : REAL := 0.0;
+    RawDemand : REAL := 0.0;
+    BoundedDemand : REAL := 0.0;
+END_VAR
+
+(* PID demand is a fraction of full valve opening.
+   Kp is expressed in opening fraction per level unit;
+   Ti and Td are expressed in seconds.
+   CycleTime must match the cyclic task period. *)
+
+StartEdge(CLK := StartCommand);
+start := StartEdge.Q;
+stop := StopCommand;
+
+IF FULL_SCALE > 0 THEN
+    h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+ELSE
+    h := 0.0;
+END_IF;
+
+e := h_sp - h;
+
+(* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+IF h >= h_max THEN
+    r := 2;
+ELSIF h >= h_target THEN
+    r := 1;
+ELSE
+    r := 0;
+END_IF;
+
+x0 := StateNumber = 0;
+x1 := StateNumber = 1;
+
+(* The hold interval must be continuous and confined to regulation. *)
+HoldTimer(
+    IN := x1 AND NOT stop AND (ABS(e) <= eps),
+    PT := t_h
+);
+settled := HoldTimer.Q;
+
+IF stop THEN
+    StateNumber := 0;
+ELSE
+    CASE StateNumber OF
+        0:
+            IF start AND (r <> 2) THEN
+                StateNumber := 1;
+            END_IF;
+        1:
+            IF settled OR (r = 2) THEN
+                StateNumber := 0;
+            END_IF;
+    ELSE
+        StateNumber := 0;
+    END_CASE;
+END_IF;
+
+x0 := StateNumber = 0;
+x1 := StateNumber = 1;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+SampleSeconds := TIME_TO_REAL(CycleTime) / 1000.0;
+
+FillValve := 0;
+DischargeValve := 0;
+
+IF x1 AND (FULL_SCALE > 0) THEN
+    IF NOT WasRegulating THEN
+        IntegralTerm := 0.0;
+        PreviousError := e;
+    END_IF;
+
+    DerivativeTerm := 0.0;
+    IF (SampleSeconds > 0.0) AND (Td > 0.0) THEN
+        DerivativeTerm :=
+            Kp * Td * (e - PreviousError) / SampleSeconds;
+    END_IF;
+
+    RawDemand := Kp * e + IntegralTerm + DerivativeTerm;
+
+    IF RawDemand >= 1.0 THEN
+        BoundedDemand := 1.0;
+    ELSIF RawDemand <= 0.0 THEN
+        BoundedDemand := 0.0;
+    ELSE
+        BoundedDemand := RawDemand;
+    END_IF;
+
+    (* Forward-Euler integration updates the next scan's integral.
+       Integration is suspended whenever demand is at either limit.
+       Ti <= 0 disables integral action. *)
+    IF Ti <= 0.0 THEN
+        IntegralTerm := 0.0;
+    ELSIF (SampleSeconds > 0.0)
+          AND (RawDemand > 0.0)
+          AND (RawDemand < 1.0) THEN
+        IntegralTerm :=
+            IntegralTerm + Kp * e * SampleSeconds / Ti;
+    END_IF;
+
+    PreviousError := e;
+
+    FillValve :=
+        REAL_TO_INT(BoundedDemand * INT_TO_REAL(FULL_SCALE));
+    DischargeValve :=
+        REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+ELSE
+    IntegralTerm := 0.0;
+    DerivativeTerm := 0.0;
+    RawDemand := 0.0;
+    BoundedDemand := 0.0;
+    PreviousError := e;
+END_IF;
+
+WasRegulating := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    Controller : FB_LevelControl;
+    h_span : REAL := 10.0;
+    h_sp : REAL := 8.0;
+    h_target : REAL := 8.0;
+    h_max : REAL := 9.0;
+    eps : REAL := 0.2;
+    t_h : TIME := T#10s;
+    Kp : REAL := 0.5;
+    Ti : REAL := 5.0;
+    Td : REAL := 0.0;
+    CycleTime : TIME := T#20ms;
+    fill_valve : BOOL;
+    discharge_valve : BOOL;
+END_VAR
+
+(* Configure Main's cyclic task with the same period as CycleTime.
+   The gain defaults are commissioning values and require plant tuning. *)
+Controller(
+    StartCommand := StartCommand,
+    StopCommand := StopCommand,
+    LevelMeter := LevelMeter,
+    FULL_SCALE := FULL_SCALE,
+    h_span := h_span,
+    h_sp := h_sp,
+    h_target := h_target,
+    h_max := h_max,
+    eps := eps,
+    t_h := t_h,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    CycleTime := CycleTime
+);
+
+FillValve := Controller.FillValve;
+DischargeValve := Controller.DischargeValve;
+fill_valve := Controller.fill_valve;
+discharge_valve := Controller.discharge_valve;
+
+END_PROGRAM

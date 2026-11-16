@@ -1,0 +1,47 @@
+OpenPLC_v3 commit: b5d41356dab4aeadca0dd7ca64ba542f870b595d
+iec2c: matiec version 0.1 changeset id:
+g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+
+== A1 (st_code) ==
+file: T1-W-07/a1_code.st
+sha256: 633f6396598cda0893709e6ed2086fc63631a2dd0e422ab310e1fbf023947529
+preparation: configuration appended for PROGRAM Main
+uploaded file for the scene test: a1_code_openplc.st
+step 1: iec2c -f -l -p -r -R -a -I <OpenPLC_v3>/webserver/lib -T <tmp> <tmp>/program.st
+exit 0
+POUS.c
+POUS.h
+LOCATED_VARIABLES.h
+VARIABLES.csv
+Config0.c
+Config0.h
+Res0.c
+step 2: g++ -std=gnu++11 -I <OpenPLC_v3>/webserver/core/lib -c Config0.c -w
+exit 0
+
+step 3: g++ -std=gnu++11 -I <OpenPLC_v3>/webserver/core/lib -c Res0.c -w
+exit 0
+
+verdict: 1
+
+== A2 (a2_st_code) ==
+file: T1-W-07/a2_code.st
+sha256: e7efb59ebe2a10afe59df680fabcb03084d672ecbacbd7c8b316b8ebfb877059
+preparation: configuration appended for PROGRAM Main
+uploaded file for the scene test: a2_code_openplc.st
+step 1: iec2c -f -l -p -r -R -a -I <OpenPLC_v3>/webserver/lib -T <tmp> <tmp>/program.st
+exit 0
+POUS.c
+POUS.h
+LOCATED_VARIABLES.h
+VARIABLES.csv
+Config0.c
+Config0.h
+Res0.c
+step 2: g++ -std=gnu++11 -I <OpenPLC_v3>/webserver/core/lib -c Config0.c -w
+exit 0
+
+step 3: g++ -std=gnu++11 -I <OpenPLC_v3>/webserver/core/lib -c Res0.c -w
+exit 0
+
+verdict: 1

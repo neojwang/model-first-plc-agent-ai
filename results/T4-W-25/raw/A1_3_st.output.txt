@@ -1,0 +1,217 @@
+FUNCTION_BLOCK LevelControlRuntime
+VAR_INPUT
+    command_start : BOOL;
+    command_stop : BOOL;
+    measured_level : REAL;
+    h_span : REAL;
+    Kp : REAL;
+    Ti : REAL;
+    Td : REAL;
+    t_h : TIME;
+    sample_seconds : REAL;
+END_VAR
+VAR_OUTPUT
+    fill_valve : BOOL := FALSE;
+    discharge_valve : BOOL := FALSE;
+    fill_percent : REAL := 0.0;
+END_VAR
+VAR
+    start_edge : R_TRIG;
+    hold_timer : TON;
+
+    start : BOOL;
+    stop : BOOL;
+    settled : BOOL;
+
+    (* Region encoding: 0 = LOW, 1 = MID, 2 = HIGH. *)
+    r : INT := 0;
+
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    was_regulating : BOOL;
+
+    h_sp : REAL;
+    h_max : REAL;
+    eps : REAL;
+    level_error : REAL;
+
+    integral_term : REAL := 0.0;
+    integral_candidate : REAL;
+    proportional_term : REAL;
+    derivative_term : REAL;
+    previous_error : REAL := 0.0;
+    unrestricted_output : REAL;
+END_VAR
+
+start_edge(CLK := command_start);
+start := start_edge.Q;
+stop := command_stop;
+
+h_sp := 0.8 * h_span;
+h_max := 0.9 * h_span;
+eps := 0.02 * h_span;
+level_error := h_sp - measured_level;
+
+IF measured_level < h_sp THEN
+    r := 0;
+ELSIF measured_level < h_max THEN
+    r := 1;
+ELSE
+    r := 2;
+END_IF;
+
+was_regulating := x1;
+
+(* The dwell time is continuous and belongs exclusively to x1.
+   It resets outside the tolerance band or outside regulation. *)
+hold_timer(
+    IN := x1 AND (ABS(level_error) <= eps)
+          AND NOT stop AND (r <> 2),
+    PT := t_h
+);
+settled := hold_timer.Q;
+
+(* Evaluate transitions from the situation at the start of this scan. *)
+IF x0 THEN
+    IF start AND NOT stop AND (r <> 2) THEN
+        x0 := FALSE;
+        x1 := TRUE;
+    END_IF;
+ELSIF x1 THEN
+    IF stop OR settled OR (r = 2) THEN
+        x1 := FALSE;
+        x0 := TRUE;
+    END_IF;
+ELSE
+    (* Recover the initial situation if the state is invalid. *)
+    x0 := TRUE;
+    x1 := FALSE;
+END_IF;
+
+fill_valve := x1;
+discharge_valve := x1;
+
+IF x1 THEN
+    (* Initialize the PID on entry without a derivative kick.
+       Kp has units of percent opening per level engineering unit.
+       Ti and Td are in seconds; Ti <= 0 disables integration. *)
+    IF NOT was_regulating THEN
+        integral_term := 0.0;
+        previous_error := level_error;
+    END_IF;
+
+    proportional_term := Kp * level_error;
+    derivative_term := 0.0;
+
+    IF (Td > 0.0) AND (sample_seconds > 0.0) THEN
+        derivative_term :=
+            Kp * Td * (level_error - previous_error) / sample_seconds;
+    END_IF;
+
+    unrestricted_output :=
+        proportional_term + integral_term + derivative_term;
+
+    (* Suspend integration whenever the current output is clamped.
+       Reject an integration increment that would introduce clamping. *)
+    IF (Ti > 0.0) AND (sample_seconds > 0.0) THEN
+        IF (unrestricted_output >= 0.0)
+           AND (unrestricted_output <= 100.0) THEN
+            integral_candidate :=
+                integral_term
+                + Kp * level_error * sample_seconds / Ti;
+
+            IF ((proportional_term + integral_candidate + derivative_term) >= 0.0)
+               AND ((proportional_term + integral_candidate + derivative_term) <= 100.0) THEN
+                integral_term := integral_candidate;
+            END_IF;
+        END_IF;
+    END_IF;
+
+    unrestricted_output :=
+        proportional_term + integral_term + derivative_term;
+
+    IF unrestricted_output > 100.0 THEN
+        fill_percent := 100.0;
+    ELSIF unrestricted_output < 0.0 THEN
+        fill_percent := 0.0;
+    ELSE
+        fill_percent := unrestricted_output;
+    END_IF;
+
+    previous_error := level_error;
+ELSE
+    fill_percent := 0.0;
+    integral_term := 0.0;
+    previous_error := level_error;
+END_IF;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    StartCommand AT %IX100.0 : BOOL;
+    StopCommand AT %IX100.1 : BOOL;
+    LevelMeter AT %IW100 : INT;
+    FillValve AT %QW100 : INT;
+    DischargeValve AT %QW101 : INT;
+END_VAR
+VAR CONSTANT
+    FULL_SCALE : INT := 1000;
+END_VAR
+VAR
+    controller : LevelControlRuntime;
+
+    (* Engineering units: volts across the 0-10 V measuring span. *)
+    h_span : REAL := 10.0;
+    h : REAL := 0.0;
+
+    (* Commissioning defaults; tune for the connected plant. *)
+    Kp : REAL := 10.0;
+    Ti : REAL := 10.0;
+    Td : REAL := 0.0;
+    t_h : TIME := T#10s;
+
+    (* Must match the configured cyclic task interval. *)
+    sample_seconds : REAL := 0.02;
+END_VAR
+
+h := INT_TO_REAL(LevelMeter) * h_span / INT_TO_REAL(FULL_SCALE);
+
+controller(
+    command_start := StartCommand,
+    command_stop := StopCommand,
+    measured_level := h,
+    h_span := h_span,
+    Kp := Kp,
+    Ti := Ti,
+    Td := Td,
+    t_h := t_h,
+    sample_seconds := sample_seconds
+);
+
+(* Explicit zero commands prevent retained analog outputs in step x0. *)
+FillValve := 0;
+DischargeValve := 0;
+
+IF NOT StopCommand THEN
+    IF controller.fill_valve THEN
+        FillValve := REAL_TO_INT(
+            controller.fill_percent * INT_TO_REAL(FULL_SCALE) / 100.0
+        );
+    END_IF;
+
+    IF controller.discharge_valve THEN
+        DischargeValve := REAL_TO_INT(0.4 * INT_TO_REAL(FULL_SCALE));
+    END_IF;
+END_IF;
+
+END_PROGRAM
+
+
+CONFIGURATION Config0
+    RESOURCE Res0 ON PLC
+        TASK ControlTask(INTERVAL := T#20ms, PRIORITY := 0);
+        PROGRAM MainInstance WITH ControlTask : Main;
+    END_RESOURCE
+END_CONFIGURATION

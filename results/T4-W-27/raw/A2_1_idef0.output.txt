@@ -1,0 +1,20 @@
+The model below uses **A0** for the context function and **A1–A5** for its decomposition. Arrows between child functions are internal to A0; they are not additional external interfaces.
+
+The identifiers `start`, `stop`, `settled`, `r`, `fill_valve`, and `discharge_valve` retain their specified meanings. In particular, `fill_valve` and `discharge_valve` are Boolean activity indications, distinct from the analog commands `FillValve` and `DischargeValve`.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | `StartCommand`; `StopCommand`; `LevelMeter` | Set point \(h_{sp}=h_{target}=0.8h_{span}\); overfill limit \(h_{max}=0.9h_{span}\); tolerance \(\varepsilon=0.02h_{span}\); hold time \(t_h=10\,s\); PID gains \(K_p,T_i,T_d\); `FULL_SCALE = 1000`; I/O mapping and Scale = 100; initial-step, sequencing, saturation, anti-windup, and shutdown rules | `FillValve`; `DischargeValve`; `fill_valve`; `discharge_valve` | OpenPLC Runtime; Modbus TCP communication; Factory I/O level-meter and valve interfaces; Factory I/O tank simulation |
+| **A1** | **Interpret command and measurement signals** | `StartCommand` at `%IX100.0`; `StopCommand` at `%IX100.1`; `LevelMeter` at `%IW100` | Input mapping; rising-edge definition of `start`; level scaling \(h=(\text{LevelMeter}/\text{FULL_SCALE})h_{span}\); `FULL_SCALE`; measuring span \(h_{span}\) | `start`; `stop`; measured level \(h\) | OpenPLC input image; rising-edge detector and its previous-button-state memory; numeric scaling logic |
+| **A2** | **Evaluate level and settling conditions** | Measured level \(h\) | \(h_{sp}\), \(h_{target}\), \(h_{max}\), \(\varepsilon\), \(t_h\); regulation-active status from A3; continuous-in-band timing rule; timer reset when regulation is inactive or the error leaves the tolerance band | Level error \(e=h_{sp}-h\); `r`; `settled` | Comparison and arithmetic logic; OpenPLC timer instance; runtime time base |
+| **A3** | **Select operating step** | — | `start`; `stop`; `r`; `settled`; initial step 0; stop-priority rule; transition rules: step 0 → regulation on `start`, regulation → step 0 on `settled` or `r = HIGH`, any step → step 0 on `stop` | Selected step; regulation-active status | OpenPLC sequence/state logic; retained inter-scan step variable initialized to step 0 |
+| **A4** | **Compute bounded PID demand** | Level error \(e\) | Regulation-active status; \(K_p,T_i,T_d\); PID execution interval; output limits 0–100%; integration suspension while the output is clamped | Bounded fill demand | PID implementation; integrator and derivative-history storage; runtime scan clock |
+| **A5** | **Apply valve commands** | Bounded fill demand | Selected step; regulation-active status; `stop`; step-0 zero-output rule; discharge opening of 40%; `FULL_SCALE`; output mapping and integer conversion rules | `FillValve` at `%QW100`: scaled PID demand during regulation, otherwise 0; `DischargeValve` at `%QW101`: 400 during regulation, otherwise 0; `fill_valve`; `discharge_valve` | OpenPLC output logic and output image; Modbus TCP driver; Factory I/O analog valve interfaces |
+
+**Interpretive details**
+
+- **Level regions:** A2 produces `r = LOW` for \(h<h_{target}\), `r = MID` for \(h_{target}\le h<h_{max}\), and `r = HIGH` for \(h\ge h_{max}\).
+- **Settling:** `settled` becomes TRUE only after \(|e|\le\varepsilon\) has remained continuously true for 10 seconds during the current regulation episode.
+- **Shutdown:** `stop` has priority over all other conditions. Step 0 commands both analog outputs to zero and makes both activity indications FALSE.
+- **Activity indications:** During regulation, `fill_valve` and `discharge_valve` are TRUE. `fill_valve` indicates that the PID controls the fill valve; it can therefore remain TRUE even when the bounded PID demand is zero.
+- **Internal feedback:** A3’s regulation-active status controls A2’s timer, A4’s execution, and A5’s output selection. The PID and timer histories are internal implementation state, not additional plant inputs.

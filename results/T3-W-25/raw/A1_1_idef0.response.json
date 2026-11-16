@@ -1,0 +1,152 @@
+{
+ "input_transformations": [],
+ "id": "resp_0ae17b192fe72db0016af9fdb1799887d097d7d0d5f8f11698",
+ "object": "response",
+ "created_at": 1794768305,
+ "completed_at": 1794768355,
+ "status": "completed",
+ "background": false,
+ "frequency_penalty": 0.0,
+ "presence_penalty": 0.0,
+ "moderation": null,
+ "model": "gpt-6.1-sol",
+ "access_programs": {
+  "cyber": "standard"
+ },
+ "previous_response_id": null,
+ "instructions": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_0ae17b192fe72db0016af9fdc275e487d08cbe32233aa038d2",
+   "summary": [],
+   "content": [],
+   "encrypted_content": "gAAAAABq-f3CZ-JmGgYhsm0WRlPxkhNtNGHW47seWuJu3h13VNyDcH2DH23HafwgYThx-FNf-mdFZdIzwvqNudzg7pktKQ5R07_DPYqTdaG5rbqprYFV9hgMu6teE1tRu1V1-gwcWkSxRNsgTZeMyPuySDDOtHETZc1dm5f8DOIed9_8VBmD8rn8mR4mgtA0TZypkh75peWkOq91mjJ04jUJUwiPsGnOtknuMGKGvTZRAfj8SRY-np6hkzjvZp2GJU1VIMkilV5kutgsl3o_HW4hkU_jYiymdA2C0M4FZ3HVmky1yJR_c1ndWzFO_VnYZKBI5zIt02vHfHotluRhspYhJAQ7GWpJpi6YSIzqYB6Dw72NRCAAnMO7BU6lf5oNY74-tqQidQ44nOmfG9utVheb8as80CA_f6kzqn01huo9v7rQw7Cfifeu2_ImEh1w79i8aGAV7kUBEXU6I9mUiZUWrmHH0uUwbLq4LQWN6UU_l9NBWdNUTX9Tbwu7bUcmDiMdPK5O91h8WIHT_YdRtuY4jJ9iLEJ1PYcjfU7xF-NFofAc1FJBA1yrj6jnOexyavtwGaU_LZ1a25KeldczW6b5Z-NuhfMDRoMc8BsYPAtEz5awmYoNF4J3tiV_Cq_Fw8-xbhqXWKePP4YDCVkxB3Vo9llznLXAXW-5Fho8D0fvP6jd0dhQsfMT7K1ZbtarSHB1PumgA7hK1t_vgaSQEhproem1zcXMnFq6Nea_ItIeMZvb1iV85UhhPI7NHkM9if2ge0D6i_GSJsrrLIlusWHi0v7yqU6w8iv03Pf7RaI4VWN-8MJ-FM3nrJrI9gh6HL2hTHUtamhI9AleTiij1Ohz34huhiJD8dltdgLIbCptVXhsoESV5ROkjG_SHS1axWUi8Q7GnVIy1OZUaYyCgytJ6XKe6yD2AKzmeCCLUTa-ycuMhIDY6YfweQ8Ux7SbHiL7rtrEz9jDQ7wg8WQ9aR7E6QwlyRYYbJKwGBOJe962pQ890ROYg_h1O-cTgMUQY5d7CB-Tvi5D8VvUwac93Dz-D7EZu8gT-xoGRuZ3GTtg5oXAciBVBdGnj51XWM5hAhXM1666zdPnBN4E-z9TjpXQy0OsdWn8_J-aLKZis5Fcz2NdYzY-suzFAWGk8ZnAiDWoC0-zTOshyU1i-Xvr_qTGz4gaphQYL8buhZqtlglqi-v5moXTnOQhfQ4t3-QQi4hjPuT40QvMLJ3uQOscF25R4btPcSRcR2bClNnYy3gHvigFHoZMSo2t4AH3OW04zB-LcCGnMerC68wG05p-gHBSsi8_20VAVe8iALLY70tY2TB2NIArvqbs7kj4DFHhVexHTqvsAJizEAyPG9cPqpGqRNEQ5RU7mZftCFFqxDAdyP32NomVvI2zOk-rFeXIKFlbV_hcVe76nIDN4nVbxbknpvsOqbLf6Ps5yCZRt6oqhIFyBTJJbdHYvhmperD4Tqj-9eJZxXJzv5ssNv-n7j7k1HqlFDj5QEJSwN-a8j7Dsfxp3SxKMYjNN1-aDfYp25KzwMUq57a_uFW-0lTmxgpeIm4CByY-6L348JbdXqGYrpTE4_h2Z-Q_uIc29RtedgICK8WoHrBDQ9sryQLTZcNosBybYgCkXbaDM6Lzs7QUbzmgkkcVAbl1nao1ghgnSr_Ctu0f9sG12N7vwKYN60NnIHvf5hil7iBeOQ17my9gmtSM80T45qt8TiF9wN_nQWXu95BgETgkgWNtNKEWbBZOYlEMLa_LJ58PFFCLdFsE1W4In6AXyfpzx_1l3TnWV7xrUOxrMBO2OWQwifXCtg0cBng3hB1gda4e438eqM_7YwA3dbTSsCu-FRoJpR07hDMAxqls0NK9evan0TRXecX9YNzfkWJAbpU7e4BcdaG0BFVVMd8Nefd-TnLAwEAS1maNUOrcDaYNI995VXTnuvcxS-f1Lhu49OqEB_ffCmxrDC_WEId6j48OV-qnx41AJUGfVdB2F3rgd67AbSLOaIfJ6efe5PWGrL73udCmgbqxjHO7TDOt4GfQcuuxfEY-XdZgFHPKk7QeGel1JxhN7daWn6QWHBwX5tJGCWVe1t14IVHU639_NShzxqaPoG_QtEVma3xwIHa4F7wFBU-a3PKCpNzfa7ObpvGhA-CV1PSSzD7sfV2CzPsYVzQ4o575ExYVQXa13kCcDQZDw21ibF40QQPcq03zgHrac9FXfCQJ-ETdFR1ysf0iMnkBXsHOy9id0Kk4dHmIU1i3cp1ByYktDmCFw0r-yrYiXqFsS01bq0g5z1ho-oFmJwAEuGHpF_GyOlC8ODlNikdqCuHWClDDveMBfZWjlWuXq5bRX7KJrmnR7u59uE4nIb7hS2PBWonuAT7zbLKns2a3DW1mF1DOua7HVKxJJC5PCaSkgSIBIspN17uHhbzpbRA119rlVz6K-jedr2j_ucBf75IFQJCJWb0FyXcm8csIAyVAX8BPn2LwigCLFTgTm3EJtjPEUvZX4lk4PiOqeRS8oXXskiBtiH5PyBOzBtoMTTc8fGJwCowtxMq4lnSlYsVnGLv8oUmyzVPi8NhGC9nrbK5j8kvV6es3AvIVgw_TNRxmxq6zipJbobbIa_KqEuQDma05cH05iw_BA08uBMbyyqFsLbwJYg8OmZ8tFpSb-3TklhttEgqaD9Jv96uYzQkZ2pBod_KArJFGtzhLICmviU70l59r3bl1VWpQFMnMtX72fDX84dhWwW4fmkLr0tlaWeQTqmJOov6_cqYltc32oVKllI0XlDZMGFS9twwMLiN-F1jI1K7e7LLhuMgiQY5nq4HngpU1jNnUBzkRmnL6Ciayh7UAGtqg3JMGEeQcmwafhP3_T2saIIA8PdzaR3x22_ZDtj2EzPKhLu5USaFsmbcKfayNM0Jl-DuxyCm1FXOcEdZzsZTXNTm9CXoM4MigvYg503pbhk3nc65tuY5fZmoMMwmwS3hrxukwoC6PTczS1tqRXMiICXhVB6ev3og9SlBjVpPKyLZVq7pJOwr5xTJIcN7VUoSrFZMegLlrgzv4dCAkc6QpEEaH9EWPrwnAVfxGOcmvPX9hwV5bA7vZg1p2g7eSPhT5-Y-vz08TCZdrb6Gx6oxMwSXQHSNJsp4txTazMU-4KQgAAO_GqGx_sezpDDJmc_DGukZHOSczJC9bmtmrVGpBfHy_fSYRbBZ9jP3YVbbQV_Gg_XWJPsK4FdWvDp8yI1gUjJRM8UP2wBQD3n2Y64VhmfpAgpNWhyU3PwGD7getd3BTqaLSM_wzaNex_QPip_UWbC0m8ah3AGx2EGdqFiJRODup3SmiE1dDmUfjFWEHXoQsXS3OhFE5Ht8Jynl4mgaJki7ZGOCpRpfJEXNIk3Eg8EUXZkcg7rP9b-tbOyqjx8uIJjmtmX_gOu4a0HYex5uWPks4uYvfNj9bNH294gnJrHeUyS3ck4d6eTqTT89HAXjJQM7MqQDMndAmc4vWWQC1fOb-s7JFiH1UkDBh_Fqpn55qpYQL2GOmESt7y-JBkjDCEP6_0IFBtYgcNLbLtKPPnTKJVwTzjLYRLPyYukeSG7lcM9JsbGw-lXPuePDGyjSQ3lVMgC1LUfX3JrIM0HEipR94NgY2CF4r5zx_X-5LR00xcUr2XpJC34JqJ5-GszeiEEjMX4-zq_cpRDHcKdyrCdVNHqxpL0ONSE2Fd1AiE-QI9f_qwnbj0Cxn3M6d3-HIQ11ZRwnfIuPL0g7rl-2Q_A8vIRgzNujp-EwvI52TAwjf0vMpwEvbLWBYfdmCtrNctpfSMk8vG1UcbTqsxFXj7XMwgdVLdRCHv7nVJqYa8IxcdN5X-PyoTzovRmsTPhQNCpqBa_dJ-sLus5hfZh-cCfqFyxeZJYQJtjtzL_tgwiUu_p3QbDlyU7zQUa95wAo7ebBQ-D3OynE25odU-JuTG_o635JcVSRONLUxE2z5cuaYoDweosvHy6b2xaLFX4FxHPz-mnKSEqLDxiyqoh6XqeB0Im_YCVHKHFlMs7I1XrXPO5K2yGOSZ-GrZlixFHM7EcDFC2lkmTdSUTKkMPNAy3LIaMG6XUkkkC_NXMiRh3yb0yTs49xRs6QWlv0SxZ4E5rcQ_L4JAI1AkKe8sfwh2nd7o1uVb2gXa7rRGv61nQ9BKwZJbRPd69OxJmayAW0XI9OP8Oyaenk0u0zqbG-Jqr2GZ67TTvI55xTpk2WtNLpdN-HXBhYSxCQiAxPyr0mufWrnJInR_h1NZ6Spcp2iQcPC1BfMRvKHa4P-IAmJ6Y2bUHDj1Y7ryPnVi81XlVwBlnOmNX3F8PXNV576r5OsUyLfJVQQ4jkJB50PyqfTYyuefheOmbMFc44LOYY77BmjMx8Da89CbAN78BhTWuBbB7O42VLXUyXRlMQmzPQwW-rPdKhZrj_FMexZMCpm4nyU5wNwM-47kn74FuiqlPn8O85P3pGm2dgUPIeU2596rvFkTighHvjC9DTwkjgTZkzc1R0DB-ElkpjTTwNVcv23WJMb-hgSIefxH5pQnVQlx7KKotlFpuzpw-iDusDv4Aga7j8ZYH_aU9xK-5WByWg1tAxQxrMl30y0xGHadr_Xd7stewYrv6pxPfriKoGNea0yneK1A-v_IIoCBO8Z7kyKFIAh_fTT9br1jwcx3VM8vwBFeMXSjlPa_slbP5QUi3ZRIPmqcsSoD32TlwaDD38JQoPMAWHhB_luJSevW-hIHs9rFelJgW-JTTeB8SRk-Id_TivQlKregxl1yHcAznREfYPCFxPk0oE_6JJsEXAtAw0Zj3q00OWNMCTg0tFr-lbyVHwbKYvgN3KT9VcWK0L0VqkQ2mNfLYfKUKEGC-LMzHaRRbklcRGYr4LqbdFYtFjdoqYHMCiD9CzNiEGs9MWCWSXD4A_d3TLlbd49qIuSzMf7W3NPY9yCgE7txdAbKGPwiOFsJYZG7UQrj1Tlw8ow80No0V7kh6kCzFEeI_zQ3uSALqIF1zYcbnXOP3PO8gqhDRzCifhBsLXfGDwkDYOQ7US0rWgr6uXw8d6CrMkKic8om_QU3pdTiuYikgYvSdfIX_b9zJrFdkqcS2F_Lt0j733Qts5XNWUzxnJYKvHgpy33cxS8DOrDcNfUSYrVpfN4d60tsrTGJRutcCh6BD5AZTYwwR2_MsB5q4mYKPBv2NLij8EieuTtOldc02D78bZ5jwUW13bNKEFX-Cit_941LMNDVWmVcSwVxrmRtD7hiv8qOYb7LzBgEtpyCrF8fLcgziZE5-j-CHl-dIUA9_Y2uPLsIv46ErTyGqXhldywHDXIOgRmf9fEvsBGzvSiwHUNvahUyd1RK5q7VQDU_2Kr31-FcoEeHxYJ3rbT1AqOe3pVkmvq0oJ4IexprVrOF7GjHcCOd61hgwDtVnQAYSbjfYHLWNiwCKsEf8e7_wIi35V0D9mbAY4atB1KSmwsZ42kDhlKnAwtQlA5rI51bUbKiEQye0SP2vLnTjwECXu4uQGkHECqEPyOF7gOH9Lj5e6gFwYPBUcj9DOYxNNzOlvswbKv9e2CRvaoEFjS_f7EhyeXaCMO_GbwGzH_s2_lUBl1kAzw4c73Z83IV7tlwY2QsvVmv2hp91LhTI2WP3k9JCeGX0NNm-PwDYgCC155yEonLqfD5AIxURKaheFqxVrYJ3yAotbyrsM-Ih1GP1IC2Hp0GMqHRdW--1CHwD4eg7aiSHHjCxPnbMXmzrw5u4VygHgwZynkUF_YWRxnEOwly4bIo6w4jrZfXGm_24BCuR4fX9X9jQ0ecNkGxjFSEASWBhdkhNpZCieYLATEEtJMUOpSvEUahMWqsOUqfwCaq01UNK3vXoWuyoMDbsYSOazSHH_748JVMk7iEZTZLVfZGbT_SP2dalHiWVP0vEDmCVD9r0xvDTnxOtY8LGoT_oIWYJ4dQbW6o0Qre0qzYMXEA-bl8I0Zgxvhbi7wH_qNPUnWtN30idUYQCdduc7K1-2WPjuYBfEaW0W0Xnkxp2tRnyYPto4awSrur3MLW-kyjD3zz0K5_Gcg7D0GIkJUMAFM1dw2-ouYNw9GLHpl_n07gV-LVjQ6zMH3O072o-aM0NLXRywpVf19Zn4M7MqfQUTE_N1ttNVwSMisoMb9bMozl6mqWCLuo94jWcch0XKMMjjE1008E6JPC9XDaaOxlKEe8DcY25GV0EC2ZL3Amu5LLmhh3ab7l_KWldeNCGxx5HlFMS73m1iDU1NxU_2468NlioDz9NOZZGC5Er2B4N1gXsrQrPcJMwmi4oW4p2_mqVZgFiwEHlbjUD0XWp-ZaHXbp1Nh29quOV7RXNPjVqwnraWs0o-Lxbg1L7sA_JlgeGKazo1_ehNdMZfkrGc3Ld2SumqBCQrdUO0sIGVf9dzOOmOgvf1MEsuGFzwmT43cbB1mKJxe-4Bie4KJyoeI5nZdQKInZszIz7vHTlzu3h4bdbX2dIMXuOn9ZlG0TGPm8wZm-huf3hh_VG4W4tNzvvy2SLni-FsBPNh5wTPwQP_fxLNaHJpSIgbbLQT5C3TrS94Inizmr8Z6f7uUgeadZjrUhgcJUIv8g4vXg6qTcjoc2p0OH78Ma4WLNyKJjFBe-ctgvHVrRM4beCG_8gQsp4Cn57ec24itASwHpGVVPb7gSIWW08ZrTsRAb_GkjXwnWAhlSh9TFa1PDNxB7UMGdNS2U2wNzXDNDmw5n8oKkG8Qpwr1YtL8xwbL4i0E0a3y-nzgqjy3BvparwsfopzVZI10T3n1bJfMVWXnn36CMWmTaUNRruREklxTJ2aOR5zVhU50_cf7sUwts7C2DAd0mMahucUD8PB794ud-6sSq8WIqXGWvTTMwUZkSvVzZRUvcMLt5BAmEIaW_wINt4nvcG3uBcfmfT3iQfld7eIpH4qk5ALBJarOPlObDGEECX_qepKUHGMia-EuNxaBrZnWXDwYEchRajilisISlr_TK-QUyDKhnO1HkW8nV_j-pLLXKbQYjUrJOsx7b-UHeM2K23y2jadwEoVTotrU4pSZOKML0EGsxj7DkGgCQN0cCn1ff6tS_Uq2d6U6aRU5glQZ5JQIaO4VsEVwLde9ETps3KYnAhCWUFLSLuWD7wgYov6bwcJsWrS1S2F5Y-J2x-7f0vf0DN0q1xu9vqxnbzsuhiRvGAUPsPcEU6WG26PoTWRXC5elwfnDj1fdR61DYK55q0crImuAWuYQgO8EZ8C_gqwBCRf1BDKsDJfki7egOzTOtzFbbmcmGbR0Sbv0JaD6dEj4LnnIgQ=="
+  },
+  {
+   "type": "message",
+   "id": "msg_0ae17b192fe72db0016af9fdc275dc87d093aeebcdb9b31586",
+   "role": "assistant",
+   "status": "completed",
+   "content": [
+    {
+     "type": "output_text",
+     "text": "## A0 context model \u2014 Control timed tank filling\n\n**Boundary:** The model covers PLC sequencing, TON/TOF timing, and valve commands. The tank, liquid flow, and level-switch locations belong to the controlled plant.\n\n**Modeling conventions**\n- Function names are verb phrases; arrow names are noun phrases, including the required signal identifiers.\n- `start` is the one-scan rising-edge event derived from StartCommand; `stop` is the current StopCommand value.\n- **Step-0 activity**, **filling-step activity**, and **pause-step activity** are internal state arrows. Exactly one is active.\n- TON_Duration and TOF_Duration are configuration controls, not process inputs.\n- As a conservative interpretation of \u201cLSHH must never be reached,\u201d an active `LSHH` inhibits filling and forces step 0. This protective behavior is an explicit modeling assumption; it does not establish that physical overshoot is impossible.\n\n### Context and decomposition ICOM table\n\n| Node | Function | Inputs | Controls | Outputs | Mechanisms |\n|---|---|---|---|---|---|\n| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | Initial-step requirement; sequence-transition rules; stop priority; level-limit requirements; TON_Duration; TOF_Duration; discharge-valve prohibition; I/O mapping | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC scan execution; input-edge detection memory; TON and TOF instances; Modbus TCP connection; Factory I/O tank, switches, and valves |\n| **A1** | **Determine operating step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial-step requirement; sequence-transition rules; stop priority; level-limit requirements | Step-0 activity; filling-step activity; pause-step activity | PLC sequence logic; operating-step memory; PLC scan execution |\n| **A2** | **Measure filling duration** | Filling-step activity | TON_Duration; TON behavior rules | `ton_q` | TON instance; PLC time base |\n| **A3** | **Measure filling interruption** | Filling-step activity | TOF_Duration; TOF behavior rules | `tof_q` | TOF instance; PLC time base |\n| **A4** | **Command tank valves** | Filling-step activity; `stop`; `LSH`; `LSHH` | Valve-command rules; stop priority; level-limit requirements; discharge-valve prohibition; output mapping | `fill_valve`; `discharge_valve` | PLC output logic; OpenPLC output image; Modbus TCP connection; Factory I/O valve interfaces |\n\n### Parent\u2013child arrow connections\n\nThese connections balance the A0 boundary and identify the internal arrows.\n\n| Arrow | Source | Destination |\n|---|---|---|\n| `start` | A0 input boundary | A1 |\n| `stop` | A0 input boundary | A1, A4 |\n| `LSH` | A0 input boundary | A1, A4 |\n| `LSHH` | A0 input boundary | A1, A4 |\n| Step-0 activity | A1 | Internal operating-step memory |\n| Filling-step activity | A1 | A2, A3, A4; internal operating-step memory |\n| Pause-step activity | A1 | Internal operating-step memory |\n| `ton_q` | A2 | A1 |\n| `tof_q` | A3 | A1 |\n| `fill_valve` | A4 | A0 output boundary |\n| `discharge_valve` | A4 | A0 output boundary |\n| TON_Duration | A0 control boundary | A2 |\n| TOF_Duration | A0 control boundary | A3 |\n\nThe other controls and mechanisms listed for A0 are allocated to the relevant children as shown in the ICOM table. Timer feedback arrows represent cyclic PLC data dependencies, not a requirement to execute each function only once in table order.\n\n## Behavioral controls\n\n### A1 \u2014 Determine operating step\n\nThe following rules define the sequence, in descending priority.\n\n| Priority | Applicable state | Condition | Result |\n|---|---|---|---|\n| 1 | Any state | `stop` | Step-0 activity |\n| 2 | Any state | `LSHH` | Step-0 activity; protective interpretation |\n| 3 | Any state | `LSH` | Step-0 activity |\n| 4 | Step 0 | `start` and not `stop` and not `LSH` and not `LSHH` | Filling-step activity |\n| 5 | Filling step | `ton_q` and not `LSH` | Pause-step activity |\n| 6 | Pause step | Not `tof_q` | Filling-step activity |\n| 7 | Any state | No applicable transition | Existing step activity |\n\nAt initialization, step-0 activity is established. A `start` event outside step 0 does not change the sequence. Returning to step 0 requires a new `start` event before filling can restart.\n\n### A2 \u2014 Measure filling duration\n\n- TON input: **filling-step activity**.\n- TON preset: **TON_Duration**.\n- `ton_q` becomes TRUE after uninterrupted filling-step activity for TON_Duration.\n- Leaving the filling step resets TON, so each filling phase receives a fresh time limit.\n\n### A3 \u2014 Measure filling interruption\n\n- TOF input: **filling-step activity**.\n- TOF preset: **TOF_Duration**.\n- `tof_q` is TRUE while the filling step is active.\n- On leaving the filling step, `tof_q` remains TRUE for TOF_Duration, then becomes FALSE.\n- Only the pause step uses `tof_q` becoming FALSE to resume filling. TOF expiration cannot restart filling from step 0.\n\n### A4 \u2014 Command tank valves\n\n- `fill_valve` is TRUE only during filling-step activity, with `stop`, `LSH`, and `LSHH` all FALSE.\n- `fill_valve` is FALSE during step 0 and the pause step.\n- `discharge_valve` is always FALSE.\n- The output inhibits provide immediate command closure independently of the state-transition update.\n\n## Physical I/O allocation\n\n| Model arrow | Scene / runtime identifier | Address |\n|---|---|---|\n| `start` | Rising-edge event of StartCommand | `%IX100.0` |\n| `stop` | StopCommand | `%IX100.1` |\n| `LSH` | LSH, at 2.4 m | `%IX100.2` |\n| `LSHH` | LSHH, at 2.7 m | `%IX100.3` |\n| `fill_valve` | FillValve | `%QX100.0` |\n| `discharge_valve` | DischargeValve | `%QX100.1` |\n\n**Engineering constraint:** Preventing the liquid from physically reaching 2.7 m requires validation of the 0.3 m margin against flow rate, scan and communication delays, valve-closing time, and residual inflow. An `LSHH` trip closes the command after detection; it cannot by itself guarantee that LSHH is never reached.",
+     "annotations": [],
+     "logprobs": []
+    }
+   ],
+   "phase": "final_answer"
+  }
+ ],
+ "error": null,
+ "incomplete_details": null,
+ "tools": [],
+ "tool_choice": "auto",
+ "parallel_tool_calls": true,
+ "prompt_cache_key": "ce6c4866-2af3-4a16-b9e3-a9b4f16c05c4",
+ "prompt_cache_retention": "24h",
+ "text": {
+  "format": {
+   "type": "text"
+  },
+  "verbosity": "medium"
+ },
+ "top_p": 0.98,
+ "top_logprobs": 0,
+ "temperature": 1.0,
+ "reasoning": {
+  "effort": "medium",
+  "context": "all_turns",
+  "summary": null,
+  "mode": "standard"
+ },
+ "user": null,
+ "usage": {
+  "input_tokens": 540,
+  "input_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "cache_write_tokens_details": {
+    "ttl_30m_tokens": 0,
+    "ttl_12h_tokens": 0
+   }
+  },
+  "output_tokens": 1869,
+  "output_tokens_details": {
+   "reasoning_tokens": 350
+  },
+  "total_tokens": 2409,
+  "attribution": {
+   "items": {
+    "msg_0ae17b192fe72db0016af9fdb17a3487d086a6221f8717dc42": {
+     "input_tokens": 538,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 0,
+     "content": [
+      {
+       "input_tokens": 538,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 0
+      }
+     ]
+    },
+    "msg_0ae17b192fe72db0016af9fdc275dc87d093aeebcdb9b31586": {
+     "input_tokens": 0,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 1519,
+     "content": [
+      {
+       "input_tokens": 0,
+       "cached_tokens": 0,
+       "cache_write_tokens": 0,
+       "output_tokens": 1519
+      }
+     ]
+    },
+    "rs_0ae17b192fe72db0016af9fdc275e487d08cbe32233aa038d2": {
+     "input_tokens": 2,
+     "cached_tokens": 0,
+     "cache_write_tokens": 0,
+     "output_tokens": 350
+    }
+   }
+  }
+ },
+ "tool_usage": {
+  "image_gen": {
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "input_tokens_details": {
+    "text_tokens": 0,
+    "image_tokens": 0
+   },
+   "output_tokens_details": {
+    "image_tokens": 0,
+    "text_tokens": 0
+   }
+  },
+  "web_search": {
+   "num_requests": 0
+  }
+ },
+ "safety_identifier": "[removed]",
+ "store": false,
+ "metadata": {},
+ "max_output_tokens": null,
+ "max_tool_calls": null,
+ "service_tier": "default",
+ "truncation": "disabled",
+ "image": {
+  "context_compression": "disabled"
+ },
+ "x_runner": {
+  "stream_events": 1524,
+  "text_source": "response",
+  "delta_mismatch": false
+ }
+}

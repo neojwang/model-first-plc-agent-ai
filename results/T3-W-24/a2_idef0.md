@@ -1,0 +1,26 @@
+The model below treats the **PLC control application** as the system boundary. Thus, signals are inputs and outputs; the tank, valves, sensors, runtime, and communications are mechanisms rather than material flows.
+
+In IDEF0, the child functions are **functional decompositions, not successive process steps**. Step 0, filling, and pause are states managed within A1.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TON_Duration`; `TOF_Duration`; initial-state rule; filling/pause transition rules; stop priority; upper-level safety requirement; discharge prohibition | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC program and state memory; TON and TOF instances; Modbus TCP connection; Factory I/O tank, switches, and valves |
+| **A1** | **Manage filling-cycle states** | `start`; `stop`; `LSH`; `LSHH` as a safety observation; `ton_q` from A2; `tof_q` from A3 | Initial state = step 0; `stop` overrides other transitions; `start` initiates filling from step 0; `LSH` terminates an active cycle; filling-to-pause condition = `ton_q` AND NOT `LSH`; pause-to-filling condition = NOT `tof_q`; upper-level safety requirement | Step-0 activity; filling-step activity; pause-step activity | PLC state-transition logic; state memory; cyclic execution |
+| **A2** | **Time the filling phase** | Filling-step activity from A1 | `TON_Duration`; TON semantics: IN equals filling-step activity; Q becomes TRUE after continuous activity for the specified duration and resets when activity becomes FALSE | `ton_q` | TON function-block instance; PLC time base |
+| **A3** | **Time the filling pause** | Filling-step activity from A1 | `TOF_Duration`; TOF semantics: IN equals filling-step activity; Q is TRUE during filling and remains TRUE for the specified duration after filling ends | `tof_q` | TOF function-block instance; PLC time base |
+| **A4** | **Drive the valve outputs** | Filling-step activity from A1; `stop` | `fill_valve` TRUE only while filling is active and `stop` is FALSE; all outputs FALSE in step 0 and during stop; `discharge_valve` always FALSE | `fill_valve`; `discharge_valve` | PLC output logic; output image; Modbus TCP output mapping; Factory I/O valve actuators |
+
+### Interpretation and traceability
+
+- **Signal mapping:**  
+  `start` is the one-scan rising-edge event derived from StartCommand at `%IX100.0`; `stop` corresponds to StopCommand at `%IX100.1`; `LSH` and `LSHH` correspond to `%IX100.2` and `%IX100.3`.  
+  `fill_valve` maps to FillValve at `%QX100.0`; `discharge_valve` maps to DischargeValve at `%QX100.1`.
+
+- **Transition priority:**  
+  `stop` returns the controller to step 0 from any state. Otherwise, `LSH` returns an active filling cycle—including its pause—to step 0. The timer-dependent transitions apply only while that cycle remains active.
+
+- **Internal arrows:**  
+  “Step-0 activity,” “filling-step activity,” and “pause-step activity” are noun-phrase names for internal state information, not additional external I/O identifiers.
+
+- **Safety limitation:**  
+  “LSHH must never be reached” is a safety constraint, not a specified `LSHH` transition. The task does not define a separate high-high trip response. Preventing the physical level from reaching 2.7 m therefore requires the 2.4 m cutoff and the plant’s sensing, scan, communication, and valve-closing delays to provide sufficient margin. An additional `LSHH` interlock would be a design extension, not a requirement derived here.

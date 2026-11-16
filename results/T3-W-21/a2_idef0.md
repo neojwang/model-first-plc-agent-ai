@@ -1,0 +1,15 @@
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | Initial-step rule; filling, pause, and completion rules; stop priority; `TON_Duration`; `TOF_Duration`; high-high-level exclusion requirement; discharge-valve prohibition | `fill_valve`; `discharge_valve` | OpenPLC Runtime; Factory I/O tank scene; Modbus TCP connection; command devices; level switches; valve actuators |
+| **A1** | **Determine the operating step** | `start`; `stop`; `LSH`; `ton_q`; `tof_q` | Initial step = step 0; `stop` overrides operation; `start` initiates filling from step 0; `LSH` ends filling and returns to step 0; `ton_q` with no `LSH` selects pause; false `tof_q` ends pause | Operating-step state; filling-step activity | OpenPLC cyclic execution; step-state memory; transition logic |
+| **A2** | **Time the filling and pause phases** | Filling-step activity | `TON_Duration`; `TOF_Duration`; TON on-delay semantics; TOF off-delay semantics; both timer inputs equal filling-step activity | `ton_q`; `tof_q` | OpenPLC TON and TOF function blocks; timer-instance memory; runtime time base |
+| **A3** | **Generate the valve commands** | Operating-step state; `stop` | Fill-valve activation only in the filling step; no outputs in step 0; fill-valve closure in pause; all outputs false while `stop` is true; `discharge_valve` always false | `fill_valve`; `discharge_valve` | OpenPLC Boolean output logic; output image; Modbus TCP output mapping |
+| **A4** | **Check high-high-level exclusion** | `LSHH` | Requirement that the 2.7 m high-high level must never be reached | High-high-level compliance status | OpenPLC signal evaluation; Factory I/O level-switch feedback |
+
+**Interpretation and boundaries**
+
+- **Internal connections:** A1 supplies filling-step activity to A2 and operating-step state to A3. A2 returns `ton_q` and `tof_q` to A1. A4 supplies a compliance observation, not an additional valve command.
+- **Signal vocabulary:** `start` is the one-scan press event derived from StartCommand; `stop` is the current StopCommand value. The physical output mappings are `fill_valve` → `%QX100.0` and `discharge_valve` → `%QX100.1`. `ton_q` and `tof_q` are internal timer signals, not external inputs to A0.
+- **Priority:** `stop` takes precedence over other conditions. During filling, `LSH` completion takes precedence over timer-driven pausing.
+- **LSHH limitation:** The task specifies that LSHH must never be reached but does **not** specify an LSHH-triggered transition or shutdown action. A4 therefore represents requirement checking only; it does not invent an interlock. Whether closure at LSH = 2.4 m guarantees avoidance of LSHH = 2.7 m depends on plant dynamics, valve response, and scan/communication delays.
+- In this IDEF0 interpretation, signal values being evaluated are **inputs**, while operating rules and timer settings are **controls**. The child functions are a functional decomposition, not a chronological step chart.

@@ -1,0 +1,92 @@
+Using the control task and the IDEF0 model below, specify the sequential behavior of the task as a GRAFCET according to IEC 60848, and output it in the JSON schema given at the end.
+
+Control task:
+# Task T1 - Factory I/O Scene 2, From A to B (Set and Reset)
+
+Plant: a conveyor transports a box from sensor A to sensor B (Factory I/O scene "From A to B (Set and Reset)").
+
+I/O (OpenPLC Runtime with Factory I/O attached as a Modbus TCP slave device; map the scene tags to these addresses in the Factory I/O driver):
+- Inputs: SensorA AT %IX100.0 : BOOL (TRUE while a box is detected at sensor A); SensorB AT %IX100.1 : BOOL (TRUE while a box is detected at sensor B).
+- Output: Conveyor AT %QX100.0 : BOOL (TRUE runs the conveyor).
+
+Requirements:
+1. When a box is detected at sensor A, start the conveyor.
+2. When the box reaches sensor B, stop the conveyor so that the box stays at sensor B.
+3. Use a bistable function block of IEC 61131-3 (SR or RS) for the conveyor command.
+
+Identifier vocabulary for receptivities and outputs (use exactly these names):
+- inputs: sensor_a, sensor_b
+- output: conveyor
+
+IDEF0 model:
+## IDEF0 model
+
+**Scope:** Control box transfer from sensor A to sensor B. The model boundary includes PLC sensing and command logic; the conveyor, box, and simulated plant remain external.
+
+**Priority decision:** Use an IEC 61131-3 **RS bistable**, with reset priority. If both sensors are TRUE, the conveyor stops, giving the sensor B stopping requirement precedence.
+
+The external signal identifiers are exactly **`sensor_a`**, **`sensor_b`**, and **`conveyor`**. *Set request* and *Reset request* below are internal information-flow arrows, not additional I/O identifiers.
+
+### A0 — Context function
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A0 | Control box transfer from A to B | `sensor_a`; `sensor_b` | Start-on-A requirement; Stop-at-B requirement; Command-retention requirement; Reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable instance; Modbus TCP connection; Factory I/O slave interface |
+
+### A0 decomposition — Child functions
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| A1 | Determine the conveyor start request | `sensor_a` | Start-on-A requirement | Set request | OpenPLC Runtime |
+| A2 | Determine the conveyor stop request | `sensor_b` | Stop-at-B requirement | Reset request | OpenPLC Runtime |
+| A3 | Retain and issue the conveyor command | Set request; Reset request | Command-retention requirement; Reset-priority rule; I/O address mapping | `conveyor` | OpenPLC Runtime; IEC 61131-3 RS bistable instance; Modbus TCP connection; Factory I/O slave interface |
+
+### Arrow definitions and routing
+
+All arrow labels below are noun phrases or the required signal identifiers.
+
+| Arrow | Source → Destination | Meaning |
+|---|---|---|
+| `sensor_a` | A0 input boundary → A1 | Box-presence indication at A; scene tag `SensorA`, mapped to `%IX100.0` |
+| `sensor_b` | A0 input boundary → A2 | Box-presence indication at B; scene tag `SensorB`, mapped to `%IX100.1` |
+| Set request | A1 → A3 | Level-sensitive start request, TRUE while `sensor_a` is TRUE |
+| Reset request | A2 → A3 | Level-sensitive stop request, TRUE while `sensor_b` is TRUE |
+| `conveyor` | A3 → A0 output boundary | Retained conveyor command; scene tag `Conveyor`, mapped to `%QX100.0`; TRUE runs the conveyor |
+| Start-on-A requirement | A0 control boundary → A1 | Conveyor-start requirement upon detection at A |
+| Stop-at-B requirement | A0 control boundary → A2 | Conveyor-stop requirement upon detection at B |
+| Command-retention requirement | A0 control boundary → A3 | Command retention between sensor detections using a bistable |
+| Reset-priority rule | A0 control boundary → A3 | Stop precedence during simultaneous start and stop requests |
+| I/O address mapping | A0 control boundary → A3 | Output-address association for the conveyor command |
+
+The mechanisms listed at A0 are allocated to the child functions as shown in their ICOM rows. No additional external inputs or outputs are introduced by the decomposition.
+
+### Required command behavior
+
+| `sensor_a` | `sensor_b` | Resulting `conveyor` behavior |
+|---|---|---|
+| FALSE | FALSE | Retain the previous command |
+| TRUE | FALSE | Set TRUE |
+| FALSE | TRUE | Reset FALSE |
+| TRUE | TRUE | Reset FALSE |
+
+Thus, departure from sensor A does not stop the conveyor: the RS instance retains the run command until sensor B requests a reset.
+
+**Pre-implementation clarification:** Startup and restart initialization are not specified. An initially reset command (`conveyor` FALSE) is a sensible proposed policy, but it must be confirmed rather than treated as an existing requirement.
+
+GRAFCET JSON schema (the tuple of Equation (1) of the paper):
+
+{
+  "graphs": [ {"name": "G1", "steps": ["x0", "x1"], "initial": ["x0"]} ],
+  "transitions": [ {"id": "t1", "from": ["x0"], "to": ["x1"], "guard": "start"} ],
+  "outputs": { "fill_valve": "x1" },
+  "forcing": [ {"by": "x11", "graph": "G1", "situation": ["x0"]} ],
+  "owned": { "timer_done": {"step": "x1", "neutral": false, "preset": "TimerDuration"} }
+}
+
+Rules:
+1. Step names start with the letter x followed by letters or digits (x0, x1, x21, xE1). The main graph is named G1, and x0 is its initial step.
+2. A transition lists its upstream steps ("from"), its downstream steps ("to"), and its receptivity ("guard"). Guards use only the input identifiers of the task card, step names, the operators ! (not), & (and), | (or), parentheses, TRUE and FALSE; the level region of task T4 is tested as r = LOW, r = MID or r = HIGH.
+3. "outputs" gives, for every output identifier of the task card, a Boolean expression over step names that is TRUE while the output is on.
+4. "forcing" is optional: a separate graph (for example G0 for stop handling) may contain a step whose forcing order holds the graph named in "graph" in the listed situation.
+5. "owned" lists every timer or hold condition used in a guard (timer_done, ton_q, tof_q, settled) with the step whose activity it measures, the value it has at the instant that step becomes active ("neutral"), and its preset, written as the parameter name of the task card ("preset"). Conditions that measure the duration of a step are FALSE at that instant; the off-delay output tof_q is measured by the pause step and is TRUE at that instant.
+6. Output only the JSON object, without comments or explanations.

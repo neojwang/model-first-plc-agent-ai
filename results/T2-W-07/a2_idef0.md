@@ -1,0 +1,28 @@
+The model below treats the **controller**, rather than the physical tank, as the functional boundary. Command and sensor data being processed are **inputs**; timing parameters and required operating rules are **controls**; the PLC and its execution facilities are **mechanisms**.
+
+Here, **A0** denotes the requested context function, decomposed into **A1–A3**. In strict FIPS 183 diagram numbering, the context diagram is **A-0**, containing the A0 function box.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSHH` | `TimerDuration`; initial-step requirement; filling termination rule; stop-priority rule; discharge inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC state memory and timer facility; Modbus TCP interface to Factory I/O |
+| **A1** | **Determine filling-step state** | `start`; `stop`; `LSHH`; `timer_done` | Initial step 0; start transition rule; filling termination rule; stop-priority rule | Filling-step state | OpenPLC cyclic execution; retained step-state memory |
+| **A2** | **Time the filling interval** | Filling-step state | `TimerDuration`; timer activation and reset rules | `timer_done` | OpenPLC timer facility; runtime time base |
+| **A3** | **Set valve commands** | Filling-step state; `stop` | Step-output rules; stop-priority rule; discharge inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC output logic and output image; Modbus TCP output mapping |
+
+### Meaning of the controls and internal arrows
+
+- **Filling-step state** is the internal arrow from A1 to A2 and A3. Its values distinguish **step 0** from the **filling step**. State memory preserves the active step between scans.
+- **Initial-step requirement:** initialize in step 0, with both outputs FALSE.
+- **Start transition rule:** in step 0, `start` activates the filling step, unless `stop` is TRUE.
+- **Filling termination rule:** while filling, either `timer_done` or `LSHH` returns the controller to step 0.
+- **Stop-priority rule:** `stop` returns the controller to step 0 and forces both outputs FALSE, overriding a simultaneous start.
+- **Timer activation and reset rules:** the timer runs during the filling step and is reset outside that step. Its elapsed indication, `timer_done`, feeds back from A2 to A1.
+- **Step-output rules:** `fill_valve` is TRUE only during the filling step and when `stop` is FALSE.
+- **Discharge inhibition rule:** `discharge_valve` is always FALSE.
+
+### Interface interpretation
+
+- `start` is the specified **one-scan press event** derived from StartCommand at `%IX100.0`; it is not a continuously asserted start request.
+- `stop` corresponds to StopCommand at `%IX100.1`; `LSHH` corresponds to `%IX100.3`.
+- `fill_valve` maps to `%QX100.0`; `discharge_valve` maps to `%QX100.1`.
+- **`LSH` at `%IX100.2` is mapped but unused by the stated control requirements.** Consequently, it has no functional arrow in this model. In particular, detecting the 2.4 m target level does **not** terminate filling; termination is by elapsed time, `LSHH`, or `stop`.

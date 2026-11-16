@@ -1,0 +1,1421 @@
+run_id,program,variant,all_situations_pass
+T4-W-19,A1,inflow x0.8,1
+T4-W-19,A1,outflow independent of level,0
+T4-W-19,A1,registers truncated,1
+T4-W-19,A1,valve lag 2 s,1
+T4-W-19,A2,inflow x0.8,1
+T4-W-19,A2,outflow independent of level,1
+T4-W-19,A2,registers truncated,1
+T4-W-19,A2,valve lag 2 s,1
+T1-W-23,A1,A-B 0.6 m,1
+T1-W-23,A1,A-B 4 m,1
+T1-W-23,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-23,A1,polling phase 40 ms,1
+T1-W-23,A2,A-B 0.6 m,1
+T1-W-23,A2,A-B 4 m,1
+T1-W-23,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-23,A2,polling phase 40 ms,1
+T2-W-07,A1,polling phase 40 ms,1
+T2-W-07,A1,switches +0.05 m,1
+T2-W-07,A1,switches -0.05 m,1
+T2-W-07,A1,valve lag 1 s,1
+T2-W-07,A2,polling phase 40 ms,1
+T2-W-07,A2,switches +0.05 m,1
+T2-W-07,A2,switches -0.05 m,1
+T2-W-07,A2,valve lag 1 s,1
+T1-W-02,A1,A-B 0.6 m,1
+T1-W-02,A1,A-B 4 m,1
+T1-W-02,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-02,A1,polling phase 40 ms,1
+T1-W-02,A2,A-B 0.6 m,1
+T1-W-02,A2,A-B 4 m,1
+T1-W-02,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-02,A2,polling phase 40 ms,1
+T2-B-05,baseline,polling phase 40 ms,1
+T2-B-05,baseline,switches +0.05 m,1
+T2-B-05,baseline,switches -0.05 m,1
+T2-B-05,baseline,valve lag 1 s,1
+T3-W-09,A1,polling phase 40 ms,1
+T3-W-09,A1,switches +0.05 m,1
+T3-W-09,A1,switches -0.05 m,1
+T3-W-09,A1,valve lag 1 s,1
+T3-W-09,A2,polling phase 40 ms,1
+T3-W-09,A2,switches +0.05 m,1
+T3-W-09,A2,switches -0.05 m,1
+T3-W-09,A2,valve lag 1 s,1
+T4-W-05,A1,inflow x0.8,1
+T4-W-05,A1,outflow independent of level,0
+T4-W-05,A1,registers truncated,1
+T4-W-05,A1,valve lag 2 s,1
+T4-W-05,A2,inflow x0.8,1
+T4-W-05,A2,outflow independent of level,0
+T4-W-05,A2,registers truncated,1
+T4-W-05,A2,valve lag 2 s,1
+T2-B-04,baseline,polling phase 40 ms,1
+T2-B-04,baseline,switches +0.05 m,1
+T2-B-04,baseline,switches -0.05 m,1
+T2-B-04,baseline,valve lag 1 s,1
+T3-W-08,A1,polling phase 40 ms,1
+T3-W-08,A1,switches +0.05 m,1
+T3-W-08,A1,switches -0.05 m,1
+T3-W-08,A1,valve lag 1 s,1
+T3-W-08,A2,polling phase 40 ms,1
+T3-W-08,A2,switches +0.05 m,1
+T3-W-08,A2,switches -0.05 m,1
+T3-W-08,A2,valve lag 1 s,1
+T2-W-11,A1,polling phase 40 ms,1
+T2-W-11,A1,switches +0.05 m,1
+T2-W-11,A1,switches -0.05 m,1
+T2-W-11,A1,valve lag 1 s,1
+T2-W-11,A2,polling phase 40 ms,1
+T2-W-11,A2,switches +0.05 m,1
+T2-W-11,A2,switches -0.05 m,1
+T2-W-11,A2,valve lag 1 s,1
+T1-W-25,A1,A-B 0.6 m,1
+T1-W-25,A1,A-B 4 m,1
+T1-W-25,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-25,A1,polling phase 40 ms,1
+T1-W-25,A2,A-B 0.6 m,1
+T1-W-25,A2,A-B 4 m,1
+T1-W-25,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-25,A2,polling phase 40 ms,1
+T4-B-28,baseline,inflow x0.8,1
+T4-B-28,baseline,outflow independent of level,0
+T4-B-28,baseline,registers truncated,1
+T4-B-28,baseline,valve lag 2 s,1
+T2-W-21,A1,polling phase 40 ms,1
+T2-W-21,A1,switches +0.05 m,1
+T2-W-21,A1,switches -0.05 m,1
+T2-W-21,A1,valve lag 1 s,1
+T2-W-21,A2,polling phase 40 ms,1
+T2-W-21,A2,switches +0.05 m,1
+T2-W-21,A2,switches -0.05 m,1
+T2-W-21,A2,valve lag 1 s,1
+T2-W-25,A1,polling phase 40 ms,1
+T2-W-25,A1,switches +0.05 m,1
+T2-W-25,A1,switches -0.05 m,1
+T2-W-25,A1,valve lag 1 s,1
+T2-W-25,A2,polling phase 40 ms,1
+T2-W-25,A2,switches +0.05 m,1
+T2-W-25,A2,switches -0.05 m,1
+T2-W-25,A2,valve lag 1 s,1
+T4-B-26,baseline,inflow x0.8,1
+T4-B-26,baseline,outflow independent of level,0
+T4-B-26,baseline,registers truncated,1
+T4-B-26,baseline,valve lag 2 s,1
+T1-B-26,baseline,A-B 0.6 m,1
+T1-B-26,baseline,A-B 4 m,1
+T1-B-26,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-26,baseline,polling phase 40 ms,1
+T2-W-30,A1,polling phase 40 ms,1
+T2-W-30,A1,switches +0.05 m,1
+T2-W-30,A1,switches -0.05 m,1
+T2-W-30,A1,valve lag 1 s,1
+T2-W-30,A2,polling phase 40 ms,1
+T2-W-30,A2,switches +0.05 m,1
+T2-W-30,A2,switches -0.05 m,1
+T2-W-30,A2,valve lag 1 s,1
+T3-B-20,baseline,polling phase 40 ms,1
+T3-B-20,baseline,switches +0.05 m,1
+T3-B-20,baseline,switches -0.05 m,1
+T3-B-20,baseline,valve lag 1 s,1
+T4-W-21,A1,inflow x0.8,0
+T4-W-21,A1,outflow independent of level,0
+T4-W-21,A1,registers truncated,0
+T4-W-21,A1,valve lag 2 s,0
+T4-W-21,A2,inflow x0.8,1
+T4-W-21,A2,outflow independent of level,0
+T4-W-21,A2,registers truncated,1
+T4-W-21,A2,valve lag 2 s,1
+T3-W-12,A1,polling phase 40 ms,1
+T3-W-12,A1,switches +0.05 m,1
+T3-W-12,A1,switches -0.05 m,1
+T3-W-12,A1,valve lag 1 s,1
+T3-W-12,A2,polling phase 40 ms,1
+T3-W-12,A2,switches +0.05 m,1
+T3-W-12,A2,switches -0.05 m,1
+T3-W-12,A2,valve lag 1 s,1
+T2-B-25,baseline,polling phase 40 ms,1
+T2-B-25,baseline,switches +0.05 m,1
+T2-B-25,baseline,switches -0.05 m,1
+T2-B-25,baseline,valve lag 1 s,1
+T4-W-03,A1,inflow x0.8,1
+T4-W-03,A1,outflow independent of level,1
+T4-W-03,A1,registers truncated,1
+T4-W-03,A1,valve lag 2 s,1
+T4-W-03,A2,inflow x0.8,1
+T4-W-03,A2,outflow independent of level,1
+T4-W-03,A2,registers truncated,1
+T4-W-03,A2,valve lag 2 s,1
+T4-B-20,baseline,inflow x0.8,1
+T4-B-20,baseline,outflow independent of level,0
+T4-B-20,baseline,registers truncated,1
+T4-B-20,baseline,valve lag 2 s,1
+T4-W-11,A1,inflow x0.8,1
+T4-W-11,A1,outflow independent of level,0
+T4-W-11,A1,registers truncated,1
+T4-W-11,A1,valve lag 2 s,1
+T4-W-11,A2,inflow x0.8,1
+T4-W-11,A2,outflow independent of level,0
+T4-W-11,A2,registers truncated,1
+T4-W-11,A2,valve lag 2 s,1
+T1-B-20,baseline,A-B 0.6 m,1
+T1-B-20,baseline,A-B 4 m,1
+T1-B-20,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-20,baseline,polling phase 40 ms,1
+T2-W-22,A1,polling phase 40 ms,1
+T2-W-22,A1,switches +0.05 m,1
+T2-W-22,A1,switches -0.05 m,1
+T2-W-22,A1,valve lag 1 s,1
+T2-W-22,A2,polling phase 40 ms,1
+T2-W-22,A2,switches +0.05 m,1
+T2-W-22,A2,switches -0.05 m,1
+T2-W-22,A2,valve lag 1 s,1
+T4-W-27,A1,inflow x0.8,1
+T4-W-27,A1,outflow independent of level,0
+T4-W-27,A1,registers truncated,1
+T4-W-27,A1,valve lag 2 s,1
+T4-W-27,A2,inflow x0.8,1
+T4-W-27,A2,outflow independent of level,0
+T4-W-27,A2,registers truncated,1
+T4-W-27,A2,valve lag 2 s,1
+T1-W-27,A1,A-B 0.6 m,1
+T1-W-27,A1,A-B 4 m,1
+T1-W-27,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-27,A1,polling phase 40 ms,1
+T1-W-27,A2,A-B 0.6 m,1
+T1-W-27,A2,A-B 4 m,1
+T1-W-27,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-27,A2,polling phase 40 ms,1
+T2-B-24,baseline,polling phase 40 ms,1
+T2-B-24,baseline,switches +0.05 m,1
+T2-B-24,baseline,switches -0.05 m,1
+T2-B-24,baseline,valve lag 1 s,1
+T3-B-23,baseline,polling phase 40 ms,1
+T3-B-23,baseline,switches +0.05 m,1
+T3-B-23,baseline,switches -0.05 m,1
+T3-B-23,baseline,valve lag 1 s,1
+T2-B-13,baseline,polling phase 40 ms,1
+T2-B-13,baseline,switches +0.05 m,1
+T2-B-13,baseline,switches -0.05 m,1
+T2-B-13,baseline,valve lag 1 s,1
+T2-B-10,baseline,polling phase 40 ms,1
+T2-B-10,baseline,switches +0.05 m,1
+T2-B-10,baseline,switches -0.05 m,1
+T2-B-10,baseline,valve lag 1 s,1
+T1-W-08,A1,A-B 0.6 m,1
+T1-W-08,A1,A-B 4 m,1
+T1-W-08,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-08,A1,polling phase 40 ms,1
+T1-W-08,A2,A-B 0.6 m,1
+T1-W-08,A2,A-B 4 m,1
+T1-W-08,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-08,A2,polling phase 40 ms,1
+T2-B-14,baseline,polling phase 40 ms,1
+T2-B-14,baseline,switches +0.05 m,1
+T2-B-14,baseline,switches -0.05 m,1
+T2-B-14,baseline,valve lag 1 s,1
+T2-W-06,A1,polling phase 40 ms,1
+T2-W-06,A1,switches +0.05 m,1
+T2-W-06,A1,switches -0.05 m,1
+T2-W-06,A1,valve lag 1 s,1
+T2-W-06,A2,polling phase 40 ms,1
+T2-W-06,A2,switches +0.05 m,1
+T2-W-06,A2,switches -0.05 m,1
+T2-W-06,A2,valve lag 1 s,1
+T2-W-05,A1,polling phase 40 ms,1
+T2-W-05,A1,switches +0.05 m,1
+T2-W-05,A1,switches -0.05 m,1
+T2-W-05,A1,valve lag 1 s,1
+T2-W-05,A2,polling phase 40 ms,1
+T2-W-05,A2,switches +0.05 m,1
+T2-W-05,A2,switches -0.05 m,1
+T2-W-05,A2,valve lag 1 s,1
+T2-W-15,A1,polling phase 40 ms,1
+T2-W-15,A1,switches +0.05 m,1
+T2-W-15,A1,switches -0.05 m,1
+T2-W-15,A1,valve lag 1 s,1
+T2-W-15,A2,polling phase 40 ms,1
+T2-W-15,A2,switches +0.05 m,1
+T2-W-15,A2,switches -0.05 m,1
+T2-W-15,A2,valve lag 1 s,1
+T1-B-13,baseline,A-B 0.6 m,1
+T1-B-13,baseline,A-B 4 m,1
+T1-B-13,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-13,baseline,polling phase 40 ms,1
+T1-B-25,baseline,A-B 0.6 m,1
+T1-B-25,baseline,A-B 4 m,1
+T1-B-25,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-25,baseline,polling phase 40 ms,1
+T3-W-30,A1,polling phase 40 ms,1
+T3-W-30,A1,switches +0.05 m,1
+T3-W-30,A1,switches -0.05 m,1
+T3-W-30,A1,valve lag 1 s,1
+T3-W-30,A2,polling phase 40 ms,1
+T3-W-30,A2,switches +0.05 m,1
+T3-W-30,A2,switches -0.05 m,1
+T3-W-30,A2,valve lag 1 s,1
+T3-W-25,A1,polling phase 40 ms,1
+T3-W-25,A1,switches +0.05 m,1
+T3-W-25,A1,switches -0.05 m,1
+T3-W-25,A1,valve lag 1 s,1
+T3-W-25,A2,polling phase 40 ms,1
+T3-W-25,A2,switches +0.05 m,1
+T3-W-25,A2,switches -0.05 m,1
+T3-W-25,A2,valve lag 1 s,1
+T4-B-19,baseline,inflow x0.8,1
+T4-B-19,baseline,outflow independent of level,0
+T4-B-19,baseline,registers truncated,1
+T4-B-19,baseline,valve lag 2 s,1
+T4-B-29,baseline,inflow x0.8,1
+T4-B-29,baseline,outflow independent of level,1
+T4-B-29,baseline,registers truncated,1
+T4-B-29,baseline,valve lag 2 s,1
+T1-W-21,A1,A-B 0.6 m,1
+T1-W-21,A1,A-B 4 m,1
+T1-W-21,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-21,A1,polling phase 40 ms,1
+T1-W-21,A2,A-B 0.6 m,1
+T1-W-21,A2,A-B 4 m,1
+T1-W-21,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-21,A2,polling phase 40 ms,1
+T2-B-30,baseline,polling phase 40 ms,1
+T2-B-30,baseline,switches +0.05 m,1
+T2-B-30,baseline,switches -0.05 m,1
+T2-B-30,baseline,valve lag 1 s,1
+T3-B-02,baseline,polling phase 40 ms,1
+T3-B-02,baseline,switches +0.05 m,1
+T3-B-02,baseline,switches -0.05 m,1
+T3-B-02,baseline,valve lag 1 s,1
+T4-B-04,baseline,inflow x0.8,1
+T4-B-04,baseline,outflow independent of level,0
+T4-B-04,baseline,registers truncated,1
+T4-B-04,baseline,valve lag 2 s,1
+T4-B-25,baseline,inflow x0.8,1
+T4-B-25,baseline,outflow independent of level,0
+T4-B-25,baseline,registers truncated,1
+T4-B-25,baseline,valve lag 2 s,1
+T2-B-11,baseline,polling phase 40 ms,1
+T2-B-11,baseline,switches +0.05 m,1
+T2-B-11,baseline,switches -0.05 m,1
+T2-B-11,baseline,valve lag 1 s,1
+T2-B-23,baseline,polling phase 40 ms,1
+T2-B-23,baseline,switches +0.05 m,1
+T2-B-23,baseline,switches -0.05 m,1
+T2-B-23,baseline,valve lag 1 s,1
+T3-B-18,baseline,polling phase 40 ms,1
+T3-B-18,baseline,switches +0.05 m,1
+T3-B-18,baseline,switches -0.05 m,1
+T3-B-18,baseline,valve lag 1 s,1
+T3-B-07,baseline,polling phase 40 ms,1
+T3-B-07,baseline,switches +0.05 m,1
+T3-B-07,baseline,switches -0.05 m,1
+T3-B-07,baseline,valve lag 1 s,1
+T4-W-26,A1,inflow x0.8,1
+T4-W-26,A1,outflow independent of level,1
+T4-W-26,A1,registers truncated,1
+T4-W-26,A1,valve lag 2 s,1
+T4-W-26,A2,inflow x0.8,1
+T4-W-26,A2,outflow independent of level,0
+T4-W-26,A2,registers truncated,1
+T4-W-26,A2,valve lag 2 s,1
+T3-B-16,baseline,polling phase 40 ms,1
+T3-B-16,baseline,switches +0.05 m,1
+T3-B-16,baseline,switches -0.05 m,1
+T3-B-16,baseline,valve lag 1 s,1
+T2-B-19,baseline,polling phase 40 ms,1
+T2-B-19,baseline,switches +0.05 m,1
+T2-B-19,baseline,switches -0.05 m,1
+T2-B-19,baseline,valve lag 1 s,1
+T2-W-23,A1,polling phase 40 ms,1
+T2-W-23,A1,switches +0.05 m,1
+T2-W-23,A1,switches -0.05 m,1
+T2-W-23,A1,valve lag 1 s,1
+T2-W-23,A2,polling phase 40 ms,1
+T2-W-23,A2,switches +0.05 m,1
+T2-W-23,A2,switches -0.05 m,1
+T2-W-23,A2,valve lag 1 s,1
+T3-W-11,A1,polling phase 40 ms,1
+T3-W-11,A1,switches +0.05 m,1
+T3-W-11,A1,switches -0.05 m,1
+T3-W-11,A1,valve lag 1 s,1
+T3-W-11,A2,polling phase 40 ms,1
+T3-W-11,A2,switches +0.05 m,1
+T3-W-11,A2,switches -0.05 m,1
+T3-W-11,A2,valve lag 1 s,1
+T4-W-20,A1,inflow x0.8,1
+T4-W-20,A1,outflow independent of level,0
+T4-W-20,A1,registers truncated,1
+T4-W-20,A1,valve lag 2 s,1
+T4-W-20,A2,inflow x0.8,1
+T4-W-20,A2,outflow independent of level,1
+T4-W-20,A2,registers truncated,1
+T4-W-20,A2,valve lag 2 s,1
+T3-W-04,A1,polling phase 40 ms,1
+T3-W-04,A1,switches +0.05 m,1
+T3-W-04,A1,switches -0.05 m,1
+T3-W-04,A1,valve lag 1 s,1
+T3-W-04,A2,polling phase 40 ms,1
+T3-W-04,A2,switches +0.05 m,1
+T3-W-04,A2,switches -0.05 m,1
+T3-W-04,A2,valve lag 1 s,1
+T2-W-14,A1,polling phase 40 ms,1
+T2-W-14,A1,switches +0.05 m,1
+T2-W-14,A1,switches -0.05 m,1
+T2-W-14,A1,valve lag 1 s,1
+T2-W-14,A2,polling phase 40 ms,1
+T2-W-14,A2,switches +0.05 m,1
+T2-W-14,A2,switches -0.05 m,1
+T2-W-14,A2,valve lag 1 s,1
+T4-B-10,baseline,inflow x0.8,1
+T4-B-10,baseline,outflow independent of level,0
+T4-B-10,baseline,registers truncated,1
+T4-B-10,baseline,valve lag 2 s,1
+T3-B-28,baseline,polling phase 40 ms,1
+T3-B-28,baseline,switches +0.05 m,1
+T3-B-28,baseline,switches -0.05 m,1
+T3-B-28,baseline,valve lag 1 s,1
+T3-B-08,baseline,polling phase 40 ms,1
+T3-B-08,baseline,switches +0.05 m,1
+T3-B-08,baseline,switches -0.05 m,1
+T3-B-08,baseline,valve lag 1 s,1
+T1-W-12,A1,A-B 0.6 m,1
+T1-W-12,A1,A-B 4 m,1
+T1-W-12,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-12,A1,polling phase 40 ms,1
+T1-W-12,A2,A-B 0.6 m,1
+T1-W-12,A2,A-B 4 m,1
+T1-W-12,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-12,A2,polling phase 40 ms,1
+T1-B-28,baseline,A-B 0.6 m,1
+T1-B-28,baseline,A-B 4 m,1
+T1-B-28,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-28,baseline,polling phase 40 ms,1
+T1-W-09,A1,A-B 0.6 m,1
+T1-W-09,A1,A-B 4 m,1
+T1-W-09,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-09,A1,polling phase 40 ms,1
+T1-W-09,A2,A-B 0.6 m,1
+T1-W-09,A2,A-B 4 m,1
+T1-W-09,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-09,A2,polling phase 40 ms,1
+T3-W-26,A1,polling phase 40 ms,1
+T3-W-26,A1,switches +0.05 m,1
+T3-W-26,A1,switches -0.05 m,1
+T3-W-26,A1,valve lag 1 s,1
+T3-W-26,A2,polling phase 40 ms,1
+T3-W-26,A2,switches +0.05 m,1
+T3-W-26,A2,switches -0.05 m,1
+T3-W-26,A2,valve lag 1 s,1
+T2-B-26,baseline,polling phase 40 ms,1
+T2-B-26,baseline,switches +0.05 m,1
+T2-B-26,baseline,switches -0.05 m,1
+T2-B-26,baseline,valve lag 1 s,1
+T3-B-30,baseline,polling phase 40 ms,1
+T3-B-30,baseline,switches +0.05 m,1
+T3-B-30,baseline,switches -0.05 m,1
+T3-B-30,baseline,valve lag 1 s,1
+T4-B-05,baseline,inflow x0.8,1
+T4-B-05,baseline,outflow independent of level,0
+T4-B-05,baseline,registers truncated,1
+T4-B-05,baseline,valve lag 2 s,1
+T3-W-20,A1,polling phase 40 ms,1
+T3-W-20,A1,switches +0.05 m,1
+T3-W-20,A1,switches -0.05 m,1
+T3-W-20,A1,valve lag 1 s,1
+T3-W-20,A2,polling phase 40 ms,1
+T3-W-20,A2,switches +0.05 m,1
+T3-W-20,A2,switches -0.05 m,1
+T3-W-20,A2,valve lag 1 s,1
+T1-W-26,A1,A-B 0.6 m,1
+T1-W-26,A1,A-B 4 m,1
+T1-W-26,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-26,A1,polling phase 40 ms,1
+T1-W-26,A2,A-B 0.6 m,1
+T1-W-26,A2,A-B 4 m,1
+T1-W-26,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-26,A2,polling phase 40 ms,1
+T4-B-01,baseline,inflow x0.8,1
+T4-B-01,baseline,outflow independent of level,0
+T4-B-01,baseline,registers truncated,1
+T4-B-01,baseline,valve lag 2 s,1
+T3-W-03,A1,polling phase 40 ms,1
+T3-W-03,A1,switches +0.05 m,1
+T3-W-03,A1,switches -0.05 m,1
+T3-W-03,A1,valve lag 1 s,1
+T3-W-03,A2,polling phase 40 ms,1
+T3-W-03,A2,switches +0.05 m,1
+T3-W-03,A2,switches -0.05 m,1
+T3-W-03,A2,valve lag 1 s,1
+T3-B-03,baseline,polling phase 40 ms,1
+T3-B-03,baseline,switches +0.05 m,1
+T3-B-03,baseline,switches -0.05 m,1
+T3-B-03,baseline,valve lag 1 s,1
+T4-W-28,A1,inflow x0.8,1
+T4-W-28,A1,outflow independent of level,0
+T4-W-28,A1,registers truncated,1
+T4-W-28,A1,valve lag 2 s,1
+T4-W-28,A2,inflow x0.8,1
+T4-W-28,A2,outflow independent of level,0
+T4-W-28,A2,registers truncated,1
+T4-W-28,A2,valve lag 2 s,1
+T1-W-17,A1,A-B 0.6 m,1
+T1-W-17,A1,A-B 4 m,1
+T1-W-17,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-17,A1,polling phase 40 ms,1
+T1-W-17,A2,A-B 0.6 m,1
+T1-W-17,A2,A-B 4 m,1
+T1-W-17,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-17,A2,polling phase 40 ms,1
+T4-W-22,A1,inflow x0.8,1
+T4-W-22,A1,outflow independent of level,1
+T4-W-22,A1,registers truncated,1
+T4-W-22,A1,valve lag 2 s,1
+T4-W-22,A2,inflow x0.8,1
+T4-W-22,A2,outflow independent of level,1
+T4-W-22,A2,registers truncated,1
+T4-W-22,A2,valve lag 2 s,1
+T1-B-07,baseline,A-B 0.6 m,1
+T1-B-07,baseline,A-B 4 m,1
+T1-B-07,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-07,baseline,polling phase 40 ms,1
+T1-W-11,A1,A-B 0.6 m,1
+T1-W-11,A1,A-B 4 m,1
+T1-W-11,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-11,A1,polling phase 40 ms,1
+T1-W-11,A2,A-B 0.6 m,1
+T1-W-11,A2,A-B 4 m,1
+T1-W-11,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-11,A2,polling phase 40 ms,1
+T2-B-28,baseline,polling phase 40 ms,1
+T2-B-28,baseline,switches +0.05 m,1
+T2-B-28,baseline,switches -0.05 m,1
+T2-B-28,baseline,valve lag 1 s,1
+T4-B-21,baseline,inflow x0.8,1
+T4-B-21,baseline,outflow independent of level,0
+T4-B-21,baseline,registers truncated,1
+T4-B-21,baseline,valve lag 2 s,1
+T3-W-18,A1,polling phase 40 ms,1
+T3-W-18,A1,switches +0.05 m,1
+T3-W-18,A1,switches -0.05 m,1
+T3-W-18,A1,valve lag 1 s,1
+T3-W-18,A2,polling phase 40 ms,1
+T3-W-18,A2,switches +0.05 m,1
+T3-W-18,A2,switches -0.05 m,1
+T3-W-18,A2,valve lag 1 s,1
+T1-B-02,baseline,A-B 0.6 m,1
+T1-B-02,baseline,A-B 4 m,1
+T1-B-02,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-02,baseline,polling phase 40 ms,1
+T3-B-13,baseline,polling phase 40 ms,1
+T3-B-13,baseline,switches +0.05 m,1
+T3-B-13,baseline,switches -0.05 m,1
+T3-B-13,baseline,valve lag 1 s,1
+T3-B-17,baseline,polling phase 40 ms,1
+T3-B-17,baseline,switches +0.05 m,1
+T3-B-17,baseline,switches -0.05 m,1
+T3-B-17,baseline,valve lag 1 s,1
+T2-W-13,A1,polling phase 40 ms,1
+T2-W-13,A1,switches +0.05 m,1
+T2-W-13,A1,switches -0.05 m,1
+T2-W-13,A1,valve lag 1 s,1
+T2-W-13,A2,polling phase 40 ms,1
+T2-W-13,A2,switches +0.05 m,1
+T2-W-13,A2,switches -0.05 m,1
+T2-W-13,A2,valve lag 1 s,1
+T2-W-08,A1,polling phase 40 ms,1
+T2-W-08,A1,switches +0.05 m,1
+T2-W-08,A1,switches -0.05 m,1
+T2-W-08,A1,valve lag 1 s,1
+T2-W-08,A2,polling phase 40 ms,1
+T2-W-08,A2,switches +0.05 m,1
+T2-W-08,A2,switches -0.05 m,1
+T2-W-08,A2,valve lag 1 s,1
+T3-B-04,baseline,polling phase 40 ms,1
+T3-B-04,baseline,switches +0.05 m,1
+T3-B-04,baseline,switches -0.05 m,1
+T3-B-04,baseline,valve lag 1 s,1
+T1-W-20,A1,A-B 0.6 m,1
+T1-W-20,A1,A-B 4 m,1
+T1-W-20,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-20,A1,polling phase 40 ms,1
+T1-W-20,A2,A-B 0.6 m,1
+T1-W-20,A2,A-B 4 m,1
+T1-W-20,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-20,A2,polling phase 40 ms,1
+T4-W-04,A2,inflow x0.8,1
+T4-W-04,A2,outflow independent of level,0
+T4-W-04,A2,registers truncated,1
+T4-W-04,A2,valve lag 2 s,1
+T1-B-22,baseline,A-B 0.6 m,1
+T1-B-22,baseline,A-B 4 m,1
+T1-B-22,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-22,baseline,polling phase 40 ms,1
+T4-B-07,baseline,inflow x0.8,1
+T4-B-07,baseline,outflow independent of level,1
+T4-B-07,baseline,registers truncated,1
+T4-B-07,baseline,valve lag 2 s,1
+T2-W-12,A1,polling phase 40 ms,1
+T2-W-12,A1,switches +0.05 m,1
+T2-W-12,A1,switches -0.05 m,1
+T2-W-12,A1,valve lag 1 s,1
+T2-W-12,A2,polling phase 40 ms,1
+T2-W-12,A2,switches +0.05 m,1
+T2-W-12,A2,switches -0.05 m,1
+T2-W-12,A2,valve lag 1 s,1
+T3-B-12,baseline,polling phase 40 ms,1
+T3-B-12,baseline,switches +0.05 m,1
+T3-B-12,baseline,switches -0.05 m,1
+T3-B-12,baseline,valve lag 1 s,1
+T4-W-18,A1,inflow x0.8,1
+T4-W-18,A1,outflow independent of level,0
+T4-W-18,A1,registers truncated,1
+T4-W-18,A1,valve lag 2 s,1
+T4-W-18,A2,inflow x0.8,0
+T4-W-18,A2,outflow independent of level,0
+T4-W-18,A2,registers truncated,0
+T4-W-18,A2,valve lag 2 s,0
+T1-W-13,A1,A-B 0.6 m,1
+T1-W-13,A1,A-B 4 m,1
+T1-W-13,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-13,A1,polling phase 40 ms,1
+T1-W-13,A2,A-B 0.6 m,1
+T1-W-13,A2,A-B 4 m,1
+T1-W-13,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-13,A2,polling phase 40 ms,1
+T2-B-07,baseline,polling phase 40 ms,1
+T2-B-07,baseline,switches +0.05 m,1
+T2-B-07,baseline,switches -0.05 m,1
+T2-B-07,baseline,valve lag 1 s,1
+T1-B-19,baseline,A-B 0.6 m,1
+T1-B-19,baseline,A-B 4 m,1
+T1-B-19,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-19,baseline,polling phase 40 ms,1
+T3-B-10,baseline,polling phase 40 ms,1
+T3-B-10,baseline,switches +0.05 m,1
+T3-B-10,baseline,switches -0.05 m,1
+T3-B-10,baseline,valve lag 1 s,1
+T1-W-05,A1,A-B 0.6 m,1
+T1-W-05,A1,A-B 4 m,1
+T1-W-05,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-05,A1,polling phase 40 ms,1
+T1-W-05,A2,A-B 0.6 m,1
+T1-W-05,A2,A-B 4 m,1
+T1-W-05,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-05,A2,polling phase 40 ms,1
+T4-W-07,A1,inflow x0.8,1
+T4-W-07,A1,outflow independent of level,1
+T4-W-07,A1,registers truncated,1
+T4-W-07,A1,valve lag 2 s,1
+T4-W-07,A2,inflow x0.8,1
+T4-W-07,A2,outflow independent of level,1
+T4-W-07,A2,registers truncated,1
+T4-W-07,A2,valve lag 2 s,1
+T1-B-01,baseline,A-B 0.6 m,1
+T1-B-01,baseline,A-B 4 m,1
+T1-B-01,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-01,baseline,polling phase 40 ms,1
+T4-B-22,baseline,inflow x0.8,1
+T4-B-22,baseline,outflow independent of level,0
+T4-B-22,baseline,registers truncated,1
+T4-B-22,baseline,valve lag 2 s,1
+T3-W-16,A1,polling phase 40 ms,1
+T3-W-16,A1,switches +0.05 m,1
+T3-W-16,A1,switches -0.05 m,1
+T3-W-16,A1,valve lag 1 s,1
+T3-W-16,A2,polling phase 40 ms,1
+T3-W-16,A2,switches +0.05 m,1
+T3-W-16,A2,switches -0.05 m,1
+T3-W-16,A2,valve lag 1 s,1
+T2-W-18,A1,polling phase 40 ms,1
+T2-W-18,A1,switches +0.05 m,1
+T2-W-18,A1,switches -0.05 m,1
+T2-W-18,A1,valve lag 1 s,1
+T2-W-18,A2,polling phase 40 ms,1
+T2-W-18,A2,switches +0.05 m,1
+T2-W-18,A2,switches -0.05 m,1
+T2-W-18,A2,valve lag 1 s,1
+T1-W-07,A1,A-B 0.6 m,1
+T1-W-07,A1,A-B 4 m,1
+T1-W-07,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-07,A1,polling phase 40 ms,1
+T1-W-07,A2,A-B 0.6 m,1
+T1-W-07,A2,A-B 4 m,1
+T1-W-07,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-07,A2,polling phase 40 ms,1
+T2-B-21,baseline,polling phase 40 ms,1
+T2-B-21,baseline,switches +0.05 m,1
+T2-B-21,baseline,switches -0.05 m,1
+T2-B-21,baseline,valve lag 1 s,1
+T1-B-30,baseline,A-B 0.6 m,1
+T1-B-30,baseline,A-B 4 m,1
+T1-B-30,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-30,baseline,polling phase 40 ms,1
+T3-W-19,A1,polling phase 40 ms,1
+T3-W-19,A1,switches +0.05 m,1
+T3-W-19,A1,switches -0.05 m,1
+T3-W-19,A1,valve lag 1 s,1
+T3-W-19,A2,polling phase 40 ms,1
+T3-W-19,A2,switches +0.05 m,1
+T3-W-19,A2,switches -0.05 m,1
+T3-W-19,A2,valve lag 1 s,1
+T4-W-24,A1,inflow x0.8,1
+T4-W-24,A1,outflow independent of level,1
+T4-W-24,A1,registers truncated,1
+T4-W-24,A1,valve lag 2 s,1
+T4-W-24,A2,inflow x0.8,1
+T4-W-24,A2,outflow independent of level,0
+T4-W-24,A2,registers truncated,1
+T4-W-24,A2,valve lag 2 s,1
+T2-B-01,baseline,polling phase 40 ms,1
+T2-B-01,baseline,switches +0.05 m,1
+T2-B-01,baseline,switches -0.05 m,1
+T2-B-01,baseline,valve lag 1 s,1
+T2-W-03,A1,polling phase 40 ms,1
+T2-W-03,A1,switches +0.05 m,1
+T2-W-03,A1,switches -0.05 m,1
+T2-W-03,A1,valve lag 1 s,1
+T2-W-03,A2,polling phase 40 ms,1
+T2-W-03,A2,switches +0.05 m,1
+T2-W-03,A2,switches -0.05 m,1
+T2-W-03,A2,valve lag 1 s,1
+T4-B-23,baseline,inflow x0.8,1
+T4-B-23,baseline,outflow independent of level,0
+T4-B-23,baseline,registers truncated,1
+T4-B-23,baseline,valve lag 2 s,1
+T3-B-05,baseline,polling phase 40 ms,1
+T3-B-05,baseline,switches +0.05 m,1
+T3-B-05,baseline,switches -0.05 m,1
+T3-B-05,baseline,valve lag 1 s,1
+T4-B-17,baseline,inflow x0.8,1
+T4-B-17,baseline,outflow independent of level,0
+T4-B-17,baseline,registers truncated,1
+T4-B-17,baseline,valve lag 2 s,1
+T4-W-30,A1,inflow x0.8,1
+T4-W-30,A1,outflow independent of level,1
+T4-W-30,A1,registers truncated,1
+T4-W-30,A1,valve lag 2 s,1
+T4-W-30,A2,inflow x0.8,1
+T4-W-30,A2,outflow independent of level,1
+T4-W-30,A2,registers truncated,1
+T4-W-30,A2,valve lag 2 s,1
+T1-B-23,baseline,A-B 0.6 m,1
+T1-B-23,baseline,A-B 4 m,1
+T1-B-23,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-23,baseline,polling phase 40 ms,1
+T4-W-23,A1,inflow x0.8,1
+T4-W-23,A1,outflow independent of level,1
+T4-W-23,A1,registers truncated,1
+T4-W-23,A1,valve lag 2 s,1
+T4-W-23,A2,inflow x0.8,1
+T4-W-23,A2,outflow independent of level,0
+T4-W-23,A2,registers truncated,1
+T4-W-23,A2,valve lag 2 s,1
+T2-B-06,baseline,polling phase 40 ms,1
+T2-B-06,baseline,switches +0.05 m,1
+T2-B-06,baseline,switches -0.05 m,1
+T2-B-06,baseline,valve lag 1 s,1
+T4-W-14,A1,inflow x0.8,0
+T4-W-14,A1,outflow independent of level,0
+T4-W-14,A1,registers truncated,0
+T4-W-14,A1,valve lag 2 s,0
+T4-W-14,A2,inflow x0.8,1
+T4-W-14,A2,outflow independent of level,0
+T4-W-14,A2,registers truncated,1
+T4-W-14,A2,valve lag 2 s,1
+T4-B-27,baseline,inflow x0.8,0
+T4-B-27,baseline,outflow independent of level,0
+T4-B-27,baseline,registers truncated,0
+T4-B-27,baseline,valve lag 2 s,0
+T2-W-10,A1,polling phase 40 ms,1
+T2-W-10,A1,switches +0.05 m,1
+T2-W-10,A1,switches -0.05 m,1
+T2-W-10,A1,valve lag 1 s,1
+T2-W-10,A2,polling phase 40 ms,1
+T2-W-10,A2,switches +0.05 m,1
+T2-W-10,A2,switches -0.05 m,1
+T2-W-10,A2,valve lag 1 s,1
+T4-W-16,A1,inflow x0.8,1
+T4-W-16,A1,outflow independent of level,1
+T4-W-16,A1,registers truncated,1
+T4-W-16,A1,valve lag 2 s,1
+T4-W-16,A2,inflow x0.8,1
+T4-W-16,A2,outflow independent of level,0
+T4-W-16,A2,registers truncated,1
+T4-W-16,A2,valve lag 2 s,1
+T3-B-06,baseline,polling phase 40 ms,1
+T3-B-06,baseline,switches +0.05 m,1
+T3-B-06,baseline,switches -0.05 m,1
+T3-B-06,baseline,valve lag 1 s,1
+T3-B-21,baseline,polling phase 40 ms,1
+T3-B-21,baseline,switches +0.05 m,1
+T3-B-21,baseline,switches -0.05 m,1
+T3-B-21,baseline,valve lag 1 s,1
+T4-B-13,baseline,inflow x0.8,1
+T4-B-13,baseline,outflow independent of level,1
+T4-B-13,baseline,registers truncated,1
+T4-B-13,baseline,valve lag 2 s,1
+T2-B-15,baseline,polling phase 40 ms,1
+T2-B-15,baseline,switches +0.05 m,1
+T2-B-15,baseline,switches -0.05 m,1
+T2-B-15,baseline,valve lag 1 s,1
+T4-W-06,A1,inflow x0.8,1
+T4-W-06,A1,outflow independent of level,1
+T4-W-06,A1,registers truncated,1
+T4-W-06,A1,valve lag 2 s,1
+T4-W-06,A2,inflow x0.8,1
+T4-W-06,A2,outflow independent of level,1
+T4-W-06,A2,registers truncated,1
+T4-W-06,A2,valve lag 2 s,1
+T3-B-15,baseline,polling phase 40 ms,1
+T3-B-15,baseline,switches +0.05 m,1
+T3-B-15,baseline,switches -0.05 m,1
+T3-B-15,baseline,valve lag 1 s,1
+T3-W-05,A1,polling phase 40 ms,1
+T3-W-05,A1,switches +0.05 m,1
+T3-W-05,A1,switches -0.05 m,1
+T3-W-05,A1,valve lag 1 s,1
+T3-W-05,A2,polling phase 40 ms,1
+T3-W-05,A2,switches +0.05 m,1
+T3-W-05,A2,switches -0.05 m,1
+T3-W-05,A2,valve lag 1 s,1
+T4-B-02,baseline,inflow x0.8,1
+T4-B-02,baseline,outflow independent of level,0
+T4-B-02,baseline,registers truncated,1
+T4-B-02,baseline,valve lag 2 s,1
+T2-B-02,baseline,polling phase 40 ms,1
+T2-B-02,baseline,switches +0.05 m,1
+T2-B-02,baseline,switches -0.05 m,1
+T2-B-02,baseline,valve lag 1 s,1
+T2-W-29,A1,polling phase 40 ms,1
+T2-W-29,A1,switches +0.05 m,1
+T2-W-29,A1,switches -0.05 m,1
+T2-W-29,A1,valve lag 1 s,1
+T2-W-29,A2,polling phase 40 ms,1
+T2-W-29,A2,switches +0.05 m,1
+T2-W-29,A2,switches -0.05 m,1
+T2-W-29,A2,valve lag 1 s,1
+T2-B-03,baseline,polling phase 40 ms,1
+T2-B-03,baseline,switches +0.05 m,1
+T2-B-03,baseline,switches -0.05 m,1
+T2-B-03,baseline,valve lag 1 s,1
+T1-B-09,baseline,A-B 0.6 m,1
+T1-B-09,baseline,A-B 4 m,1
+T1-B-09,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-09,baseline,polling phase 40 ms,1
+T1-B-17,baseline,A-B 0.6 m,1
+T1-B-17,baseline,A-B 4 m,1
+T1-B-17,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-17,baseline,polling phase 40 ms,1
+T2-W-19,A1,polling phase 40 ms,1
+T2-W-19,A1,switches +0.05 m,1
+T2-W-19,A1,switches -0.05 m,1
+T2-W-19,A1,valve lag 1 s,1
+T2-W-19,A2,polling phase 40 ms,1
+T2-W-19,A2,switches +0.05 m,1
+T2-W-19,A2,switches -0.05 m,1
+T2-W-19,A2,valve lag 1 s,1
+T3-W-13,A1,polling phase 40 ms,1
+T3-W-13,A1,switches +0.05 m,1
+T3-W-13,A1,switches -0.05 m,1
+T3-W-13,A1,valve lag 1 s,1
+T3-W-13,A2,polling phase 40 ms,1
+T3-W-13,A2,switches +0.05 m,1
+T3-W-13,A2,switches -0.05 m,1
+T3-W-13,A2,valve lag 1 s,1
+T1-W-10,A1,A-B 0.6 m,1
+T1-W-10,A1,A-B 4 m,1
+T1-W-10,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-10,A1,polling phase 40 ms,1
+T1-W-10,A2,A-B 0.6 m,1
+T1-W-10,A2,A-B 4 m,1
+T1-W-10,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-10,A2,polling phase 40 ms,1
+T2-B-17,baseline,polling phase 40 ms,1
+T2-B-17,baseline,switches +0.05 m,1
+T2-B-17,baseline,switches -0.05 m,1
+T2-B-17,baseline,valve lag 1 s,1
+T1-W-04,A1,A-B 0.6 m,1
+T1-W-04,A1,A-B 4 m,1
+T1-W-04,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-04,A1,polling phase 40 ms,1
+T1-W-04,A2,A-B 0.6 m,1
+T1-W-04,A2,A-B 4 m,1
+T1-W-04,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-04,A2,polling phase 40 ms,1
+T2-B-12,baseline,polling phase 40 ms,1
+T2-B-12,baseline,switches +0.05 m,1
+T2-B-12,baseline,switches -0.05 m,1
+T2-B-12,baseline,valve lag 1 s,1
+T2-W-26,A1,polling phase 40 ms,1
+T2-W-26,A1,switches +0.05 m,1
+T2-W-26,A1,switches -0.05 m,1
+T2-W-26,A1,valve lag 1 s,1
+T2-W-26,A2,polling phase 40 ms,1
+T2-W-26,A2,switches +0.05 m,1
+T2-W-26,A2,switches -0.05 m,1
+T2-W-26,A2,valve lag 1 s,1
+T4-B-18,baseline,inflow x0.8,1
+T4-B-18,baseline,outflow independent of level,0
+T4-B-18,baseline,registers truncated,1
+T4-B-18,baseline,valve lag 2 s,1
+T1-W-29,A1,A-B 0.6 m,1
+T1-W-29,A1,A-B 4 m,1
+T1-W-29,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-29,A1,polling phase 40 ms,1
+T1-W-29,A2,A-B 0.6 m,1
+T1-W-29,A2,A-B 4 m,1
+T1-W-29,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-29,A2,polling phase 40 ms,1
+T3-W-22,A1,polling phase 40 ms,1
+T3-W-22,A1,switches +0.05 m,1
+T3-W-22,A1,switches -0.05 m,1
+T3-W-22,A1,valve lag 1 s,1
+T3-W-22,A2,polling phase 40 ms,1
+T3-W-22,A2,switches +0.05 m,1
+T3-W-22,A2,switches -0.05 m,1
+T3-W-22,A2,valve lag 1 s,1
+T3-W-17,A1,polling phase 40 ms,1
+T3-W-17,A1,switches +0.05 m,1
+T3-W-17,A1,switches -0.05 m,1
+T3-W-17,A1,valve lag 1 s,1
+T3-W-17,A2,polling phase 40 ms,1
+T3-W-17,A2,switches +0.05 m,1
+T3-W-17,A2,switches -0.05 m,1
+T3-W-17,A2,valve lag 1 s,1
+T1-W-16,A1,A-B 0.6 m,1
+T1-W-16,A1,A-B 4 m,1
+T1-W-16,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-16,A1,polling phase 40 ms,1
+T1-W-16,A2,A-B 0.6 m,1
+T1-W-16,A2,A-B 4 m,1
+T1-W-16,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-16,A2,polling phase 40 ms,1
+T1-B-21,baseline,A-B 0.6 m,1
+T1-B-21,baseline,A-B 4 m,1
+T1-B-21,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-21,baseline,polling phase 40 ms,1
+T1-B-05,baseline,A-B 0.6 m,1
+T1-B-05,baseline,A-B 4 m,1
+T1-B-05,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-05,baseline,polling phase 40 ms,1
+T4-B-03,baseline,inflow x0.8,1
+T4-B-03,baseline,outflow independent of level,0
+T4-B-03,baseline,registers truncated,1
+T4-B-03,baseline,valve lag 2 s,1
+T1-W-22,A1,A-B 0.6 m,1
+T1-W-22,A1,A-B 4 m,1
+T1-W-22,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-22,A1,polling phase 40 ms,1
+T1-W-22,A2,A-B 0.6 m,1
+T1-W-22,A2,A-B 4 m,1
+T1-W-22,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-22,A2,polling phase 40 ms,1
+T1-B-11,baseline,A-B 0.6 m,1
+T1-B-11,baseline,A-B 4 m,1
+T1-B-11,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-11,baseline,polling phase 40 ms,1
+T1-B-06,baseline,A-B 0.6 m,1
+T1-B-06,baseline,A-B 4 m,1
+T1-B-06,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-06,baseline,polling phase 40 ms,1
+T2-B-27,baseline,polling phase 40 ms,1
+T2-B-27,baseline,switches +0.05 m,1
+T2-B-27,baseline,switches -0.05 m,1
+T2-B-27,baseline,valve lag 1 s,1
+T3-W-27,A1,polling phase 40 ms,1
+T3-W-27,A1,switches +0.05 m,1
+T3-W-27,A1,switches -0.05 m,1
+T3-W-27,A1,valve lag 1 s,1
+T3-W-27,A2,polling phase 40 ms,1
+T3-W-27,A2,switches +0.05 m,1
+T3-W-27,A2,switches -0.05 m,1
+T3-W-27,A2,valve lag 1 s,1
+T2-B-29,baseline,polling phase 40 ms,1
+T2-B-29,baseline,switches +0.05 m,1
+T2-B-29,baseline,switches -0.05 m,1
+T2-B-29,baseline,valve lag 1 s,1
+T3-W-29,A1,polling phase 40 ms,1
+T3-W-29,A1,switches +0.05 m,1
+T3-W-29,A1,switches -0.05 m,1
+T3-W-29,A1,valve lag 1 s,1
+T3-W-29,A2,polling phase 40 ms,1
+T3-W-29,A2,switches +0.05 m,1
+T3-W-29,A2,switches -0.05 m,1
+T3-W-29,A2,valve lag 1 s,1
+T3-B-26,baseline,polling phase 40 ms,1
+T3-B-26,baseline,switches +0.05 m,1
+T3-B-26,baseline,switches -0.05 m,1
+T3-B-26,baseline,valve lag 1 s,1
+T1-B-18,baseline,A-B 0.6 m,1
+T1-B-18,baseline,A-B 4 m,1
+T1-B-18,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-18,baseline,polling phase 40 ms,1
+T1-W-15,A1,A-B 0.6 m,1
+T1-W-15,A1,A-B 4 m,1
+T1-W-15,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-15,A1,polling phase 40 ms,1
+T1-W-15,A2,A-B 0.6 m,1
+T1-W-15,A2,A-B 4 m,1
+T1-W-15,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-15,A2,polling phase 40 ms,1
+T2-W-17,A1,polling phase 40 ms,1
+T2-W-17,A1,switches +0.05 m,1
+T2-W-17,A1,switches -0.05 m,1
+T2-W-17,A1,valve lag 1 s,1
+T2-W-17,A2,polling phase 40 ms,1
+T2-W-17,A2,switches +0.05 m,1
+T2-W-17,A2,switches -0.05 m,1
+T2-W-17,A2,valve lag 1 s,1
+T4-W-17,A1,inflow x0.8,1
+T4-W-17,A1,outflow independent of level,0
+T4-W-17,A1,registers truncated,1
+T4-W-17,A1,valve lag 2 s,1
+T4-W-17,A2,inflow x0.8,1
+T4-W-17,A2,outflow independent of level,1
+T4-W-17,A2,registers truncated,1
+T4-W-17,A2,valve lag 2 s,1
+T4-W-25,A1,inflow x0.8,1
+T4-W-25,A1,outflow independent of level,0
+T4-W-25,A1,registers truncated,1
+T4-W-25,A1,valve lag 2 s,1
+T4-W-25,A2,inflow x0.8,1
+T4-W-25,A2,outflow independent of level,0
+T4-W-25,A2,registers truncated,1
+T4-W-25,A2,valve lag 2 s,1
+T1-W-06,A1,A-B 0.6 m,1
+T1-W-06,A1,A-B 4 m,1
+T1-W-06,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-06,A1,polling phase 40 ms,1
+T1-W-06,A2,A-B 0.6 m,1
+T1-W-06,A2,A-B 4 m,1
+T1-W-06,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-06,A2,polling phase 40 ms,1
+T1-B-12,baseline,A-B 0.6 m,1
+T1-B-12,baseline,A-B 4 m,1
+T1-B-12,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-12,baseline,polling phase 40 ms,1
+T3-W-28,A1,polling phase 40 ms,1
+T3-W-28,A1,switches +0.05 m,1
+T3-W-28,A1,switches -0.05 m,1
+T3-W-28,A1,valve lag 1 s,1
+T3-W-28,A2,polling phase 40 ms,1
+T3-W-28,A2,switches +0.05 m,1
+T3-W-28,A2,switches -0.05 m,1
+T3-W-28,A2,valve lag 1 s,1
+T4-B-14,baseline,inflow x0.8,1
+T4-B-14,baseline,outflow independent of level,0
+T4-B-14,baseline,registers truncated,1
+T4-B-14,baseline,valve lag 2 s,1
+T3-W-15,A1,polling phase 40 ms,1
+T3-W-15,A1,switches +0.05 m,1
+T3-W-15,A1,switches -0.05 m,1
+T3-W-15,A1,valve lag 1 s,1
+T3-W-15,A2,polling phase 40 ms,1
+T3-W-15,A2,switches +0.05 m,1
+T3-W-15,A2,switches -0.05 m,1
+T3-W-15,A2,valve lag 1 s,1
+T3-B-01,baseline,polling phase 40 ms,1
+T3-B-01,baseline,switches +0.05 m,1
+T3-B-01,baseline,switches -0.05 m,1
+T3-B-01,baseline,valve lag 1 s,1
+T1-W-03,A1,A-B 0.6 m,1
+T1-W-03,A1,A-B 4 m,1
+T1-W-03,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-03,A1,polling phase 40 ms,1
+T1-W-03,A2,A-B 0.6 m,1
+T1-W-03,A2,A-B 4 m,1
+T1-W-03,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-03,A2,polling phase 40 ms,1
+T1-W-19,A1,A-B 0.6 m,1
+T1-W-19,A1,A-B 4 m,1
+T1-W-19,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-19,A1,polling phase 40 ms,1
+T1-W-19,A2,A-B 0.6 m,1
+T1-W-19,A2,A-B 4 m,1
+T1-W-19,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-19,A2,polling phase 40 ms,1
+T3-W-06,A1,polling phase 40 ms,1
+T3-W-06,A1,switches +0.05 m,1
+T3-W-06,A1,switches -0.05 m,1
+T3-W-06,A1,valve lag 1 s,1
+T3-W-06,A2,polling phase 40 ms,1
+T3-W-06,A2,switches +0.05 m,1
+T3-W-06,A2,switches -0.05 m,1
+T3-W-06,A2,valve lag 1 s,1
+T2-B-09,baseline,polling phase 40 ms,1
+T2-B-09,baseline,switches +0.05 m,1
+T2-B-09,baseline,switches -0.05 m,1
+T2-B-09,baseline,valve lag 1 s,1
+T3-W-21,A1,polling phase 40 ms,1
+T3-W-21,A1,switches +0.05 m,1
+T3-W-21,A1,switches -0.05 m,1
+T3-W-21,A1,valve lag 1 s,1
+T3-W-21,A2,polling phase 40 ms,1
+T3-W-21,A2,switches +0.05 m,1
+T3-W-21,A2,switches -0.05 m,1
+T3-W-21,A2,valve lag 1 s,1
+T3-B-25,baseline,polling phase 40 ms,1
+T3-B-25,baseline,switches +0.05 m,1
+T3-B-25,baseline,switches -0.05 m,1
+T3-B-25,baseline,valve lag 1 s,1
+T2-W-09,A1,polling phase 40 ms,1
+T2-W-09,A1,switches +0.05 m,1
+T2-W-09,A1,switches -0.05 m,1
+T2-W-09,A1,valve lag 1 s,1
+T2-W-09,A2,polling phase 40 ms,1
+T2-W-09,A2,switches +0.05 m,1
+T2-W-09,A2,switches -0.05 m,1
+T2-W-09,A2,valve lag 1 s,1
+T1-B-10,baseline,A-B 0.6 m,1
+T1-B-10,baseline,A-B 4 m,1
+T1-B-10,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-10,baseline,polling phase 40 ms,1
+T3-B-24,baseline,polling phase 40 ms,1
+T3-B-24,baseline,switches +0.05 m,1
+T3-B-24,baseline,switches -0.05 m,1
+T3-B-24,baseline,valve lag 1 s,1
+T3-B-11,baseline,polling phase 40 ms,1
+T3-B-11,baseline,switches +0.05 m,1
+T3-B-11,baseline,switches -0.05 m,1
+T3-B-11,baseline,valve lag 1 s,1
+T1-B-03,baseline,A-B 0.6 m,1
+T1-B-03,baseline,A-B 4 m,1
+T1-B-03,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-03,baseline,polling phase 40 ms,1
+T4-B-08,baseline,inflow x0.8,1
+T4-B-08,baseline,outflow independent of level,1
+T4-B-08,baseline,registers truncated,1
+T4-B-08,baseline,valve lag 2 s,1
+T3-B-29,baseline,polling phase 40 ms,1
+T3-B-29,baseline,switches +0.05 m,1
+T3-B-29,baseline,switches -0.05 m,1
+T3-B-29,baseline,valve lag 1 s,1
+T4-B-15,baseline,inflow x0.8,1
+T4-B-15,baseline,outflow independent of level,0
+T4-B-15,baseline,registers truncated,1
+T4-B-15,baseline,valve lag 2 s,1
+T2-W-20,A1,polling phase 40 ms,1
+T2-W-20,A1,switches +0.05 m,1
+T2-W-20,A1,switches -0.05 m,1
+T2-W-20,A1,valve lag 1 s,1
+T2-W-20,A2,polling phase 40 ms,1
+T2-W-20,A2,switches +0.05 m,1
+T2-W-20,A2,switches -0.05 m,1
+T2-W-20,A2,valve lag 1 s,1
+T4-W-29,A1,inflow x0.8,1
+T4-W-29,A1,outflow independent of level,1
+T4-W-29,A1,registers truncated,1
+T4-W-29,A1,valve lag 2 s,1
+T4-W-29,A2,inflow x0.8,1
+T4-W-29,A2,outflow independent of level,1
+T4-W-29,A2,registers truncated,1
+T4-W-29,A2,valve lag 2 s,1
+T1-B-08,baseline,A-B 0.6 m,1
+T1-B-08,baseline,A-B 4 m,1
+T1-B-08,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-08,baseline,polling phase 40 ms,1
+T4-W-01,A1,inflow x0.8,1
+T4-W-01,A1,outflow independent of level,1
+T4-W-01,A1,registers truncated,1
+T4-W-01,A1,valve lag 2 s,1
+T4-W-01,A2,inflow x0.8,1
+T4-W-01,A2,outflow independent of level,1
+T4-W-01,A2,registers truncated,1
+T4-W-01,A2,valve lag 2 s,1
+T3-B-09,baseline,polling phase 40 ms,1
+T3-B-09,baseline,switches +0.05 m,1
+T3-B-09,baseline,switches -0.05 m,1
+T3-B-09,baseline,valve lag 1 s,1
+T1-B-15,baseline,A-B 0.6 m,1
+T1-B-15,baseline,A-B 4 m,1
+T1-B-15,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-15,baseline,polling phase 40 ms,1
+T2-W-01,A1,polling phase 40 ms,1
+T2-W-01,A1,switches +0.05 m,1
+T2-W-01,A1,switches -0.05 m,1
+T2-W-01,A1,valve lag 1 s,1
+T2-W-01,A2,polling phase 40 ms,1
+T2-W-01,A2,switches +0.05 m,1
+T2-W-01,A2,switches -0.05 m,1
+T2-W-01,A2,valve lag 1 s,1
+T3-B-14,baseline,polling phase 40 ms,1
+T3-B-14,baseline,switches +0.05 m,1
+T3-B-14,baseline,switches -0.05 m,1
+T3-B-14,baseline,valve lag 1 s,1
+T2-B-18,baseline,polling phase 40 ms,1
+T2-B-18,baseline,switches +0.05 m,1
+T2-B-18,baseline,switches -0.05 m,1
+T2-B-18,baseline,valve lag 1 s,1
+T4-W-02,A1,inflow x0.8,1
+T4-W-02,A1,outflow independent of level,0
+T4-W-02,A1,registers truncated,1
+T4-W-02,A1,valve lag 2 s,1
+T4-W-02,A2,inflow x0.8,1
+T4-W-02,A2,outflow independent of level,1
+T4-W-02,A2,registers truncated,1
+T4-W-02,A2,valve lag 2 s,1
+T4-W-09,A1,inflow x0.8,0
+T4-W-09,A1,outflow independent of level,0
+T4-W-09,A1,registers truncated,0
+T4-W-09,A1,valve lag 2 s,0
+T4-W-09,A2,inflow x0.8,1
+T4-W-09,A2,outflow independent of level,0
+T4-W-09,A2,registers truncated,1
+T4-W-09,A2,valve lag 2 s,1
+T2-B-20,baseline,polling phase 40 ms,1
+T2-B-20,baseline,switches +0.05 m,1
+T2-B-20,baseline,switches -0.05 m,1
+T2-B-20,baseline,valve lag 1 s,1
+T3-W-01,A1,polling phase 40 ms,1
+T3-W-01,A1,switches +0.05 m,1
+T3-W-01,A1,switches -0.05 m,1
+T3-W-01,A1,valve lag 1 s,1
+T3-W-01,A2,polling phase 40 ms,1
+T3-W-01,A2,switches +0.05 m,1
+T3-W-01,A2,switches -0.05 m,1
+T3-W-01,A2,valve lag 1 s,1
+T2-W-02,A1,polling phase 40 ms,1
+T2-W-02,A1,switches +0.05 m,1
+T2-W-02,A1,switches -0.05 m,1
+T2-W-02,A1,valve lag 1 s,1
+T2-W-02,A2,polling phase 40 ms,1
+T2-W-02,A2,switches +0.05 m,1
+T2-W-02,A2,switches -0.05 m,1
+T2-W-02,A2,valve lag 1 s,1
+T3-W-23,A1,polling phase 40 ms,1
+T3-W-23,A1,switches +0.05 m,1
+T3-W-23,A1,switches -0.05 m,1
+T3-W-23,A1,valve lag 1 s,1
+T3-W-23,A2,polling phase 40 ms,1
+T3-W-23,A2,switches +0.05 m,1
+T3-W-23,A2,switches -0.05 m,1
+T3-W-23,A2,valve lag 1 s,1
+T1-W-01,A1,A-B 0.6 m,1
+T1-W-01,A1,A-B 4 m,1
+T1-W-01,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-01,A1,polling phase 40 ms,1
+T1-W-01,A2,A-B 0.6 m,1
+T1-W-01,A2,A-B 4 m,1
+T1-W-01,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-01,A2,polling phase 40 ms,1
+T1-B-04,baseline,A-B 0.6 m,1
+T1-B-04,baseline,A-B 4 m,1
+T1-B-04,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-04,baseline,polling phase 40 ms,1
+T1-B-27,baseline,A-B 0.6 m,1
+T1-B-27,baseline,A-B 4 m,1
+T1-B-27,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-27,baseline,polling phase 40 ms,1
+T1-B-29,baseline,A-B 0.6 m,1
+T1-B-29,baseline,A-B 4 m,1
+T1-B-29,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-29,baseline,polling phase 40 ms,1
+T4-W-13,A1,inflow x0.8,1
+T4-W-13,A1,outflow independent of level,0
+T4-W-13,A1,registers truncated,1
+T4-W-13,A1,valve lag 2 s,1
+T4-W-13,A2,inflow x0.8,1
+T4-W-13,A2,outflow independent of level,0
+T4-W-13,A2,registers truncated,1
+T4-W-13,A2,valve lag 2 s,1
+T2-W-27,A1,polling phase 40 ms,1
+T2-W-27,A1,switches +0.05 m,1
+T2-W-27,A1,switches -0.05 m,1
+T2-W-27,A1,valve lag 1 s,1
+T2-W-27,A2,polling phase 40 ms,1
+T2-W-27,A2,switches +0.05 m,1
+T2-W-27,A2,switches -0.05 m,1
+T2-W-27,A2,valve lag 1 s,1
+T3-W-24,A1,polling phase 40 ms,1
+T3-W-24,A1,switches +0.05 m,1
+T3-W-24,A1,switches -0.05 m,1
+T3-W-24,A1,valve lag 1 s,1
+T3-W-24,A2,polling phase 40 ms,1
+T3-W-24,A2,switches +0.05 m,1
+T3-W-24,A2,switches -0.05 m,1
+T3-W-24,A2,valve lag 1 s,1
+T4-W-10,A1,inflow x0.8,1
+T4-W-10,A1,outflow independent of level,1
+T4-W-10,A1,registers truncated,1
+T4-W-10,A1,valve lag 2 s,1
+T4-W-10,A2,inflow x0.8,1
+T4-W-10,A2,outflow independent of level,0
+T4-W-10,A2,registers truncated,1
+T4-W-10,A2,valve lag 2 s,1
+T1-W-18,A1,A-B 0.6 m,1
+T1-W-18,A1,A-B 4 m,1
+T1-W-18,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-18,A1,polling phase 40 ms,1
+T1-W-18,A2,A-B 0.6 m,1
+T1-W-18,A2,A-B 4 m,1
+T1-W-18,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-18,A2,polling phase 40 ms,1
+T1-B-14,baseline,A-B 0.6 m,1
+T1-B-14,baseline,A-B 4 m,1
+T1-B-14,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-14,baseline,polling phase 40 ms,1
+T3-B-19,baseline,polling phase 40 ms,1
+T3-B-19,baseline,switches +0.05 m,1
+T3-B-19,baseline,switches -0.05 m,1
+T3-B-19,baseline,valve lag 1 s,1
+T4-W-12,A1,inflow x0.8,1
+T4-W-12,A1,outflow independent of level,0
+T4-W-12,A1,registers truncated,1
+T4-W-12,A1,valve lag 2 s,1
+T4-W-12,A2,inflow x0.8,1
+T4-W-12,A2,outflow independent of level,0
+T4-W-12,A2,registers truncated,1
+T4-W-12,A2,valve lag 2 s,1
+T1-W-14,A1,A-B 0.6 m,1
+T1-W-14,A1,A-B 4 m,1
+T1-W-14,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-14,A1,polling phase 40 ms,1
+T1-W-14,A2,A-B 0.6 m,1
+T1-W-14,A2,A-B 4 m,1
+T1-W-14,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-14,A2,polling phase 40 ms,1
+T2-W-16,A1,polling phase 40 ms,1
+T2-W-16,A1,switches +0.05 m,1
+T2-W-16,A1,switches -0.05 m,1
+T2-W-16,A1,valve lag 1 s,1
+T2-W-16,A2,polling phase 40 ms,1
+T2-W-16,A2,switches +0.05 m,1
+T2-W-16,A2,switches -0.05 m,1
+T2-W-16,A2,valve lag 1 s,1
+T2-B-16,baseline,polling phase 40 ms,1
+T2-B-16,baseline,switches +0.05 m,1
+T2-B-16,baseline,switches -0.05 m,1
+T2-B-16,baseline,valve lag 1 s,1
+T2-W-24,A1,polling phase 40 ms,1
+T2-W-24,A1,switches +0.05 m,1
+T2-W-24,A1,switches -0.05 m,1
+T2-W-24,A1,valve lag 1 s,1
+T2-W-24,A2,polling phase 40 ms,1
+T2-W-24,A2,switches +0.05 m,1
+T2-W-24,A2,switches -0.05 m,1
+T2-W-24,A2,valve lag 1 s,1
+T1-W-28,A1,A-B 0.6 m,1
+T1-W-28,A1,A-B 4 m,1
+T1-W-28,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-28,A1,polling phase 40 ms,1
+T1-W-28,A2,A-B 0.6 m,1
+T1-W-28,A2,A-B 4 m,1
+T1-W-28,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-28,A2,polling phase 40 ms,1
+T4-B-11,baseline,inflow x0.8,1
+T4-B-11,baseline,outflow independent of level,0
+T4-B-11,baseline,registers truncated,1
+T4-B-11,baseline,valve lag 2 s,1
+T2-W-28,A1,polling phase 40 ms,1
+T2-W-28,A1,switches +0.05 m,1
+T2-W-28,A1,switches -0.05 m,1
+T2-W-28,A1,valve lag 1 s,1
+T2-W-28,A2,polling phase 40 ms,1
+T2-W-28,A2,switches +0.05 m,1
+T2-W-28,A2,switches -0.05 m,1
+T2-W-28,A2,valve lag 1 s,1
+T3-B-22,baseline,polling phase 40 ms,1
+T3-B-22,baseline,switches +0.05 m,1
+T3-B-22,baseline,switches -0.05 m,1
+T3-B-22,baseline,valve lag 1 s,1
+T3-B-27,baseline,polling phase 40 ms,1
+T3-B-27,baseline,switches +0.05 m,1
+T3-B-27,baseline,switches -0.05 m,1
+T3-B-27,baseline,valve lag 1 s,1
+T1-W-24,A1,A-B 0.6 m,1
+T1-W-24,A1,A-B 4 m,1
+T1-W-24,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-24,A1,polling phase 40 ms,1
+T1-W-24,A2,A-B 0.6 m,1
+T1-W-24,A2,A-B 4 m,1
+T1-W-24,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-24,A2,polling phase 40 ms,1
+T3-W-14,A1,polling phase 40 ms,1
+T3-W-14,A1,switches +0.05 m,1
+T3-W-14,A1,switches -0.05 m,1
+T3-W-14,A1,valve lag 1 s,1
+T3-W-14,A2,polling phase 40 ms,1
+T3-W-14,A2,switches +0.05 m,1
+T3-W-14,A2,switches -0.05 m,1
+T3-W-14,A2,valve lag 1 s,1
+T4-B-16,baseline,inflow x0.8,1
+T4-B-16,baseline,outflow independent of level,0
+T4-B-16,baseline,registers truncated,1
+T4-B-16,baseline,valve lag 2 s,1
+T3-W-07,A1,polling phase 40 ms,1
+T3-W-07,A1,switches +0.05 m,1
+T3-W-07,A1,switches -0.05 m,1
+T3-W-07,A1,valve lag 1 s,1
+T3-W-07,A2,polling phase 40 ms,1
+T3-W-07,A2,switches +0.05 m,1
+T3-W-07,A2,switches -0.05 m,1
+T3-W-07,A2,valve lag 1 s,1
+T4-B-30,baseline,inflow x0.8,1
+T4-B-30,baseline,outflow independent of level,0
+T4-B-30,baseline,registers truncated,1
+T4-B-30,baseline,valve lag 2 s,1
+T3-W-02,A1,polling phase 40 ms,1
+T3-W-02,A1,switches +0.05 m,1
+T3-W-02,A1,switches -0.05 m,1
+T3-W-02,A1,valve lag 1 s,1
+T3-W-02,A2,polling phase 40 ms,1
+T3-W-02,A2,switches +0.05 m,1
+T3-W-02,A2,switches -0.05 m,1
+T3-W-02,A2,valve lag 1 s,1
+T1-B-16,baseline,A-B 0.6 m,1
+T1-B-16,baseline,A-B 4 m,1
+T1-B-16,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-16,baseline,polling phase 40 ms,1
+T2-B-22,baseline,polling phase 40 ms,1
+T2-B-22,baseline,switches +0.05 m,1
+T2-B-22,baseline,switches -0.05 m,1
+T2-B-22,baseline,valve lag 1 s,1
+T4-W-15,A1,inflow x0.8,1
+T4-W-15,A1,outflow independent of level,1
+T4-W-15,A1,registers truncated,1
+T4-W-15,A1,valve lag 2 s,1
+T4-W-15,A2,inflow x0.8,1
+T4-W-15,A2,outflow independent of level,1
+T4-W-15,A2,registers truncated,1
+T4-W-15,A2,valve lag 2 s,1
+T1-W-30,A1,A-B 0.6 m,1
+T1-W-30,A1,A-B 4 m,1
+T1-W-30,A1,"box 0.3 m, slide 0.1 m",1
+T1-W-30,A1,polling phase 40 ms,1
+T1-W-30,A2,A-B 0.6 m,1
+T1-W-30,A2,A-B 4 m,1
+T1-W-30,A2,"box 0.3 m, slide 0.1 m",1
+T1-W-30,A2,polling phase 40 ms,1
+T2-W-04,A1,polling phase 40 ms,1
+T2-W-04,A1,switches +0.05 m,1
+T2-W-04,A1,switches -0.05 m,1
+T2-W-04,A1,valve lag 1 s,1
+T2-W-04,A2,polling phase 40 ms,1
+T2-W-04,A2,switches +0.05 m,1
+T2-W-04,A2,switches -0.05 m,1
+T2-W-04,A2,valve lag 1 s,1
+T4-W-08,A1,inflow x0.8,1
+T4-W-08,A1,outflow independent of level,0
+T4-W-08,A1,registers truncated,1
+T4-W-08,A1,valve lag 2 s,1
+T4-W-08,A2,inflow x0.8,1
+T4-W-08,A2,outflow independent of level,1
+T4-W-08,A2,registers truncated,1
+T4-W-08,A2,valve lag 2 s,1
+T2-B-08,baseline,polling phase 40 ms,1
+T2-B-08,baseline,switches +0.05 m,1
+T2-B-08,baseline,switches -0.05 m,1
+T2-B-08,baseline,valve lag 1 s,1
+T3-W-10,A1,polling phase 40 ms,1
+T3-W-10,A1,switches +0.05 m,1
+T3-W-10,A1,switches -0.05 m,1
+T3-W-10,A1,valve lag 1 s,1
+T3-W-10,A2,polling phase 40 ms,1
+T3-W-10,A2,switches +0.05 m,1
+T3-W-10,A2,switches -0.05 m,1
+T3-W-10,A2,valve lag 1 s,1
+T1-B-24,baseline,A-B 0.6 m,1
+T1-B-24,baseline,A-B 4 m,1
+T1-B-24,baseline,"box 0.3 m, slide 0.1 m",1
+T1-B-24,baseline,polling phase 40 ms,1

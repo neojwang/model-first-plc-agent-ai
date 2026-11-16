@@ -1,0 +1,28 @@
+The model below treats the function as **controlling tank filling**, rather than physically transferring liquid. Thus, command and sensor signals are inputs, valve commands are outputs, timing parameters and operating rules are controls, and the PLC execution and communication facilities are mechanisms.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | start; stop; LSH; LSHH | TON_Duration; TOF_Duration; initial-step rule; filling/pause sequence rules; stop priority; LSH completion rule; LSHH non-reach requirement; discharge-valve prohibition | fill_valve; discharge_valve | OpenPLC Runtime; PLC application; Factory I/O digital-tank scene; Modbus TCP connection and I/O mapping |
+| **A1** | **Determine the operating step** | start; stop; LSH; LSHH; ton_q; tof_q | Initial step 0; start-triggered filling rule; TON-expiry pause rule; TOF-expiry restart rule; LSH completion rule; stop priority; LSHH non-reach requirement | Operating-step activity, including filling-step activity | PLC sequence logic; operating-step memory; OpenPLC Runtime |
+| **A2** | **Evaluate phase timing** | Filling-step activity | TON_Duration; TOF_Duration; TON behavior with IN equal to filling-step activity; TOF behavior with IN equal to filling-step activity | ton_q; tof_q | TON function-block instance; TOF function-block instance; PLC time base; OpenPLC Runtime |
+| **A3** | **Generate valve commands** | Operating-step activity; stop | Fill-valve activation rule; initial-step and pause-step output restrictions; stop override; discharge-valve prohibition | fill_valve; discharge_valve | PLC output logic; OpenPLC output image; Modbus TCP output mapping; Factory I/O valve interfaces |
+
+### Sequence rules represented by A1
+
+- **Initialization:** activate step 0.
+- **Stop priority:** whenever **stop** is TRUE, activate step 0, regardless of other conditions.
+- **Start:** from step 0, **start** initiates filling, provided **LSH** is FALSE.
+- **Level completion:** when **LSH** is TRUE during filling or pausing, return to step 0.
+- **Filling timeout:** while filling, **ton_q AND NOT LSH** causes entry into the pause step.
+- **Pause completion:** while paused, **NOT tof_q**, with **LSH** FALSE, causes filling to resume.
+
+### Output and timer interpretation
+
+- **fill_valve** is TRUE only during the filling step and when **stop** is FALSE.
+- **discharge_valve** is always FALSE.
+- Both timers receive **filling-step activity** as their IN signal. Consequently, leaving the filling step resets TON and starts the TOF off-delay; **tof_q** remains TRUE until that off-delay expires.
+- **start** is the specified one-scan button-press event, not the continuously held StartCommand signal.
+
+**LSHH interpretation:** LSHH is included as a safety-observation input, and “LSHH must never be reached” is a governing constraint. The task does not specify an LSHH-triggered transition or a separate high-high interlock, so none is invented here. Actual non-reach also depends on the plant’s response after valve closure and the available headroom above LSH.
+
+*IDEF0 notation:* Strictly, the context diagram is **A-0**, containing function box **A0**; the decomposition of that box is diagram **A0**, containing child boxes **A1–A3**.

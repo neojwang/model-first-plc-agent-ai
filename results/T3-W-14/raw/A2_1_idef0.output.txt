@@ -1,0 +1,16 @@
+The model below treats the **PLC control function**, rather than the physical liquid-transfer process, as the system boundary. Thus, commands and level indications are inputs; valve commands are outputs; operating rules and timer settings are controls; and the PLC, timer instances, and communication interface are mechanisms. **A0** is the context function, decomposed into **A1–A4**.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | `start`; `stop`; `LSH`; `LSHH` | `TON_Duration`; `TOF_Duration`; initial-step rule; filling/pause sequence rules; stop-priority rule; upper-level safety constraint; discharge-inhibition rule | `fill_valve`; `discharge_valve` | OpenPLC Runtime; PLC application; TON and TOF timer instances; Modbus TCP interface; Factory I/O tank scene |
+| **A1** | **Determine the active sequence step** | `start`; `stop`; `LSH`; `LSHH`; `ton_q`; `tof_q` | Initial state: step 0. Highest priority: `stop` selects step 0 from every step. In step 0, `start` selects filling, subject to the level-completion condition. During filling or pause, `LSH` selects step 0. During filling, `ton_q` with no `LSH` selects pause. During pause, absence of `tof_q`, with no `LSH`, selects filling. Upper-level safety constraint: `LSHH` must never be reached. | Step-0 activity; filling-step activity; pause-step activity | PLC sequence logic; retained sequence-state variable; OpenPLC scan execution |
+| **A2** | **Time the filling interval** | Filling-step activity | `TON_Duration`; TON semantics: IN equals filling-step activity, Q becomes TRUE after continuous activity for the preset duration, and resets when activity becomes FALSE | `ton_q` | IEC 61131-3 TON instance; PLC time base |
+| **A3** | **Time the filling pause** | Filling-step activity | `TOF_Duration`; TOF semantics: IN equals filling-step activity, Q is TRUE during filling and remains TRUE for the preset duration after filling activity becomes FALSE | `tof_q` | IEC 61131-3 TOF instance; PLC time base |
+| **A4** | **Generate valve commands** | Filling-step activity; `stop` | Fill-command rule: `fill_valve` is TRUE only during filling and with no `stop`. Initial-step and pause-step rule: no active outputs. Discharge-inhibition rule: `discharge_valve` remains FALSE. | `fill_valve`; `discharge_valve` | PLC output logic; OpenPLC output image; Modbus TCP output mapping |
+
+**Interface and interpretation notes**
+
+- `start` is the **one-scan press event**, derived from the rising edge of the physical start input, not its sustained TRUE level.
+- Input mappings: `start` derives from `%IX100.0`; `stop` maps to `%IX100.1`; `LSH` to `%IX100.2`; and `LSHH` to `%IX100.3`. Output mappings: `fill_valve` maps to `%QX100.0`, and `discharge_valve` to `%QX100.1`.
+- The internal arrows **filling-step activity**, `ton_q`, and `tof_q` connect the child functions; they are not additional external I/O.
+- `LSHH` is included as an incoming safety observation, but the task specifies **no distinct transition or interlock triggered by it**. Consequently, no such behavior is invented here. The requirement that LSHH never be reached depends on stopping at LSH and on adequate physical margin between 2.4 m and 2.7 m, including scan, communication, valve-closing, and residual-flow effects.

@@ -1,0 +1,20 @@
+### IDEF0 functional model
+
+**Scope:** the controller for the filling task, rather than the physical liquid-handling process. Consequently, the context outputs are valve commands, not liquid flows. **A0** is the context function; **A1–A3** are its child functions.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control timed tank filling** | **start**; **stop**; **LSHH** | **TimerDuration**; initial-step requirement; filling-sequence requirements; stop-priority requirement; discharge-valve inhibition requirement | **fill_valve**; **discharge_valve** | OpenPLC Runtime; controller program; Factory I/O Modbus TCP connection; configured scene I/O |
+| **A1** | **Determine filling-step state** | **start**; **stop**; **LSHH**; **timer_done**; retained step state | Initial state of step 0; transition from step 0 to the filling step on **start**; return from the filling step to step 0 on **timer_done** or **LSHH**; overriding return to step 0 on **stop** | Filling-step state; updated retained step state | OpenPLC program execution; step-state memory |
+| **A2** | **Time the filling interval** | Filling-step state | **TimerDuration**; timer initiation on entry to the filling step; timer reset outside the filling step | **timer_done** | OpenPLC timer instance; runtime time base |
+| **A3** | **Generate valve commands** | Filling-step state; **stop** | **fill_valve** assertion only during the filling step; both outputs FALSE in step 0; both outputs FALSE whenever **stop** is TRUE; permanent **discharge_valve** inhibition | **fill_valve**; **discharge_valve** | OpenPLC output logic; mapped output image; Factory I/O Modbus TCP connection |
+
+### Arrow and decomposition notes
+
+- **start** is the specified one-scan button-press event, not a continuously asserted start request. **stop** is the level-sensitive stop condition.
+- **LSH** is available in the scene but has **no specified role in this task**. It therefore has no functional arrow in this model. In particular, detection at 2.4 m does not terminate filling.
+- **LSHH** and **timer_done** provide alternative termination conditions; either returns the active filling sequence to step 0.
+- The internal arrows are **Filling-step state** from A1 to A2 and A3, **timer_done** from A2 to A1, and the retained-state feedback associated with A1.
+- **timer_done** is internal to A0. **TimerDuration** is a control parameter, not a mechanism.
+- **fill_valve** maps to `%QX100.0`; **discharge_valve** maps to `%QX100.1`. **discharge_valve** remains FALSE throughout.
+- The cyclic evaluation of A1–A3 must ensure that **stop**, timer completion, or high-high detection removes **fill_valve** in the applicable controller scan. The table is a functional decomposition, not a prescribed program execution order.

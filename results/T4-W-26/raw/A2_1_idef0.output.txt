@@ -1,0 +1,24 @@
+The model below treats the **PLC level-control application** as the system boundary. Factory I/O supplies the measured level and receives the valve commands. The child functions describe functional responsibilities, not necessarily separate program blocks or sequential execution steps.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | Level measurement `LevelMeter` (%IW100) | Start command `StartCommand` (%IX100.0); stop command `StopCommand` (%IX100.1); set point \(h_{sp}=h_{target}=0.8h_{span}\); overfill limit \(h_{max}=0.9h_{span}\); tolerance \(\varepsilon=0.02h_{span}\); hold time \(t_h=10\,s\); PID parameters \(K_p,T_i,T_d\); `FULL_SCALE = 1000`; I/O mapping and driver scaling; operating and safety rules | Fill-valve command `FillValve` (%QW100); discharge-valve command `DischargeValve` (%QW101) | OpenPLC Runtime; PLC control program; scan clock and state memory; Modbus TCP connection and Factory I/O driver |
+| **A1** | **Interpret measurements and command signals** | Level measurement `LevelMeter` | `StartCommand`; `StopCommand`; `FULL_SCALE`; measuring span \(h_{span}\); region thresholds \(h_{target}\) and \(h_{max}\); rising-edge detection rule | Scaled level \(h\); start event `start`; stop condition `stop`; level region `r` | Input acquisition and scaling logic; rising-edge detector; previous-command memory |
+| **A2** | **Evaluate level error and settling condition** | Scaled level \(h\) | Set point \(h_{sp}\); tolerance \(\varepsilon\); hold time \(t_h\); regulation state; continuous-in-band timing rule | Level error \(e=h_{sp}-h\); settling condition `settled` | Arithmetic and comparison logic; hold timer; scan clock |
+| **A3** | **Manage regulation state** | — | `start`; `stop`; `settled`; `r`; initial-step rule; stop-priority rule; completion rule | Regulation state, comprising step 0 and the active regulation step; PID-drive enable `fill_valve`; fixed-discharge enable `discharge_valve` | State-transition logic; step memory; initialization logic |
+| **A4** | **Calculate bounded PID demand** | Level error \(e\) | `fill_valve`; PID parameters \(K_p,T_i,T_d\); output limits of 0–100%; integration-suspension rule during output clamping; controller update interval | Bounded fill-opening demand | PID algorithm; integrator and derivative-state memory; output limiter; scan clock |
+| **A5** | **Generate valve output commands** | Bounded fill-opening demand | `fill_valve`; `discharge_valve`; `stop`; `FULL_SCALE`; fixed discharge opening of 40%; step-0 zero-output rule | Fill-valve command `FillValve`; discharge-valve command `DischargeValve` | Output-selection and scaling logic; OpenPLC output image; Modbus TCP connection and Factory I/O driver |
+
+### Arrow and behavior definitions
+
+- **`start`** is TRUE only for the scan detecting a rising edge of `StartCommand`. **`stop`** follows the TRUE condition of `StopCommand`.
+- **`r`** has exactly these values:
+  - `LOW`: \(h<h_{target}\)
+  - `MID`: \(h_{target}\le h<h_{max}\)
+  - `HIGH`: \(h\ge h_{max}\)
+- **`settled`** becomes TRUE only after \(|e|\le\varepsilon\) has remained continuously true for 10 seconds during regulation. Leaving the band breaks that timing interval; inactive time does not count.
+- **A3** starts in step 0. A valid `start` initiates regulation; `settled` or `r = HIGH` terminates it. **`stop` has priority**, returning the application to step 0. Both enable outputs are FALSE in step 0 and TRUE during regulation.
+- **`fill_valve` and `discharge_valve` are Boolean enables**, not analog valve-opening values. A5 converts the PID demand to `FillValve` in the range 0–1000 and sets `DischargeValve` to 400 while enabled. Both analog commands are zero in step 0 or whenever `stop` is TRUE.
+- With the specified scaling, the set point, overfill threshold, and tolerance correspond to **800, 900, and 20 register units**, respectively.
+
+The specification does not select a PID discretization or prescribe the handling of retained PID state on restart; those remain implementation decisions rather than additional functional requirements.

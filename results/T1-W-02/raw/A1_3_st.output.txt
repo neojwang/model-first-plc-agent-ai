@@ -1,0 +1,49 @@
+FUNCTION_BLOCK ConveyorRuntime
+VAR_INPUT
+    sensor_a : BOOL;
+    sensor_b : BOOL;
+END_VAR
+VAR_OUTPUT
+    conveyor : BOOL := FALSE;
+END_VAR
+VAR
+    x0 : BOOL := TRUE;
+    x1 : BOOL := FALSE;
+    t1 : BOOL := FALSE;
+    t2 : BOOL := FALSE;
+    command_latch : RS;
+END_VAR
+
+(* Evaluate transitions using the current situation. *)
+t1 := x0 AND sensor_a AND NOT sensor_b;
+t2 := x1 AND sensor_b;
+
+(* Maintain the active situation with a reset-dominant bistable. *)
+command_latch(S := t1, R1 := t2);
+
+x1 := command_latch.Q1;
+x0 := NOT x1;
+
+conveyor := x1;
+
+END_FUNCTION_BLOCK
+
+
+PROGRAM Main
+VAR
+    SensorA AT %IX100.0 : BOOL;
+    SensorB AT %IX100.1 : BOOL;
+    Conveyor AT %QX100.0 : BOOL;
+END_VAR
+VAR
+    runtime_logic : ConveyorRuntime;
+END_VAR
+
+runtime_logic(
+    sensor_a := SensorA,
+    sensor_b := SensorB
+);
+
+Conveyor := runtime_logic.conveyor;
+
+END_PROGRAM

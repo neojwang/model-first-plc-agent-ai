@@ -1,0 +1,27 @@
+**Scope:** the controller, including signal conditioning, sequence supervision, PID calculation, and output generation. The simulated tank is outside the functional boundary.
+
+The table uses **A0** for the context function and **A1–A5** for its decomposition. In IDEF0 terms, inputs are transformed, controls govern execution, outputs are produced, and mechanisms perform the functions. Function names are verb phrases; arrow names are noun phrases.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control tank level** | Level measurement (`LevelMeter`, `%IW100`); start-button signal (`StartCommand`, `%IX100.0`); stop-button signal (`StopCommand`, `%IX100.1`) | Level span `h_span`; target `h_sp = h_target = 0.8 h_span`; overfill limit `h_max = 0.9 h_span`; tolerance `eps = 0.02 h_span`; hold time `t_h = 10 s`; PID gains `Kp`, `Ti`, `Td`; `FULL_SCALE = 1000`; driver scale `100`; initial-step, stop-priority, termination, output-limiting, and integration-suspension rules | Fill-valve command (`FillValve`, `%QW100`); discharge-valve command (`DischargeValve`, `%QW101`) | OpenPLC Runtime; PLC task and scan clock; Modbus TCP interface; Factory I/O driver |
+| **A1** | **Condition measurements and commands** | Level measurement (`LevelMeter`); start-button signal (`StartCommand`); stop-button signal (`StopCommand`) | Level span `h_span`; `FULL_SCALE`; driver scale; rising-edge definition of `start` | Scaled level `h`; start event `start`; stop condition `stop` | PLC signal-conditioning logic; start-button edge memory |
+| **A2** | **Evaluate level and settling conditions** | Scaled level `h` | Target `h_sp = h_target`; overfill limit `h_max`; tolerance `eps`; hold time `t_h`; regulation enable `fill_valve`; continuous-hold and timer-reset rules | Level error `e`; level region `r`; settling condition `settled` | PLC arithmetic and comparison logic; continuous-hold timer; PLC scan clock |
+| **A3** | **Supervise regulation sequence** | Start event `start`; stop condition `stop`; level region `r`; settling condition `settled` | Initial step 0; start-transition rule; stop-priority rule; termination rule (`settled` or `r = HIGH`); step-0 zero-output rule | Regulation enable `fill_valve`; discharge enable `discharge_valve` | PLC sequence logic; step-state memory |
+| **A4** | **Calculate bounded PID demand** | Level error `e` | Regulation enable `fill_valve`; PID gains `Kp`, `Ti`, `Td`; output bounds of 0–100%; integration-suspension rule while output is clamped | Bounded fill demand | PID implementation; integrator and derivative state memory; PLC scan clock |
+| **A5** | **Generate valve commands** | Bounded fill demand | Regulation enable `fill_valve`; discharge enable `discharge_valve`; `FULL_SCALE`; fixed discharge opening of 40%; disabled-output value of zero | Fill-valve command (`FillValve`, `%QW100`); discharge-valve command (`DischargeValve`, `%QW101`) | PLC output-scaling and selection logic; output registers; Modbus TCP interface; Factory I/O driver |
+
+### Arrow semantics and decomposition rules
+
+- **`start`** is TRUE only during the scan that detects a rising edge of `StartCommand`. **`stop`** follows `StopCommand`.
+- **`e = h_sp − h`**.
+- **`r`** has exactly these values:
+  - `LOW`: `h < h_target`
+  - `MID`: `h_target <= h < h_max`
+  - `HIGH`: `h >= h_max`
+- **`settled`** becomes TRUE only after `|e| <= eps` has remained continuously true for 10 seconds during regulation. The hold timer resets when the condition is broken or regulation is inactive.
+- **`fill_valve`** and **`discharge_valve`** are Boolean enables, not analog opening values. Both are FALSE in step 0 and TRUE during regulation.
+- **Stop has priority:** `stop = TRUE` selects step 0 and zero commands regardless of the other conditions. During regulation, either `settled` or `r = HIGH` also selects step 0 and closes both valves.
+- **A4** clamps fill demand to 0–100% and suspends integration while clamped. **A5** converts the enabled demand to `0…1000`; enabled discharge is `400`. Disabled commands are zero.
+
+The child-to-child arrows (`h`, `start`, `stop`, `e`, `r`, `settled`, the enables, and bounded fill demand) are internal to A0. Only the two analog valve commands cross its output boundary.

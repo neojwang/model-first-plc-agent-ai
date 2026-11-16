@@ -1,0 +1,14 @@
+The model below treats **A0 as the conveyor-control function**, rather than the physical transport process. Its children form the sequence **acquire sensor states → update the bistable state → apply the command**.
+
+A **reset-dominant RS block** is selected so that detection at B stops the conveyor even if both sensors are TRUE. This resolves the simultaneous-detection case consistently with keeping the box at B.
+
+| Node | Function | Inputs | Controls | Outputs | Mechanisms |
+|---|---|---|---|---|---|
+| **A0** | **Control box transfer from A to B** | `sensor_a`; `sensor_b` | Start-on-A requirement; stop-and-hold-at-B requirement; IEC 61131-3 bistable requirement; I/O address mapping; reset-priority rule | `conveyor` | OpenPLC Runtime; Modbus TCP connection; Factory I/O scene, sensors, and conveyor |
+| **A1** | **Acquire sensor states** | `sensor_a`; `sensor_b` | Input mapping: `sensor_a` ↔ SensorA at `%IX100.0`, `sensor_b` ↔ SensorB at `%IX100.1`; TRUE-means-detection convention | Sampled sensor states | Factory I/O sensors and Modbus TCP slave interface; OpenPLC input acquisition |
+| **A2** | **Update the retained conveyor command** | Sampled sensor states; previous bistable state *(internal feedback)* | Set condition: `sensor_a = TRUE`; reset condition: `sensor_b = TRUE`; reset dominance; state retention when both inputs are FALSE; IEC 61131-3 RS semantics | Retained conveyor command state *(also fed back as the previous bistable state)* | IEC 61131-3 RS function-block instance; OpenPLC execution and instance memory |
+| **A3** | **Apply the conveyor command** | Retained conveyor command state | Output mapping: `conveyor` ↔ Conveyor at `%QX100.0`; TRUE-runs-conveyor convention | `conveyor` | OpenPLC output update; Modbus TCP connection; Factory I/O conveyor actuator interface |
+
+**Child-function connections:** A1’s **Sampled sensor states** feed A2; A2’s **Retained conveyor command state** feeds A3. A3 produces the A0 boundary output, `conveyor`.
+
+The bistable holds the command after the box leaves A and holds the stopped state after detection at B. The task does not specify startup initialization; that remains a separate implementation decision.
